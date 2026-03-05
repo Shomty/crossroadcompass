@@ -14,6 +14,7 @@ import { DashboardReport } from "@/components/report/DashboardReport";
 import { TodaysGuidance } from "@/components/insights/TodaysGuidance";
 import { HumanDesignTypeCard } from "@/components/dashboard/HumanDesignTypeCard";
 import { ForecastCard } from "@/components/dashboard/ForecastCard";
+import { DashaCard } from "@/components/dashboard/DashaCard";
 import { getOrCreateHDChart } from "@/lib/astro/chartService";
 import { getThisWeeksForecast, getThisMonthsForecast, getWeekStart, getMonthStart } from "@/lib/ai/forecastService";
 
@@ -158,66 +159,70 @@ export default async function DashboardPage({
           />
         </GlassCard>
 
-        {/* 2. Active Dasha — 1 col */}
-        <GlassCard>
-          {/* Planet glyph bg decoration */}
-          {activeMaha && (
-            <div style={{ position: "absolute", top: 12, right: 16, opacity: 0.08, pointerEvents: "none", fontSize: 88, lineHeight: 1, fontFamily: "serif", color: PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--gold)", userSelect: "none" }}>
-              {PLANET_GLYPH[activeMaha.planetName.toLowerCase()] ?? "★"}
-            </div>
-          )}
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <p style={dashaLabel}>Current Period</p>
-            {activeMaha ? (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 6 }}>
-                  <PlanetOrb name={activeMaha.planetName} size={64} />
-                  <div>
-                    <div style={dashaPlanet}>{activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1)}</div>
-                    <div style={dashaType}>Mahadasha</div>
-                  </div>
+        {/* 2. Active Dasha — 1 col (flip card) */}
+        <GlassCard style={{ padding: 0 }}>
+          <div style={{ padding: "var(--card-padding, 20px)", height: "100%", boxSizing: "border-box" }}>
+            <DashaCard
+              activeMaha={activeMaha ? { planetName: activeMaha.planetName, startDate: activeMaha.startDate, endDate: activeMaha.endDate } : null}
+              activeAntar={activeAntar ? { planetName: activeAntar.planetName, startDate: activeAntar.startDate, endDate: activeAntar.endDate } : null}
+              mahaRemainingDays={mahaRemainingDays}
+              mahaProgress={mahaProgress}
+              planetGlyph={activeMaha ? (PLANET_GLYPH[activeMaha.planetName.toLowerCase()] ?? "★") : "★"}
+              planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--gold)") : "var(--gold)"}
+              frontContent={
+                <div>
+                  <p style={dashaLabel}>Current Period</p>
+                  {activeMaha ? (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 6 }}>
+                        <PlanetOrb name={activeMaha.planetName} size={64} />
+                        <div>
+                          <div style={dashaPlanet}>{activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1)}</div>
+                          <div style={dashaType}>Mahadasha</div>
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--faint)", letterSpacing: "0.06em" }}>
+                          {fmtDate(activeMaha.startDate)} → {fmtDate(activeMaha.endDate)}
+                        </span>
+                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--gold)", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+                          {mahaRemainingDays != null ? `${mahaRemainingDays.toLocaleString()} days left` : ""}
+                        </span>
+                      </div>
+                      {mahaProgress != null && (
+                        <div style={{ height: 3, background: "rgba(212,175,95,0.12)", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${mahaProgress}%`, background: "linear-gradient(90deg, rgba(212,175,95,0.6), rgba(212,175,95,0.9))", borderRadius: 2, transition: "width 0.5s" }} />
+                        </div>
+                      )}
+                      {activeAntar && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                          <PlanetOrb name={activeAntar.planetName} size={22} />
+                          <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 13, color: "var(--gold)" }}>
+                            Sub: {activeAntar.planetName.split("/")[1]?.charAt(0).toUpperCase() + (activeAntar.planetName.split("/")[1]?.slice(1) ?? "")} Antardasha
+                          </span>
+                        </div>
+                      )}
+                      <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginTop: activeAntar ? 0 : 14 }}>
+                        {getDashaGuidance(activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1)).map((item, i) => (
+                          <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5 }}>
+                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(212,175,95,0.4)", flexShrink: 0, marginTop: 6 }} />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ ...dashaPlanet, opacity: 0.3, fontSize: 32 }}>—</div>
+                      <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, lineHeight: 1.6 }}>
+                        Complete your birth profile to see your active Dasha period.
+                      </p>
+                      <Link href="/settings/profile" style={smallGoldLink}>Set up profile →</Link>
+                    </>
+                  )}
                 </div>
-                {/* Period dates + remaining days */}
-                <div style={{ marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--faint)", letterSpacing: "0.06em" }}>
-                    {fmtDate(activeMaha.startDate)} → {fmtDate(activeMaha.endDate)}
-                  </span>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--gold)", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
-                    {mahaRemainingDays != null ? `${mahaRemainingDays.toLocaleString()} days left` : ""}
-                  </span>
-                </div>
-                {/* Progress bar */}
-                {mahaProgress != null && (
-                  <div style={{ height: 3, background: "rgba(212,175,95,0.12)", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${mahaProgress}%`, background: "linear-gradient(90deg, rgba(212,175,95,0.6), rgba(212,175,95,0.9))", borderRadius: 2, transition: "width 0.5s" }} />
-                  </div>
-                )}
-                {activeAntar && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <PlanetOrb name={activeAntar.planetName} size={22} />
-                    <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 13, color: "var(--gold)" }}>
-                      Sub: {activeAntar.planetName.split("/")[1]?.charAt(0).toUpperCase() + (activeAntar.planetName.split("/")[1]?.slice(1) ?? "")} Antardasha
-                    </span>
-                  </div>
-                )}
-                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginTop: activeAntar ? 0 : 14 }}>
-                  {getDashaGuidance(activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1)).map((item, i) => (
-                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12.5, color: "var(--muted)", lineHeight: 1.5 }}>
-                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "rgba(212,175,95,0.4)", flexShrink: 0, marginTop: 6 }} />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <>
-                <div style={{ ...dashaPlanet, opacity: 0.3, fontSize: 32 }}>—</div>
-                <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 8, lineHeight: 1.6 }}>
-                  Complete your birth profile to see your active Dasha period.
-                </p>
-                <Link href="/settings/profile" style={smallGoldLink}>Set up profile →</Link>
-              </>
-            )}
+              }
+            />
           </div>
         </GlassCard>
 
@@ -231,15 +236,7 @@ export default async function DashboardPage({
           />
         </GlassCard>
 
-        {/* 5. HD Report — full width (span 3) */}
-        <GlassCard span="full" style={{ padding: 0, overflow: "visible", background: "transparent", border: "none" }}>
-          <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 14, paddingLeft: 2 }}>
-            Human Design Report
-          </p>
-          <DashboardReport />
-        </GlassCard>
-
-        {/* 6. Weekly / Monthly Forecast — full width */}
+        {/* 5. Weekly / Monthly Forecast — full width */}
         <GlassCard span="full">
           <ForecastCard
             initialWeekly={weeklyForecast}
@@ -248,6 +245,14 @@ export default async function DashboardPage({
             weekLabel={weekLabel}
             monthLabel={monthLabel}
           />
+        </GlassCard>
+
+        {/* 6. HD Report — full width (span 3) */}
+        <GlassCard span="full" style={{ padding: 0, overflow: "visible", background: "transparent", border: "none" }}>
+          <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--faint)", marginBottom: 14, paddingLeft: 2 }}>
+            Human Design Report
+          </p>
+          <DashboardReport />
         </GlassCard>
 
       </div>

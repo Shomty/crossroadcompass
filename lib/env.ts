@@ -43,6 +43,13 @@ const envSchema = z.object({
   APPLE_ID: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
   APPLE_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
 
+  // ─── Cron ─────────────────────────────────────────────────────────────────
+  // Secret token Vercel sends with every scheduled cron invocation.
+  CRON_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
+
+  // App public URL — used to generate dashboard links in emails
+  APP_URL: z.string().url().default("http://localhost:3000"),
+
   // Auth (NextAuth v5)
   AUTH_SECRET: z.string().min(1),
   NEXTAUTH_URL: z.string().url(),
