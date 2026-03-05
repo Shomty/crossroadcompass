@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <radialGradient id="cosmicBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a1035"/>
+      <stop offset="100%" stop-color="#0c0820"/>
+    </radialGradient>
+    <linearGradient id="goldRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4A843"/>
+      <stop offset="40%" stop-color="#F0CC6E"/>
+      <stop offset="70%" stop-color="#B8882A"/>
+      <stop offset="100%" stop-color="#E8BC55"/>
+    </linearGradient>
+    <linearGradient id="northNeedle" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F0CC6E"/>
+      <stop offset="100%" stop-color="#B8882A"/>
+    </linearGradient>
+    <linearGradient id="southNeedle" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a3a6e"/>
+      <stop offset="100%" stop-color="#2d2050"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="160" height="160" fill="#0c0820" rx="20"/>
+  <g transform="translate(80, 80)">
+    <circle cx="0" cy="0" r="62" fill="none" stroke="url(#goldRing)" stroke-width="1.2" opacity="0.5"/>
+    <circle cx="0" cy="0" r="55" fill="url(#cosmicBg)"/>
+    <circle cx="0" cy="0" r="55" fill="none" stroke="url(#goldRing)" stroke-width="2.5"/>
+    <circle cx="0" cy="0" r="48" fill="none" stroke="#D4A843" stroke-width="0.6" opacity="0.4"/>
+    <line x1="0" y1="-55" x2="0" y2="-46" stroke="#F0CC6E" stroke-width="2.5"/>
+    <line x1="0" y1="55" x2="0" y2="46" stroke="#D4A843" stroke-width="1.5" opacity="0.6"/>
+    <line x1="55" y1="0" x2="46" y2="0" stroke="#D4A843" stroke-width="1.5" opacity="0.6"/>
+    <line x1="-55" y1="0" x2="-46" y2="0" stroke="#D4A843" stroke-width="1.5" opacity="0.6"/>
+    <line x1="38.9" y1="-38.9" x2="33.2" y2="-33.2" stroke="#D4A843" stroke-width="1" opacity="0.4"/>
+    <line x1="-38.9" y1="-38.9" x2="-33.2" y2="-33.2" stroke="#D4A843" stroke-width="1" opacity="0.4"/>
+    <line x1="38.9" y1="38.9" x2="33.2" y2="33.2" stroke="#D4A843" stroke-width="1" opacity="0.4"/>
+    <line x1="-38.9" y1="38.9" x2="-33.2" y2="33.2" stroke="#D4A843" stroke-width="1" opacity="0.4"/>
+    <circle cx="-20" cy="-38" r="0.9" fill="#F0CC6E" opacity="0.7"/>
+    <circle cx="38" cy="-22" r="0.7" fill="#D4A843" opacity="0.6"/>
+    <circle cx="18" cy="36" r="0.8" fill="#F0CC6E" opacity="0.5"/>
+    <circle cx="-38" cy="24" r="0.6" fill="#D4A843" opacity="0.5"/>
+    <circle cx="-26" cy="-8" r="1.1" fill="#F0CC6E" opacity="0.55" filter="url(#glow)"/>
+    <circle cx="32" cy="-32" r="1.0" fill="#F0CC6E" opacity="0.5" filter="url(#glow)"/>
+    <line x1="-38" y1="0" x2="38" y2="0" stroke="#D4A843" stroke-width="0.5" opacity="0.2"/>
+    <line x1="0" y1="-38" x2="0" y2="38" stroke="#D4A843" stroke-width="0.5" opacity="0.2"/>
+    <polygon points="0,-42 -8,-8 0,-16 8,-8" fill="url(#northNeedle)" filter="url(#glow)"/>
+    <polygon points="0,42 -8,8 0,16 8,8" fill="url(#southNeedle)"/>
+    <polygon points="42,0 8,-5 16,0 8,5" fill="#2d2050" opacity="0.6"/>
+    <polygon points="-42,0 -8,-5 -16,0 -8,5" fill="#2d2050" opacity="0.6"/>
+    <circle cx="0" cy="0" r="6" fill="#0c0820" stroke="url(#goldRing)" stroke-width="1.8"/>
+    <circle cx="0" cy="0" r="3" fill="#F0CC6E" opacity="0.9"/>
+    <text x="0" y="-57" text-anchor="middle" fill="#F0CC6E" font-family="Georgia, serif" font-size="9" font-weight="bold" letter-spacing="1">N</text>
+  </g>
+</svg>

@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crossroads Compass — Personal Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ─── TOKENS ─────────────────────────────────────────────── */
+  :root {
+    --void:        #04050f;
+    --deep:        #080c1a;
+    --surface:     #0d1225;
+    --raised:      #111828;
+    --border:      rgba(255,255,255,0.06);
+    --border-lit:  rgba(212,175,95,0.25);
+    --gold:        #D4AF5F;
+    --gold-soft:   rgba(212,175,95,0.15);
+    --gold-glow:   rgba(212,175,95,0.08);
+    --moon:        #E8E0D0;
+    --muted:       rgba(232,224,208,0.45);
+    --faint:       rgba(232,224,208,0.22);
+    --font-display: 'Cormorant Garamond', Georgia, serif;
+    --font-mono:    'DM Mono', monospace;
+    --font-body:    'Instrument Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--void);
+    color: var(--moon);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── STARFIELD CANVAS ────────────────────────────────────── */
+  #starfield {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ─── NEBULA BLOBS ────────────────────────────────────────── */
+  .nebula {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .nebula-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(ellipse, rgba(100,60,180,0.12) 0%, transparent 70%);
+    top: -100px; left: -200px;
+    animation: drift1 25s ease-in-out infinite;
+  }
+  .nebula-2 {
+    width: 500px; height: 500px;
+    background: radial-gradient(ellipse, rgba(212,175,95,0.07) 0%, transparent 70%);
+    top: 40%; right: -100px;
+    animation: drift2 30s ease-in-out infinite;
+  }
+  .nebula-3 {
+    width: 400px; height: 400px;
+    background: radial-gradient(ellipse, rgba(60,100,200,0.08) 0%, transparent 70%);
+    bottom: 10%; left: 30%;
+    animation: drift3 35s ease-in-out infinite;
+  }
+
+  @keyframes drift1 {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(40px,30px) scale(1.08); }
+  }
+  @keyframes drift2 {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-30px,40px) scale(0.95); }
+  }
+  @keyframes drift3 {
+    0%, 100% { transform: translate(0,0); }
+    50% { transform: translate(20px,-30px); }
+  }
+
+  /* ─── LAYOUT ──────────────────────────────────────────────── */
+  .app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ─── SIDEBAR ─────────────────────────────────────────────── */
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: rgba(8,12,26,0.85);
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 8px;
+    margin-bottom: 36px;
+  }
+
+  .logo-mark {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border-lit);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gold-glow);
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg {
+    width: 18px; height: 18px;
+    color: var(--gold);
+  }
+
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--moon);
+    line-height: 1.2;
+  }
+
+  .logo-sub {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-top: 1px;
+  }
+
+  /* ─── NAV ─────────────────────────────────────────────────── */
+  .nav { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: var(--faint);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    background: none;
+    text-align: left;
+    width: 100%;
+  }
+
+  .nav-item:hover {
+    color: var(--moon);
+    background: rgba(255,255,255,0.04);
+  }
+
+  .nav-item.active {
+    color: var(--gold);
+    background: var(--gold-glow);
+    border-color: var(--border-lit);
+  }
+
+  .nav-icon {
+    width: 17px; height: 17px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .nav-item.active .nav-icon { opacity: 1; }
+
+  /* ─── SIDEBAR DIVIDER ─────────────────────────────────────── */
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 8px;
+  }
+
+  /* ─── USER CHIP ───────────────────────────────────────────── */
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .user-chip:hover { background: rgba(255,255,255,0.05); }
+
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c6bc4, #4f7de0);
+    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: #fff;
+  }
+
+  .avatar-dot {
+    position: absolute;
+    top: -1px; right: -1px;
+    width: 9px; height: 9px;
+    background: var(--gold);
+    border-radius: 50%;
+    border: 2px solid var(--deep);
+  }
+
+  .user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--moon);
+    flex: 1;
+  }
+
+  .user-tier {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 1px;
+  }
+
+  .settings-btn {
+    background: none;
+    border: none;
+    color: var(--faint);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+  .settings-btn:hover { color: var(--moon); }
+
+  /* ─── MAIN ────────────────────────────────────────────────── */
+  .main {
+    flex: 1;
+    padding: 28px 32px 40px;
+    overflow: auto;
+    min-width: 0;
+  }
+
+  /* ─── TOPBAR ──────────────────────────────────────────────── */
+  .topbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 20px;
+  }
+
+  .greeting-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 5px;
+  }
+
+  .greeting {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: var(--moon);
+    line-height: 1.1;
+  }
+
+  .greeting em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .topbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .search-wrap {
+    position: relative;
+  }
+
+  .search-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 14px 9px 36px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--moon);
+    width: 200px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .search-input::placeholder { color: var(--faint); }
+
+  .search-input:focus {
+    border-color: var(--border-lit);
+    background: rgba(212,175,95,0.04);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px; height: 14px;
+    color: var(--faint);
+  }
+
+  .icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--faint);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .icon-btn:hover { color: var(--moon); background: rgba(255,255,255,0.07); }
+
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  .cta-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    background: transparent;
+    border: 1px solid var(--border-lit);
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .cta-btn:hover {
+    background: var(--gold-soft);
+    border-color: var(--gold);
+  }
+
+  .cta-btn svg { width: 14px; height: 14px; }
+
+  /* ─── GRID ────────────────────────────────────────────────── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* ─── GLASS CARD ──────────────────────────────────────────── */
+  .card {
+    background: rgba(13,18,37,0.7);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .card:hover { border-color: rgba(255,255,255,0.1); }
+
+  /* subtle inner highlight on top edge */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,0.08) 50%, transparent 90%);
+    pointer-events: none;
+  }
+
+  /* ─── CARD SPANS ─────────────────────────────────────────── */
+  .col-span-2 { grid-column: span 2; }
+  .row-span-1 { }
+
+  /* ─── COSMIC WEATHER CARD ─────────────────────────────────── */
+  .weather-card {
+    grid-column: span 2;
+  }
+
+  .card-eyebrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .eyebrow-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .eyebrow-pill .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .phase-badge {
+    padding: 5px 14px;
+    background: var(--gold);
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--void);
+    font-weight: 400;
+  }
+
+  .weather-body {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    justify-content: space-between;
+  }
+
+  .weather-text { flex: 1; }
+
+  .weather-headline {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--moon);
+    margin-bottom: 12px;
+  }
+
+  .weather-headline .planet {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .weather-desc {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--muted);
+    max-width: 380px;
+  }
+
+  /* ─── PLANET ORB ──────────────────────────────────────────── */
+  .planet-orb {
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .planet-inner {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #e8834a 0%, #c4581e 35%, #8a2e08 65%, #3d1002 100%);
+    box-shadow:
+      0 0 0 1px rgba(200,100,30,0.15),
+      0 0 40px rgba(200,100,30,0.2),
+      inset 0 0 30px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .planet-crater {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.22);
+  }
+
+  .planet-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 50%, rgba(0,0,0,0.3) 100%);
+  }
+
+  .planet-glow {
+    position: absolute;
+    inset: -30px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(200,100,30,0.1) 30%, transparent 70%);
+    pointer-events: none;
+    animation: glow-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%,100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* ─── DASHA CARD ──────────────────────────────────────────── */
+  .dasha-card {
+    position: relative;
+  }
+
+  .dasha-bg {
+    position: absolute;
+    top: 0; right: 0;
+    width: 110px; height: 110px;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  .dasha-period-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 10px;
+  }
+
+  .dasha-planet {
+    font-family: var(--font-display);
+    font-size: 46px;
+    font-weight: 300;
+    line-height: 0.95;
+    color: var(--moon);
+    letter-spacing: -0.01em;
+  }
+
+  .dasha-type {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1;
+    color: rgba(232,224,208,0.6);
+    margin-bottom: 14px;
+  }
+
+  .dasha-focus {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .dasha-focus-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .dasha-focus-text {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 0.01em;
+  }
+
+  .dasha-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dasha-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .dasha-list li::before {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(212,175,95,0.4);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  /* ─── SATURN BACKGROUND SVG ───────────────────────────────── */
+  .saturn-bg {
+    fill: none;
+    stroke: var(--moon);
+  }
+
+  /* ─── SADE SATI CARD ──────────────────────────────────────── */
+  .sati-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+
+  .sati-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--moon);
+  }
+
+  .sati-settings {
+    background: none;
+    border: none;
+    color: var(--faint);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    transition: color 0.2s;
+  }
+
+  .sati-settings:hover { color: var(--moon); }
+  .sati-settings svg { width: 16px; height: 16px; }
+
+  /* Progress Track */
+  .progress-track-wrap { margin-bottom: 10px; position: relative; }
+
+  .progress-track {
+    height: 3px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 100px;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 50%;
+    background: linear-gradient(90deg, rgba(212,175,95,0.3) 0%, var(--gold) 100%);
+    border-radius: 100px;
+    position: relative;
+  }
+
+  .progress-thumb {
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px; height: 16px;
+    background: var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(212,175,95,0.2), 0 0 12px rgba(212,175,95,0.4);
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .progress-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .progress-label.active {
+    color: var(--moon);
+    font-weight: 400;
+  }
+
+  /* Phase info */
+  .phase-info {
+    padding: 14px 16px;
+    background: rgba(212,175,95,0.05);
+    border: 1px solid rgba(212,175,95,0.15);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+    margin-top: 4px;
+  }
+
+  .phase-info-title {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--gold);
+    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+  }
+
+  .phase-info-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ─── HD REPORT CARD ─────────────────────────────────────── */
+  .hd-report-card {
+    grid-column: span 2;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+    border: none;
+  }
+
+  .hd-report-card::before { display: none; }
+
+  .hd-card-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 14px;
+    padding: 0 2px;
+  }
+
+  /* ─── INSIGHT SUMMARY BOX ─────────────────────────────────── */
+  .hd-summary-box {
+    background: rgba(13,18,37,0.75);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 22px 18px;
+    margin-bottom: 10px;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hd-summary-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,0.07) 50%, transparent 90%);
+    pointer-events: none;
+  }
+
+  .hd-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .hd-summary-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .hd-expand-btn {
+    background: none;
+    border: none;
+    color: var(--faint);
+    cursor: pointer;
+    padding: 3px;
+    transition: color 0.2s;
+  }
+
+  .hd-expand-btn:hover { color: var(--gold); }
+  .hd-expand-btn svg { width: 14px; height: 14px; }
+
+  .hd-summary-text {
+    font-family: var(--font-display);
+    font-size: 15.5px;
+    font-weight: 400;
+    line-height: 1.75;
+    color: var(--moon);
+    margin-bottom: 18px;
+  }
+
+  .hd-summary-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .hd-gen-date {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+  }
+
+  .hd-regen-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .hd-regen-btn:hover { color: var(--gold); }
+  .hd-regen-btn svg { width: 12px; height: 12px; }
+
+  /* ─── ACCORDION ───────────────────────────────────────────── */
+  .hd-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .accordion-item {
+    background: rgba(13,18,37,0.6);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    transition: border-color 0.25s;
+  }
+
+  .accordion-item.open {
+    border-color: rgba(212,175,95,0.18);
+  }
+
+  .accordion-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+  }
+
+  .accordion-trigger:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .accordion-gem {
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    color: var(--faint);
+    transition: color 0.25s;
+  }
+
+  .accordion-item.open .accordion-gem { color: var(--gold); }
+
+  .accordion-title {
+    flex: 1;
+    font-family: var(--font-body);
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+    transition: color 0.25s;
+  }
+
+  .accordion-item.open .accordion-title { color: var(--moon); }
+
+  .accordion-chevron {
+    width: 14px; height: 14px;
+    color: var(--faint);
+    transition: transform 0.3s, color 0.25s;
+    flex-shrink: 0;
+  }
+
+  .accordion-item.open .accordion-chevron {
+    transform: rotate(180deg);
+    color: var(--gold);
+  }
+
+  .accordion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .accordion-item.open .accordion-body {
+    max-height: 400px;
+  }
+
+  .accordion-content {
+    padding: 0 18px 18px 44px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  .accordion-content p + p { margin-top: 10px; }
+
+  .accordion-content .highlight {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  /* ─── DAILY INSIGHT CARD ──────────────────────────────────── */
+  .insight-card {
+    grid-column: span 1;
+  }
+
+  .insight-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 12px;
+  }
+
+  .insight-text {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.7;
+    color: var(--moon);
+    font-style: italic;
+    margin-bottom: 20px;
+  }
+
+  .insight-rating {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .rating-label {
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: 0.02em;
+  }
+
+  .stars {
+    display: flex;
+    gap: 4px;
+  }
+
+  .star {
+    width: 16px; height: 16px;
+    cursor: pointer;
+    color: var(--gold);
+    transition: transform 0.15s;
+  }
+
+  .star:hover { transform: scale(1.2); }
+
+  .star-empty { color: rgba(212,175,95,0.2); }
+
+  /* ─── MOBILE BOTTOM NAV ───────────────────────────────────── */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(8,12,26,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 10px 0 4px;
+    z-index: 100;
+  }
+
+  .bottom-nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+
+  .bottom-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--faint);
+    transition: color 0.2s;
+  }
+
+  .bottom-nav-btn.active { color: var(--gold); }
+  .bottom-nav-btn svg { width: 22px; height: 22px; }
+
+  .bottom-nav-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .home-indicator {
+    display: flex;
+    justify-content: center;
+    padding: 6px 0 8px;
+  }
+
+  .home-bar {
+    width: 100px; height: 4px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 100px;
+  }
+
+  /* ─── MOBILE HEADER ───────────────────────────────────────── */
+  .mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 0;
+  }
+
+  .mobile-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--moon);
+  }
+
+  .mobile-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--faint);
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  /* ─── CARD DECORATION ─────────────────────────────────────── */
+  .card-grain {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  /* ─── RESPONSIVE ──────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .sidebar { display: none; }
+    .mobile-header { display: flex; }
+    .bottom-nav { display: block; }
+    .main { padding: 16px 16px 100px; }
+    .topbar { display: none; }
+    .grid {
+      grid-template-columns: 1fr;
+    }
+    .weather-card, .hd-report-card, .col-span-2 {
+      grid-column: span 1;
+    }
+    .weather-headline { font-size: 24px; }
+    .planet-orb { width: 80px; height: 80px; }
+    .dasha-planet { font-size: 36px; }
+  }
+
+  /* ─── FADE IN ANIMATION ───────────────────────────────────── */
+  .card {
+    animation: fadeUp 0.5s ease-out both;
+  }
+
+  .grid .card:nth-child(1) { animation-delay: 0.1s; }
+  .grid .card:nth-child(2) { animation-delay: 0.18s; }
+  .grid .card:nth-child(3) { animation-delay: 0.26s; }
+  .grid .card:nth-child(4) { animation-delay: 0.34s; }
+  .grid .card:nth-child(5) { animation-delay: 0.42s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── YANTRA ANIMATED ORBS ────────────────────────────────── */
+  .orb-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(14px);
+    animation: morphBlob 6s ease-in-out infinite;
+  }
+
+  @keyframes morphBlob {
+    0%, 100% { transform: scale(1) translate(0,0); border-radius: 50%; }
+    33% { transform: scale(1.12) translate(4px,-4px); border-radius: 46% 54% 55% 45% / 50% 46% 54% 50%; }
+    66% { transform: scale(0.92) translate(-3px,5px); border-radius: 54% 46% 45% 55% / 50% 54% 46% 50%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Starfield -->
+<canvas id="starfield"></canvas>
+
+<!-- Nebulas -->
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="nebula nebula-3"></div>
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+  <div>
+    <div class="mobile-title">Crossroads Compass</div>
+    <div class="mobile-sub">Personal Dashboard</div>
+  </div>
+  <div class="avatar" style="width:42px;height:42px;font-size:16px;">
+    M
+    <div class="avatar-dot"></div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke-dasharray="2 3"/>
+          <line x1="12" y1="2" x2="12" y2="6"/>
+          <line x1="12" y1="18" x2="12" y2="22"/>
+          <line x1="2" y1="12" x2="6" y2="12"/>
+          <line x1="18" y1="12" x2="22" y2="12"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">Crossroads Compass</div>
+        <div class="logo-sub">Personal Navigation</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+        Dashboard
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Reports
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="2"/>
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        Yantras
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+        </svg>
+        Coaching
+      </button>
+      <button class="nav-item">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Profile
+      </button>
+    </nav>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="user-chip">
+      <div class="avatar">M<div class="avatar-dot"></div></div>
+      <div style="flex:1;min-width:0;">
+        <div class="user-name">Milosh</div>
+        <div class="user-tier">Core Member</div>
+      </div>
+      <button class="settings-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:15px;height:15px;">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div>
+        <div class="greeting-label">Personal Dashboard</div>
+        <div class="greeting">Good evening, <em>Milosh</em></div>
+      </div>
+      <div class="topbar-controls">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="search-input" type="text" placeholder="Search insights…">
+        </div>
+        <button class="icon-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <button class="cta-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Quick Scan
+        </button>
+      </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="grid">
+
+      <!-- Cosmic Weather -->
+      <div class="card weather-card">
+        <div class="card-grain"></div>
+        <div class="card-eyebrow">
+          <div class="eyebrow-pill">
+            <div class="dot"></div>
+            Cosmic Weather
+          </div>
+          <div class="phase-badge">Action Phase</div>
+        </div>
+        <div class="weather-body">
+          <div class="weather-text">
+            <h2 class="weather-headline">
+              <span class="planet">Mars</span> supports<br>bold initiatives today.
+            </h2>
+            <p class="weather-desc">
+              Energy is high for new beginnings and decisive action. This is the moment to move on projects you have been holding in reserve.
+            </p>
+          </div>
+          <div class="planet-orb">
+            <div class="planet-glow"></div>
+            <div class="planet-inner">
+              <div class="planet-crater" style="width:18px;height:16px;top:22%;left:30%;"></div>
+              <div class="planet-crater" style="width:12px;height:11px;top:45%;right:26%;"></div>
+              <div class="planet-crater" style="width:22px;height:18px;bottom:22%;left:34%;"></div>
+              <div class="planet-overlay"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saturn Dasha -->
+      <div class="card dasha-card">
+        <div class="card-grain"></div>
+        <!-- Saturn rings background decoration -->
+        <div class="dasha-bg">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="60" cy="58" r="28" stroke="white" stroke-opacity="0.5" stroke-width="1"/>
+            <ellipse cx="60" cy="58" rx="52" ry="14" stroke="white" stroke-opacity="0.3" stroke-width="1" transform="rotate(-15 60 58)"/>
+          </svg>
+        </div>
+        <div class="dasha-period-label">Current Period</div>
+        <div class="dasha-planet">Saturn</div>
+        <div class="dasha-type">Dasha</div>
+        <div class="dasha-focus">
+          <div class="dasha-focus-dot"></div>
+          <div class="dasha-focus-text">Focus: Discipline &amp; Structure</div>
+        </div>
+        <ul class="dasha-list">
+          <li>Consolidate your career gains and secure positions.</li>
+          <li>Review long-term investments and savings.</li>
+          <li>Practice patience in relationships.</li>
+        </ul>
+      </div>
+
+      <!-- Sade Sati -->
+      <div class="card">
+        <div class="card-grain"></div>
+        <div class="sati-header">
+          <h3 class="sati-title">Sade Sati Cycle</h3>
+          <button class="sati-settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="progress-track-wrap">
+          <div class="progress-track">
+            <div class="progress-fill">
+              <div class="progress-thumb"></div>
+            </div>
+          </div>
+        </div>
+        <div class="progress-labels">
+          <span class="progress-label">Rising</span>
+          <span class="progress-label active">Peak</span>
+          <span class="progress-label">Setting</span>
+        </div>
+
+        <div class="phase-info">
+          <div class="phase-info-title">Current Phase: Peak (Shani)</div>
+          <div class="phase-info-desc">Intense transformation period requiring patience and inner work.</div>
+        </div>
+      </div>
+
+      <!-- Daily Insight -->
+      <div class="card insight-card">
+        <div class="card-grain"></div>
+        <div class="insight-eyebrow">Today's Insight · <span id="today-date"></span></div>
+        <p class="insight-text">
+          With your Moon in the 4th house, this Saturn transit calls for stillness before motion. Your authority is clearest when you wait for the exhale, not the inhale.
+        </p>
+        <div class="insight-rating">
+          <span class="rating-label">Accuracy</span>
+          <div class="stars">
+            <svg class="star star-empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star star-empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star star-empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star star-empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star star-empty" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Human Design Report -->
+      <div class="card hd-report-card">
+
+        <div class="hd-card-eyebrow">Human Design Report</div>
+
+        <!-- Summary insight box -->
+        <div class="hd-summary-box">
+          <div class="hd-summary-header">
+            <span class="hd-summary-label">Your Human Design</span>
+            <button class="hd-expand-btn" title="Expand">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/>
+              </svg>
+            </button>
+          </div>
+          <p class="hd-summary-text">
+            Milosh, your chart reveals a powerful Generator energy, designed to build and create through responding from your Sacral Authority. With a 6/2 Profile, you are on a unique journey of becoming a wise role model, naturally gifted and attuned to the rhythms of life, meant to find deep satisfaction in your authentic flow.
+          </p>
+          <div class="hd-summary-footer">
+            <span class="hd-gen-date">Generated 4 March 2026</span>
+            <button class="hd-regen-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="23 4 23 10 17 10"/>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+              Regenerate
+            </button>
+          </div>
+        </div>
+
+        <!-- Accordion sections -->
+        <div class="hd-accordion">
+
+          <div class="accordion-item open" data-index="0">
+            <button class="accordion-trigger" onclick="toggleAccordion(0)">
+              <svg class="accordion-gem" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+              </svg>
+              <span class="accordion-title">Your Human Design Type: Generator</span>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-content">
+                <p>As a <span class="highlight">Generator</span>, you are here to find work and activities that light you up — and then give yourself fully to them. Your life force is the most powerful in the Human Design system. When you are engaged with what genuinely excites your Sacral center, you have almost unlimited energy and endurance.</p>
+                <p>The shadow side is doing things out of obligation rather than genuine response. When you say yes to things your Sacral doesn't light up for, you leak energy and build resentment. The practice is learning to listen to your gut — that involuntary, pre-verbal response that knows before your mind does.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-index="1">
+            <button class="accordion-trigger" onclick="toggleAccordion(1)">
+              <svg class="accordion-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+              </svg>
+              <span class="accordion-title">Strategy &amp; Inner Authority</span>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-content">
+                <p>Your <span class="highlight">Strategy is to Wait to Respond</span>. This does not mean passive waiting — it means staying engaged with life while allowing things to come to you rather than initiating from the mind. When something in your environment triggers a Sacral response, that is your green light.</p>
+                <p>Your <span class="highlight">Inner Authority is Sacral</span>. When faced with a decision, your most reliable signal is the gut sound — the involuntary "uh-huh" (yes) or "uhn-uhn" (no) that arises before thought. Practice asking yourself yes/no questions out loud and listening for that pre-verbal response.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-index="2">
+            <button class="accordion-trigger" onclick="toggleAccordion(2)">
+              <svg class="accordion-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+              </svg>
+              <span class="accordion-title">Your Profile: 6/2</span>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-content">
+                <p>The <span class="highlight">6/2 Profile</span> is called the Role Model / Hermit. Your life moves in three phases. In the first (roughly until age 30), you experiment and collect experience — often through trial and error. In the second phase you retreat and integrate. In the third, you emerge as a living example for others.</p>
+                <p>The 2nd line brings a natural talent you may not fully see in yourself — others will often recognize and call you toward things you do effortlessly. Honor the need for solitude; it is not withdrawal, it is how you consolidate wisdom.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-index="3">
+            <button class="accordion-trigger" onclick="toggleAccordion(3)">
+              <svg class="accordion-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+              </svg>
+              <span class="accordion-title">Energy Centers — What Drives You</span>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-content">
+                <p>Your <span class="highlight">defined centers</span> are the areas of consistent, reliable energy in your life — Sacral (life force and work capacity), Root (pressure and drive), and Solar Plexus (emotional wave). These are your fixed frequencies that others feel and are drawn to.</p>
+                <p>Your <span class="highlight">undefined centers</span> — Head, Ajna, Throat, G-Center — are where you are open and amplifying. You take in and magnify the mental and identity energies around you. These are not weaknesses; they are where you gain wisdom about others and the world, but where you are also most susceptible to conditioning.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-index="4">
+            <button class="accordion-trigger" onclick="toggleAccordion(4)">
+              <svg class="accordion-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+              </svg>
+              <span class="accordion-title">Key Channels &amp; Themes</span>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-content">
+                <p>Your <span class="highlight">Channel of Power (21-45)</span> gives you natural authority and the ability to take control when needed — most potent when you are the one who owns or directs the work rather than serving another's agenda.</p>
+                <p>The <span class="highlight">Channel of Initiation (51-25)</span> brings a connection to shock and awakening. You often experience sudden turns that feel disruptive but are actually initiations into a larger unfolding. Your resilience in these moments is a gift to those watching.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-index="5">
+            <button class="accordion-trigger" onclick="toggleAccordion(5)">
+              <svg class="accordion-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+              </svg>
+              <span class="accordion-title">Shadow Work &amp; Growth Edge</span>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-content">
+                <p>The primary shadow for Generators is <span class="highlight">frustration</span> — the signal that you are doing things your Sacral did not truly agree to. If frustration is a frequent visitor, audit your commitments. Which ones arose from genuine response, and which from pressure, expectation, or wanting to be helpful?</p>
+                <p>Your growth edge is developing trust in the Sacral response even when it goes against logic or what others expect. The mind will always have reasons. Your practice is learning to let the gut lead when they conflict.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-index="6">
+            <button class="accordion-trigger" onclick="toggleAccordion(6)">
+              <svg class="accordion-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+              </svg>
+              <span class="accordion-title">Practical Guidance for Right Now</span>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-content">
+                <p>With Saturn Dasha active and your Sacral as authority, the current period rewards <span class="highlight">deliberate, sustained effort over bursts of initiative</span>. Saturn favors the builder who shows up consistently — which maps directly to your Generator nature.</p>
+                <p>This is an excellent period to consolidate rather than expand. Deepen one thing rather than starting several. Your Sacral will tell you which commitments have genuine juice — honour those with full energy, and begin releasing the ones that have gone quiet.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bottom-nav-btn active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+      </svg>
+      <span class="bottom-nav-label">Home</span>
+    </button>
+    <button class="bottom-nav-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14,2 14,8 20,8"/>
+      </svg>
+    </button>
+    <button class="bottom-nav-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </button>
+    <button class="bottom-nav-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/>
+        <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+      </svg>
+    </button>
+    <button class="bottom-nav-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </button>
+  </div>
+  <div class="home-indicator"><div class="home-bar"></div></div>
+</nav>
+
+<script>
+  // ─── STARFIELD ──────────────────────────────────────────────
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const stars = Array.from({ length: 220 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 1.2 + 0.2,
+    opacity: Math.random() * 0.6 + 0.1,
+    speed: Math.random() * 0.0004 + 0.0001,
+    phase: Math.random() * Math.PI * 2,
+  }));
+
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const flicker = s.opacity + Math.sin(t * s.speed * 1000 + s.phase) * 0.12;
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(232, 224, 208, ${Math.max(0, flicker)})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawStars);
+  }
+
+  requestAnimationFrame(drawStars);
+
+  // ─── ACCORDION ─────────────────────────────────────────────
+  function toggleAccordion(index) {
+    const items = document.querySelectorAll('.accordion-item');
+    items.forEach((item, i) => {
+      if (i === index) {
+        item.classList.toggle('open');
+      } else {
+        item.classList.remove('open');
+      }
+    });
+  }
+
+
+  const el = document.getElementById('today-date');
+  if (el) {
+    el.textContent = new Date().toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
+    });
+  }
+
+  // ─── STAR RATING ───────────────────────────────────────────
+  const stars2 = document.querySelectorAll('.star');
+  stars2.forEach((star, i) => {
+    star.addEventListener('click', () => {
+      stars2.forEach((s, j) => {
+        s.style.color = j <= i ? 'var(--gold)' : 'rgba(212,175,95,0.2)';
+      });
+    });
+    star.addEventListener('mouseenter', () => {
+      stars2.forEach((s, j) => {
+        s.style.color = j <= i ? 'var(--gold)' : 'rgba(212,175,95,0.2)';
+      });
+    });
+    star.addEventListener('mouseleave', () => {
+      stars2.forEach(s => {
+        if (!s.dataset.active) s.style.color = 'rgba(212,175,95,0.2)';
+      });
+    });
+  });
+
+  // ─── NAV ACTIVE ────────────────────────────────────────────
+  document.querySelectorAll('.nav-item, .bottom-nav-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const group = this.closest('.nav') || this.closest('.bottom-nav-inner');
+      if (group) {
+        group.querySelectorAll('.nav-item, .bottom-nav-btn').forEach(b => b.classList.remove('active'));
+      }
+      this.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

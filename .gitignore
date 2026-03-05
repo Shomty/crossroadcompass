@@ -1,0 +1,24 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/app/generated/prisma
+
+# Swiss Ephemeris data files (large binaries — run scripts/download-ephe.sh)
+/ephe/
+*.se1
+
+# SQLite local dev database
+prisma/dev.db
+prisma/dev.db-journal
+prisma/dev.db-shm
+prisma/dev.db-wal
+
+# Dev magic link
+.magic-link-dev
+
+# Next.js build output
+.next/
+
+# OS
+.DS_Store

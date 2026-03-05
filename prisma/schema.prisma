@@ -1,0 +1,289 @@
+// Crossroads Compass - Prisma Schema
+// Personal data is subject to GDPR. Deletion cascades from User. See copilot-instructions section 17.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// AUTH (Auth.js / NextAuth v5 required models)
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  birthProfile BirthProfile?
+  transits     Transit[]
+  dashas       Dasha[]
+  insights     Insight[]
+  bookings     ConsultationBooking[]
+  subscription Subscription?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// BIRTH PROFILE & CHART DATA
+// See copilot-instructions sections 16, 17, 18 for caching rules.
+// ---------------------------------------------------------------------------
+
+model BirthProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Birth data — changing any field bumps profileVersion
+  birthName      String
+  birthDate      DateTime
+  birthTimeKnown Boolean  @default(true)
+  birthHour      Int?     // 0-23; null when birthTimeKnown = false (OB-04)
+  birthMinute    Int?     // 0-59; null when birthTimeKnown = false (OB-04)
+  birthCity      String
+  birthCountry   String
+  latitude       Float
+  longitude      Float
+  timezone       String   // IANA timezone e.g. "Europe/Belgrade" — for display only; HD library uses UTC directly
+
+  // Versioning — bumped atomically on birth data change (sections 18, 19)
+  profileVersion Int @default(1)
+
+  // Gender — used in HD chart context and personalised report language
+  gender  String?  // "male" | "female" | "other" | null (prefer not to say)
+
+  // Human Design chart — local library (sections 16.2, 18.1)
+  // LICENSE PENDING: requires Swiss Ephemeris professional license before go-live
+  chartDataHumanDesign  Json?
+  hdProfileVersion    Int? // profileVersion at time of last HD calculation (18.1)
+  vedicProfileVersion Int? // profileVersion at time of last Vedic fetch (18.2)
+
+  // Typed HD columns for fast indexed querying
+  hdType             String?  // Generator | Manifesting Generator | Projector | Manifestor | Reflector
+  hdStrategy         String?
+  hdAuthority        String?  // Emotional | Sacral | Splenic | Ego | Self-Projected | Mental | Lunar
+  hdProfile          String?  // e.g. "1/3"
+  hdDefinition       String?  // Single | Split | Triple Split | Quadruple Split | None
+  hdIncarnationCross String?
+  hdDefinedCenters   String? // JSON-encoded string[] — SQLite has no native arrays
+  hdUndefinedCenters String? // JSON-encoded string[]
+  hdActiveChannels   String? // JSON-encoded Channel[]
+  hdActiveGates      String? // JSON-encoded number[]
+
+  // Vedic natal chart — external API (sections 16.1, 18.2)
+  // DECISION NEEDED: confirm typed columns once API response shape is confirmed with Milosh
+  chartDataVedic Json?
+
+  // Onboarding intake (OB-05)
+  intakeLifeSituation String?
+  intakePrimaryFocus  String?
+  intakeWantsClarity  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("birth_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// TRANSITS — section 18.3 — one row per user per calendar day
+// ---------------------------------------------------------------------------
+
+model Transit {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime // one row per user per calendar day — compare date portion only
+  data      Json
+  fetchedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("transits")
+}
+
+// ---------------------------------------------------------------------------
+// DASHAS — section 18.4 — fetched once; deleted when birth data changes
+// ---------------------------------------------------------------------------
+
+enum DashaLevel {
+  MAHADASHA
+  ANTARDASHA
+}
+
+model Dasha {
+  id         String     @id @default(cuid())
+  userId     String
+  startDate  DateTime
+  endDate    DateTime
+  planetName String
+  level      DashaLevel
+  fetchedAt  DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, startDate, endDate])
+  @@map("dashas")
+}
+
+// ---------------------------------------------------------------------------
+// INSIGHTS — DAILY / WEEKLY / MONTHLY generated content (sections 5.2, 6)
+// ---------------------------------------------------------------------------
+
+enum InsightType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  HD_TIP
+  INITIAL
+}
+
+model Insight {
+  id         String      @id @default(cuid())
+  userId     String
+  type       InsightType
+  // periodDate semantics:
+  //   DAILY   -> specific calendar day
+  //   WEEKLY  -> Monday of that week
+  //   MONTHLY -> 1st of that month
+  periodDate DateTime
+  content    String
+
+  generatedAt          DateTime  @default(now())
+  reviewedByConsultant Boolean   @default(false) // section 6.3 content review
+  reviewedAt           DateTime?
+  deliveredAt          DateTime?
+  accuracyRating       Int?      // 1-5, set via /api/insights/rate (email link or dashboard)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, periodDate])
+  @@index([userId, type, periodDate])
+  @@map("insights")
+}
+
+// ---------------------------------------------------------------------------
+// CONSULTATION BOOKINGS — section 5.4
+// ---------------------------------------------------------------------------
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum ConsultationTier {
+  SINGLE_90      // $150 — 90-min session
+  VIP_QUARTERLY  // $497 — quarterly package (CB-06)
+}
+
+model ConsultationBooking {
+  id                 String           @id @default(cuid())
+  userId             String
+  tier               ConsultationTier
+  status             BookingStatus    @default(PENDING)
+  scheduledAt        DateTime?
+  calendlyEventId    String?          // MVP = external link; future = embedded (CB-03)
+  stripePaymentId    String?
+  amountCents        Int
+  consultantNotes    String?          // CB-05 (Phase 2)
+  prepGuideEmailSent Boolean          @default(false) // CB-04 (Phase 2)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("consultation_bookings")
+}
+
+// ---------------------------------------------------------------------------
+// SUBSCRIPTIONS — AC-02 — Stripe-backed tiers FREE / CORE / VIP
+// ---------------------------------------------------------------------------
+
+enum SubscriptionTier {
+  FREE
+  CORE // $29/month
+  VIP  // $497/quarter
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  tier                 SubscriptionTier   @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
