@@ -26,6 +26,6 @@ export const STRIPE_PRICES = {
 } as const;
 
 export const TIER_LABELS = {
-  CORE: { name: "Core", price: "$29", interval: "/ month" },
+  CORE: { name: "Core", price: "$9.99", interval: "/ month" },
   VIP: { name: "VIP", price: "$149", interval: "/ quarter" },
 } as const;

@@ -67,7 +67,7 @@ export default async function SubscribePage() {
           {/* CORE */}
           <PlanCard
             name="Core"
-            price="$29"
+            price="$9.99"
             interval="/ month"
             features={["Everything in Free", "Weekly personalised forecast", "Monthly cosmic map", "Dasha AI insights"]}
             highlight
