@@ -13,7 +13,9 @@
  */
 
 // LICENSE PENDING
-import { HumanDesignCalculator } from "openhumandesign-library";
+// Dynamic require keeps Turbopack/webpack from bundling this native module.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { HumanDesignCalculator } = require("openhumandesign-library") as typeof import("openhumandesign-library");
 import { env } from "@/lib/env";
 import type { BirthInfo, HDChartData } from "@/types";
 
