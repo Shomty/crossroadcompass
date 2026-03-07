@@ -13,9 +13,6 @@
  */
 
 // LICENSE PENDING
-// Dynamic require keeps Turbopack/webpack from bundling this native module.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { HumanDesignCalculator } = require("openhumandesign-library") as typeof import("openhumandesign-library");
 import { env } from "@/lib/env";
 import type { BirthInfo, HDChartData } from "@/types";
 
@@ -33,6 +30,10 @@ export class HDCalculationError extends Error {
  * Cache the result in KV; only recalculate when profileVersion changes (section 18.1).
  */
 export function calculateHDChart(birthInfo: BirthInfo): HDChartData {
+  // Require inside the function body — Turbopack only sees this at runtime,
+  // not at bundle time, so it won't try to resolve the native .node binary.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+  const { HumanDesignCalculator } = require("openhumandesign-library") as any;
   try {
     const chart = HumanDesignCalculator.calculateHumanDesignChart(birthInfo, {
       ephePath: env.EPHE_PATH,
