@@ -102,6 +102,7 @@ describe("PATCH /api/birth-profile", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "user1" } });
+    mockFindUnique.mockResolvedValue(null);
   });
 
   it("returns 401 when not authenticated", async () => {
@@ -115,7 +116,6 @@ describe("PATCH /api/birth-profile", () => {
   });
 
   it("returns 422 when birthHour/birthMinute missing with birthTimeKnown true", async () => {
-    mockFindUnique.mockResolvedValueOnce({ id: "bp1", userId: "user1" });
     const req = new NextRequest("http://localhost/api/birth-profile", {
       method: "PATCH",
       body: JSON.stringify({
