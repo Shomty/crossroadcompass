@@ -8,7 +8,7 @@
 
 import { z } from "zod";
 
-const envSchema = z.object({
+export const envSchema = z.object({
   // Vedic Astrology API (external — section 16.1). Optional until API access is restored.
   VEDIC_API_URL: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   VEDIC_API_KEY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
@@ -29,6 +29,9 @@ const envSchema = z.object({
   // Mock payment service is used while these are absent.
   STRIPE_SECRET_KEY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
   STRIPE_WEBHOOK_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
+  // Price IDs from Stripe dashboard (Products → Prices)
+  STRIPE_PRICE_CORE_MONTHLY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
+  STRIPE_PRICE_VIP_QUARTERLY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
 
   // Email via Resend — optional in dev (magic link URL printed to console)
   RESEND_API_KEY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
@@ -68,8 +71,27 @@ const envSchema = z.object({
     .default("development"),
 });
 
-const parsed = envSchema.safeParse(process.env);
+export type Env = z.infer<typeof envSchema>;
 
+/**
+ * Parse and validate environment. Use in tests with a mock env object.
+ * Throws if validation fails.
+ */
+export function parseEnv(envSource: NodeJS.ProcessEnv): Env {
+  const parsed = envSchema.safeParse(envSource);
+  if (!parsed.success) {
+    console.error(
+      "❌  Missing or invalid environment variables:\n",
+      parsed.error.flatten().fieldErrors
+    );
+    throw new Error(
+      "Invalid environment configuration — check your .env.local file."
+    );
+  }
+  return parsed.data;
+}
+
+const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
   console.error(
     "❌  Missing or invalid environment variables:\n",

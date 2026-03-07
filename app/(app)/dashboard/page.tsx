@@ -21,7 +21,7 @@ import { getThisWeeksForecast, getThisMonthsForecast, getWeekStart, getMonthStar
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ rated?: string }>;
+  searchParams: Promise<{ rated?: string; subscribed?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
@@ -138,6 +138,11 @@ export default async function DashboardPage({
           {params.rated && (
             <span style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em" }}>
               ✦ Rating saved
+            </span>
+          )}
+          {params.subscribed && (
+            <span style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em" }}>
+              ✦ Welcome to {tier} — your forecasts are now unlocked
             </span>
           )}
         </div>
