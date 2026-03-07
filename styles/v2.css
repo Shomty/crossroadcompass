@@ -1,0 +1,322 @@
+/*
+ * styles/v2.css
+ * Premium V2 design system — scoped to .v2 class on root element.
+ * Imports alongside globals.css in the v2 layout only.
+ * Does NOT override globals.css.
+ */
+
+/* ── Fonts ─────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&family=Instrument+Sans:wght@300;400;500&display=swap');
+
+/* ── V2 Design Tokens ──────────────────────────────────────────────────────── */
+.v2 {
+  /* Backgrounds — deeper, warmer */
+  --v2-void:       #010208;
+  --v2-deep:       #050810;
+  --v2-surface:    #09101f;
+  --v2-raised:     #0e1628;
+  --v2-overlay:    rgba(5, 8, 16, 0.88);
+
+  /* Borders */
+  --v2-border:     rgba(255, 255, 255, 0.055);
+  --v2-border-md:  rgba(255, 255, 255, 0.09);
+  --v2-border-lit: rgba(212, 175, 95, 0.22);
+  --v2-border-warm:rgba(212, 175, 95, 0.12);
+
+  /* Gold — warmer champagne */
+  --v2-gold:       #C9A84C;
+  --v2-gold-soft:  rgba(201, 168, 76, 0.14);
+  --v2-gold-glow:  rgba(201, 168, 76, 0.06);
+  --v2-amber:      #C9A84C;
+
+  /* Text */
+  --v2-moon:       #EDE6D3;
+  --v2-bone:       #D8D0BC;
+  --v2-muted:      rgba(232, 224, 208, 0.42);
+  --v2-faint:      rgba(232, 224, 208, 0.2);
+  --v2-whisper:    rgba(232, 224, 208, 0.11);
+
+  /* Accent depths */
+  --v2-indigo:     rgba(72, 82, 180, 0.15);
+  --v2-violet:     rgba(110, 80, 200, 0.12);
+  --v2-iris:       rgba(90, 100, 220, 0.08);
+}
+
+/* ── Base overrides inside .v2 ─────────────────────────────────────────────── */
+.v2 body,
+.v2 {
+  background: var(--v2-void);
+  font-family: 'Instrument Sans', sans-serif;
+  color: var(--v2-moon);
+  -webkit-font-smoothing: antialiased;
+}
+
+.v2 h1, .v2 h2, .v2 h3 {
+  font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+  color: var(--v2-moon);
+  font-weight: 400;
+}
+
+/* ── V2 Background ──────────────────────────────────────────────────────────── */
+.v2-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 10% -5%, rgba(55, 40, 140, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 92% 100%, rgba(40, 60, 160, 0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 40% at 50% 110%, rgba(201, 168, 76, 0.06) 0%, transparent 55%),
+    #010208;
+  pointer-events: none;
+}
+
+/* Limbal ring — warm amber glow around screen edge */
+.v2-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 55%, rgba(201, 168, 76, 0.025) 100%);
+  pointer-events: none;
+}
+
+/* ── V2 Nebula clouds ───────────────────────────────────────────────────────── */
+.v2-nebula {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+.v2-nebula-1 {
+  width: 700px; height: 500px;
+  background: radial-gradient(ellipse, rgba(80, 55, 180, 0.1) 0%, transparent 70%);
+  top: -120px; left: -180px;
+  animation: v2drift1 28s ease-in-out infinite;
+}
+.v2-nebula-2 {
+  width: 500px; height: 600px;
+  background: radial-gradient(ellipse, rgba(201, 168, 76, 0.055) 0%, transparent 70%);
+  top: 35%; right: -120px;
+  animation: v2drift2 35s ease-in-out infinite;
+}
+.v2-nebula-3 {
+  width: 450px; height: 450px;
+  background: radial-gradient(ellipse, rgba(50, 80, 200, 0.07) 0%, transparent 70%);
+  bottom: 5%; left: 25%;
+  animation: v2drift3 40s ease-in-out infinite;
+}
+@keyframes v2drift1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, 35px) scale(1.06); }
+}
+@keyframes v2drift2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, 50px) scale(0.94); }
+}
+@keyframes v2drift3 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -40px); }
+}
+
+/* ── V2 Glass Card ──────────────────────────────────────────────────────────── */
+.v2-card {
+  background: linear-gradient(
+    160deg,
+    rgba(14, 22, 44, 0.82) 0%,
+    rgba(9, 16, 31, 0.78) 100%
+  );
+  border: 1px solid var(--v2-border);
+  border-radius: 20px;
+  padding: 28px;
+  backdrop-filter: blur(28px) saturate(1.1);
+  -webkit-backdrop-filter: blur(28px) saturate(1.1);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  animation: v2fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Warm inner top highlight */
+.v2-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 15%; right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.18) 40%, rgba(201, 168, 76, 0.18) 60%, transparent);
+  pointer-events: none;
+}
+
+/* Subtle inner side glows */
+.v2-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 60% 30% at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.v2-card:hover {
+  border-color: var(--v2-border-md);
+  box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.04), 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Staggered fade-in */
+.v2-card:nth-child(1) { animation-delay: 0.05s; }
+.v2-card:nth-child(2) { animation-delay: 0.12s; }
+.v2-card:nth-child(3) { animation-delay: 0.19s; }
+.v2-card:nth-child(4) { animation-delay: 0.26s; }
+.v2-card:nth-child(5) { animation-delay: 0.33s; }
+
+@keyframes v2fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── V2 Sidebar ─────────────────────────────────────────────────────────────── */
+.v2-sidebar {
+  display: none;
+  flex-direction: column;
+  width: 228px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(6, 9, 20, 0.96) 0%, rgba(4, 7, 16, 0.98) 100%);
+  border-right: 1px solid var(--v2-border);
+  padding: 32px 18px 28px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) { .v2-sidebar { display: flex; } }
+
+/* Active nav item — elegant left rule */
+.v2-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: var(--v2-faint);
+  text-decoration: none;
+  transition: color 0.2s, background 0.2s;
+  position: relative;
+  border: 1px solid transparent;
+}
+.v2-nav-item:hover {
+  color: var(--v2-bone);
+  background: rgba(255, 255, 255, 0.025);
+}
+.v2-nav-item.active {
+  color: var(--v2-gold);
+  background: var(--v2-gold-glow);
+  border-color: var(--v2-border-warm);
+}
+/* Left rule accent for active item */
+.v2-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 2px;
+  background: var(--v2-gold);
+  border-radius: 2px;
+}
+
+/* ── V2 Bottom Nav ──────────────────────────────────────────────────────────── */
+.v2-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, rgba(4, 6, 14, 0.92) 0%, rgba(2, 4, 10, 0.98) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--v2-border);
+  padding: 10px 0 max(6px, env(safe-area-inset-bottom));
+  z-index: 100;
+}
+@media (max-width: 1023px) { .v2-bottom-nav { display: block; } }
+
+/* ── V2 Grid ────────────────────────────────────────────────────────────────── */
+.v2-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 1023px) { .v2-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 639px) {
+  .v2-grid { grid-template-columns: 1fr !important; gap: 14px; }
+  .v2-grid > * { grid-column: 1 / -1 !important; }
+}
+
+/* ── V2 Ornament ────────────────────────────────────────────────────────────── */
+.v2-ornament {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(201, 168, 76, 0.25);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+}
+.v2-ornament::before,
+.v2-ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(201, 168, 76, 0.18), transparent);
+}
+
+/* ── V2 Eyebrow ─────────────────────────────────────────────────────────────── */
+.v2-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--v2-amber);
+  opacity: 0.65;
+}
+
+/* ── V2 Content area ────────────────────────────────────────────────────────── */
+.v2-content {
+  padding: 32px 36px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (max-width: 1023px) { .v2-content { padding-top: 82px; } }
+@media (max-width: 639px) { .v2-content { padding: 76px 16px 96px; } }
+
+/* ── Noise grain overlay ────────────────────────────────────────────────────── */
+.v2-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.022;
+  pointer-events: none;
+}
+
+/* ── Forms ──────────────────────────────────────────────────────────────────── */
+.v2 input, .v2 select, .v2 textarea {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--v2-border-warm);
+  border-radius: 4px;
+  color: var(--v2-moon);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 14px;
+  padding: 11px 14px;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+.v2 input:focus, .v2 select:focus, .v2 textarea:focus {
+  outline: none;
+  border-color: var(--v2-gold);
+}
+.v2 input::placeholder, .v2 textarea::placeholder {
+  color: var(--v2-faint);
+}
+
+/* ── Mobile header ──────────────────────────────────────────────────────────── */
+.v2-mobile-header { display: none; }
+@media (max-width: 1023px) { .v2-mobile-header { display: block; } }
