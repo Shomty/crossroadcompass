@@ -33,7 +33,7 @@ export function calculateHDChart(birthInfo: BirthInfo): HDChartData {
   // Require inside the function body — Turbopack only sees this at runtime,
   // not at bundle time, so it won't try to resolve the native .node binary.
   // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-  const { HumanDesignCalculator } = require("openhumandesign-library") as any;
+  const { HumanDesignCalculator } = require(/* webpackIgnore: true */ "openhumandesign-library") as any;
   try {
     const chart = HumanDesignCalculator.calculateHumanDesignChart(birthInfo, {
       ephePath: env.EPHE_PATH,
