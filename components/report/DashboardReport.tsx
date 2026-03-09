@@ -75,22 +75,6 @@ function AccordionItem({ section, index, isOpen, onToggle }: {
   );
 }
 
-function LoadingSkeleton() {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-      {[140, 56, 56, 56].map((h, i) => (
-        <div key={i} style={{
-          height: h,
-          borderRadius: 12,
-          background: "rgba(212,175,95,0.05)",
-          animation: "pulse 1.8s ease-in-out infinite",
-          animationDelay: `${i * 0.1}s`,
-        }} />
-      ))}
-    </div>
-  );
-}
-
 export function DashboardReport() {
   const router = useRouter();
   const [report, setReport] = useState<HDReport | null>(null);
@@ -116,6 +100,14 @@ export function DashboardReport() {
 
   useEffect(() => { loadReport(); }, [loadReport]);
 
+  // Auto-generate on mount when no report exists — user never needs to click manually
+  useEffect(() => {
+    if (!loading && !report && !generating && !error) {
+      void generate();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, report]);
+
   async function generate() {
     setGenerating(true);
     setError(null);
@@ -133,9 +125,7 @@ export function DashboardReport() {
     }
   }
 
-  if (loading) return <LoadingSkeleton />;
-
-  if (!report) {
+  if (loading || (!report && !error)) {
     return (
       <div style={{ textAlign: "center", padding: "2.5rem 1rem" }}>
         <div style={{
@@ -146,19 +136,22 @@ export function DashboardReport() {
           display: "flex", alignItems: "center", justifyContent: "center",
           margin: "0 auto 1.25rem",
         }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5">
-            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
-          </svg>
+          <RefreshCw size={20} color="var(--gold)" style={{ animation: "spin 1s linear infinite" }} />
         </div>
         <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "var(--moon)", marginBottom: 8 }}>
           Your Human Design Report
         </p>
-        <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, maxWidth: 340, margin: "0 auto 1.75rem" }}>
-          Generate a personalised report based on your birth data. Includes type, strategy, authority, profile, and more.
+        <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, maxWidth: 340, margin: "0 auto" }}>
+          {loading ? "Loading…" : "Preparing your personalised report…"}
         </p>
-        {error && (
-          <p style={{ fontSize: 12, color: "#f87171", marginBottom: "1rem" }}>{error}</p>
-        )}
+      </div>
+    );
+  }
+
+  if (!report && error) {
+    return (
+      <div style={{ textAlign: "center", padding: "2.5rem 1rem" }}>
+        <p style={{ fontSize: 12, color: "#f87171", marginBottom: "1rem" }}>{error}</p>
         <button
           onClick={generate}
           disabled={generating}
@@ -189,15 +182,14 @@ export function DashboardReport() {
                 <line x1="12" y1="8" x2="12" y2="16"/>
                 <line x1="8" y1="12" x2="16" y2="12"/>
               </svg>
-              Generate Report
+              Try Again
             </>
           )}
         </button>
       </div>
     );
   }
-
-  const genDate = new Date(report.generatedAt).toLocaleDateString("en-GB", {
+  const genDate = new Date(report!.generatedAt).toLocaleDateString("en-GB", {
     day: "numeric", month: "long", year: "numeric",
   });
 
@@ -232,7 +224,7 @@ export function DashboardReport() {
           color: "var(--moon)",
           marginBottom: 18,
         }}>
-          {report.summary}
+          {report!.summary}
         </p>
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -265,7 +257,7 @@ export function DashboardReport() {
 
       {/* Accordion sections */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {report.sections.map((section, i) => (
+        {report!.sections.map((section, i) => (
           <AccordionItem
             key={i}
             section={section}

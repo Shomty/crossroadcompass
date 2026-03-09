@@ -17,7 +17,7 @@ export default async function ReportPage() {
   const firstName = session.user?.name?.split(" ")[0] ?? "You";
 
   return (
-    <div className="dashboard-content">
+    <div className="v2-content">
 
       {/* ── Topbar ─────────────────────────────────────────────── */}
       <div

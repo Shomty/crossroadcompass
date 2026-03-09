@@ -125,7 +125,7 @@ export function DashaCard({
                   {mahaName} · Insight
                 </p>
                 {mahaProgress != null && (
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "var(--faint)", letterSpacing: "0.06em" }}>
+                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "var(--mist)", letterSpacing: "0.06em" }}>
                     {mahaProgress}% complete
                   </span>
                 )}
@@ -141,11 +141,11 @@ export function DashaCard({
               {/* Insight text */}
               <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 {loading ? (
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, fontStyle: "italic", color: "var(--mist)", opacity: 0.5, lineHeight: 1.7, animation: "dashaPulse 1.8s ease-in-out infinite" }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: "italic", color: "var(--cream)", opacity: 0.45, lineHeight: 1.8, animation: "dashaPulse 1.8s ease-in-out infinite" }}>
                     Reading the stars…
                   </p>
                 ) : insight ? (
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14.5, fontStyle: "italic", fontWeight: 300, color: "var(--moon)", lineHeight: 1.75 }}>
+                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: "italic", fontWeight: 300, color: "var(--cream)", lineHeight: 1.8 }}>
                     {insight}
                   </p>
                 ) : apiError ? (
@@ -161,7 +161,7 @@ export function DashaCard({
                     </button>
                   </div>
                 ) : (
-                  <p style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--mist)", opacity: 0.5, lineHeight: 1.65 }}>
+                  <p style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--mist)", lineHeight: 1.65 }}>
                     No Dasha data yet. Complete your birth profile to receive your planetary insight.
                   </p>
                 )}
@@ -170,7 +170,7 @@ export function DashaCard({
               {/* Days remaining */}
               {mahaRemainingDays != null && (
                 <div style={{ marginTop: 14, borderTop: "1px solid rgba(212,175,95,0.1)", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "var(--faint)", letterSpacing: "0.06em" }}>
+                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "var(--mist)", letterSpacing: "0.06em" }}>
                     {mahaRemainingDays.toLocaleString()} days remaining
                   </span>
                   <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.12em", color: "var(--amber)", opacity: 0.4, textTransform: "uppercase" }}>

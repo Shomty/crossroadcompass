@@ -126,6 +126,20 @@ export function ForecastCard({ initialWeekly, initialMonthly, isPaid, weekLabel,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-generate monthly forecast on first load if missing (runs in background, no tab switch)
+  useEffect(() => {
+    if (!initialMonthly && isPaid) {
+      void (async () => {
+        try {
+          const res = await fetch("/api/insights/generate/monthly", { method: "POST" });
+          const data = await res.json();
+          if (res.ok) setMonthly(data.forecast);
+        } catch { /* silent — monthly generates in background */ }
+      })();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function generate() {
     setLoading(true); setError(null);
     const url = tab === "weekly" ? "/api/insights/generate/weekly" : "/api/insights/generate/monthly";

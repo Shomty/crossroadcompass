@@ -1,17 +1,14 @@
 /**
  * app/(app)/layout.tsx
- * Shared shell for all authenticated app pages:
- * /dashboard, /report, /settings
- * Provides: starfield, nebulas, sidebar, bottom nav.
+ * Shared shell for all authenticated app pages.
+ * Uses V2 design system — TopNavV2, v2.css
  */
 
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { DashboardNav } from "@/components/layout/DashboardNav";
-import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
-import { DashboardBottomNav } from "@/components/dashboard/DashboardBottomNav";
-import { StarfieldCanvas } from "@/components/StarfieldCanvas";
+import { TopNavV2 } from "@/components/v2/TopNav";
+import "@/styles/v2.css";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -26,24 +23,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const userName = session.user?.name ?? session.user?.email?.split("@")[0] ?? "You";
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--void)" }}>
-      <StarfieldCanvas />
-      <div className="nebula nebula-1" />
-      <div className="nebula nebula-2" />
-      <div className="nebula nebula-3" />
+    <div className="v2" style={{ minHeight: "100vh" }}>
+      <div className="v2-bg" />
+      <div className="v2-nebula v2-nebula-1" />
+      <div className="v2-nebula v2-nebula-2" />
+      <div className="v2-nebula v2-nebula-3" />
+      <div className="v2-grain" />
 
-      <div style={{ position: "relative", zIndex: 1, display: "flex", minHeight: "100vh" }}>
-        <DashboardSidebar userName={userName} tier={tier} />
-
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <div className="dashboard-mobile-header">
-            <DashboardNav tier={tier} />
-          </div>
-          <main style={{ flex: 1, paddingBottom: "5rem" }}>
-            {children}
-          </main>
-          <DashboardBottomNav />
-        </div>
+      <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <TopNavV2 userName={userName} tier={tier} />
+        <main style={{ flex: 1 }}>
+          {children}
+        </main>
       </div>
     </div>
   );

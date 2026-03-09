@@ -123,13 +123,17 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Pre-calculate HD chart synchronously so the report endpoint has data ready.
+  // Pre-calculate both charts in the background so dashboard data is ready immediately.
   // Fire-and-forget — don't await so the 201 response is immediate.
   const userId = session.user.id;
-  void getChartService().then(({ getOrCreateHDChart }) =>
-    getOrCreateHDChart(userId, profile)
+  void getChartService().then(({ getOrCreateHDChart, getOrCreateVedicChart }) =>
+    Promise.all([
+      getOrCreateHDChart(userId, profile),
+      // Vedic chart populates the Dasha table — required for DashaCard to show Current Period
+      getOrCreateVedicChart(userId, profile),
+    ])
   ).catch((err) =>
-    console.error("[birth-profile] HD pre-calc failed:", err)
+    console.error("[birth-profile] chart pre-calc failed:", err)
   );
 
   return NextResponse.json({ profileId: profile.id }, { status: 201 });
@@ -194,8 +198,20 @@ export async function PATCH(req: NextRequest) {
   });
 
   // Invalidate KV cache keys (separate from DB tx — KV is not transactional)
-  const { invalidateChartCache } = await getChartService();
+  const { invalidateChartCache, getOrCreateHDChart, getOrCreateVedicChart } = await getChartService();
   await invalidateChartCache(userId);
+
+  // Re-fetch both charts in the background so dashboard data is ready immediately.
+  const updatedProfile = await db.birthProfile.findUnique({ where: { userId } });
+  if (updatedProfile) {
+    void Promise.all([
+      getOrCreateHDChart(userId, updatedProfile),
+      // Vedic chart re-populates the Dasha table after birth data change
+      getOrCreateVedicChart(userId, updatedProfile),
+    ]).catch((err) =>
+      console.error("[birth-profile] chart re-calc failed:", err)
+    );
+  }
 
   // AC-04: notify user that past insights were based on prior birth data
   return NextResponse.json({
