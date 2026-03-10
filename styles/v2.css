@@ -79,6 +79,27 @@
   pointer-events: none;
 }
 
+/* Liquid Ether — slow-drifting orbs layered above the static bg */
+.v2-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 18% 28%, rgba(90, 55, 185, 0.10) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 55% at 82% 72%, rgba(185, 95, 35, 0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 38% 38% at 58% 8%,  rgba(35, 75, 190, 0.07) 0%, transparent 65%);
+  animation: liquidEther 28s ease-in-out infinite alternate;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+@keyframes liquidEther {
+  0%   { opacity: 1;    transform: scale(1)    translate(0, 0); }
+  33%  { opacity: 0.80; transform: scale(1.05) translate(-1.2%, 2%); }
+  66%  { opacity: 1;    transform: scale(0.96) translate(2%, -1.2%); }
+  100% { opacity: 0.88; transform: scale(1.03) translate(-0.5%, 0.8%); }
+}
+
 /* ── V2 Nebula clouds ───────────────────────────────────────────────────────── */
 .v2-nebula {
   position: fixed;

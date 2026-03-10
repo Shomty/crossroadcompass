@@ -24,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="v2" style={{ minHeight: "100vh" }}>
+      <div className="v2-bg" />
       <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <TopNavV2 userName={userName} tier={tier} />
         <main style={{ flex: 1 }}>
