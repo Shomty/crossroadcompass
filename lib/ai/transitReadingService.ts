@@ -119,13 +119,17 @@ export async function generateTransitReading(
   const cached = await kvGet<TransitReading>(cacheKey);
   if (cached) return cached;
 
-  const model = gemini().getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = gemini().getGenerativeModel({
+    model: "gemini-2.5-flash",
+    generationConfig: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 2000 },
+  });
   const prompt = buildTransitPrompt(natal, transit, dashaLord, userName, today);
 
   const result = await model.generateContent(prompt);
   const raw = result.response.text();
   if (!raw) throw new Error("Gemini returned empty transit reading");
 
+  // Strip markdown fences as a safety net even with responseMimeType set
   const clean = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
   const parsed = JSON.parse(clean) as Omit<TransitReading, "generatedAt">;
   const reading: TransitReading = { ...parsed, generatedAt: new Date().toISOString() };

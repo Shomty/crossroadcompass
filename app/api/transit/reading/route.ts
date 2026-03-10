@@ -58,6 +58,7 @@ export async function GET() {
   // Fetch today's transit chart (KV-cached per day)
   const transitChart = await getTodayTransitChart(userId, profile);
   if (!transitChart) {
+    console.error("[transit/reading] Transit chart unavailable for userId:", userId);
     return NextResponse.json(
       { error: "Transit chart unavailable. Please try again later." },
       { status: 503 }
@@ -84,7 +85,7 @@ export async function GET() {
     );
     return NextResponse.json({ reading, source: "generated" });
   } catch (err) {
-    console.error("[transit/reading] Gemini error:", err);
+    console.error("[transit/reading] Gemini error:", err instanceof Error ? err.message : err);
     return NextResponse.json(
       { error: "Could not generate transit reading. Please try again." },
       { status: 502 }
