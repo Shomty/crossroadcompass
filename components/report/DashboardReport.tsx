@@ -33,7 +33,7 @@ function AccordionItem({ section, index, isOpen, onToggle }: {
   return (
     <div className={`accordion-item-v2${isOpen ? " open" : ""}`}>
       <button className="accordion-trigger-v2" onClick={onToggle}>
-        <span style={{ color: isOpen ? "var(--gold)" : "var(--faint)", flexShrink: 0, transition: "color 0.25s" }}>
+        <span style={{ color: isOpen ? "var(--gold)" : "var(--mist)", flexShrink: 0, transition: "color 0.25s" }}>
           {GEM_ICON}
         </span>
         <span style={{
@@ -41,7 +41,7 @@ function AccordionItem({ section, index, isOpen, onToggle }: {
           fontFamily: "'Instrument Sans', sans-serif",
           fontSize: 13.5,
           fontWeight: 400,
-          color: isOpen ? "var(--moon)" : "var(--muted)",
+          color: isOpen ? "var(--cream)" : "var(--mist)",
           letterSpacing: "0.01em",
           transition: "color 0.25s",
         }}>
@@ -50,7 +50,7 @@ function AccordionItem({ section, index, isOpen, onToggle }: {
         <ChevronDown
           size={14}
           style={{
-            color: isOpen ? "var(--gold)" : "var(--faint)",
+            color: isOpen ? "var(--gold)" : "var(--mist)",
             transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
             transition: "transform 0.3s, color 0.25s",
             flexShrink: 0,
@@ -63,7 +63,7 @@ function AccordionItem({ section, index, isOpen, onToggle }: {
             <p key={i} style={{
               fontSize: 13,
               lineHeight: 1.7,
-              color: "var(--muted)",
+              color: "var(--mist)",
               marginTop: i > 0 ? 10 : 0,
             }}>
               {p}
@@ -138,10 +138,10 @@ export function DashboardReport() {
         }}>
           <RefreshCw size={20} color="var(--gold)" style={{ animation: "spin 1s linear infinite" }} />
         </div>
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "var(--moon)", marginBottom: 8 }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "var(--cream)", marginBottom: 8 }}>
           Your Human Design Report
         </p>
-        <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, maxWidth: 340, margin: "0 auto" }}>
+        <p style={{ fontSize: 13, color: "var(--mist)", lineHeight: 1.6, maxWidth: 340, margin: "0 auto" }}>
           {loading ? "Loading…" : "Preparing your personalised report…"}
         </p>
       </div>
@@ -165,7 +165,7 @@ export function DashboardReport() {
             fontSize: 13,
             fontWeight: 500,
             letterSpacing: "0.04em",
-            color: generating ? "var(--faint)" : "var(--gold)",
+            color: generating ? "var(--mist)" : "var(--gold)",
             cursor: generating ? "not-allowed" : "pointer",
             transition: "all 0.2s",
           }}
@@ -221,7 +221,7 @@ export function DashboardReport() {
           fontSize: 15.5,
           fontWeight: 400,
           lineHeight: 1.75,
-          color: "var(--moon)",
+          color: "var(--cream)",
           marginBottom: 18,
         }}>
           {report!.summary}
@@ -231,7 +231,7 @@ export function DashboardReport() {
           paddingTop: 14,
           borderTop: "1px solid var(--border)",
         }}>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9.5, letterSpacing: "0.08em", color: "var(--faint)" }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9.5, letterSpacing: "0.08em", color: "var(--mist)" }}>
             Generated {genDate}
           </span>
           <button
@@ -242,12 +242,12 @@ export function DashboardReport() {
               background: "none", border: "none",
               fontFamily: "'DM Mono', monospace", fontSize: 9.5,
               letterSpacing: "0.1em", textTransform: "uppercase" as const,
-              color: generating ? "var(--faint)" : "var(--faint)",
+              color: generating ? "var(--mist)" : "var(--mist)",
               cursor: generating ? "not-allowed" : "pointer",
               transition: "color 0.2s",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--faint)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--mist)")}
           >
             <RefreshCw size={12} style={generating ? { animation: "spin 1s linear infinite" } : {}} />
             Regenerate

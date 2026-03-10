@@ -67,7 +67,7 @@ export function LifePhaseIndicator({ compact }: { compact?: boolean }) {
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             {["Type", "Strategy", "Authority"].map((label) => (
-              <span key={label} style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--faint)" }}>
+              <span key={label} style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--mist)" }}>
                 {label}
               </span>
             ))}
@@ -83,7 +83,7 @@ export function LifePhaseIndicator({ compact }: { compact?: boolean }) {
           <p style={{ fontSize: 12.5, fontWeight: 500, color: "var(--gold)", marginBottom: 4, letterSpacing: "0.01em" }}>
             {data.type}
           </p>
-          <p style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12, color: "var(--mist)", lineHeight: 1.5 }}>
             {data.strategy} · {data.authority}
             {data.profile && ` · Profile ${data.profile}`}
           </p>

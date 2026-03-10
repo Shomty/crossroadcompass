@@ -27,7 +27,7 @@ const labelStyle: React.CSSProperties = {
   fontSize: 9,
   letterSpacing: "0.16em",
   textTransform: "uppercase",
-  color: "var(--faint)",
+  color: "var(--mist)",
   marginBottom: 12,
 };
 
@@ -36,7 +36,7 @@ const bodyStyle: React.CSSProperties = {
   fontSize: 15,
   fontWeight: 400,
   lineHeight: 1.7,
-  color: "var(--moon)",
+  color: "var(--cream)",
 };
 
 const actionStyle: React.CSSProperties = {

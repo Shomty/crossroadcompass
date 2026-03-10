@@ -30,7 +30,7 @@ export default async function ReportPage() {
             fontSize: 10,
             letterSpacing: "0.18em",
             textTransform: "uppercase" as const,
-            color: "var(--faint)",
+            color: "var(--mist)",
             marginBottom: 6,
           }}>
             Human Design
@@ -40,7 +40,7 @@ export default async function ReportPage() {
             fontSize: "clamp(22px, 3vw, 30px)",
             fontWeight: 400,
             letterSpacing: "0.01em",
-            color: "var(--moon)",
+            color: "var(--cream)",
             lineHeight: 1.1,
             margin: 0,
           }}>
@@ -60,7 +60,7 @@ export default async function ReportPage() {
               fontSize: 12.5,
               fontWeight: 500,
               letterSpacing: "0.04em",
-              color: "var(--muted)",
+              color: "var(--mist)",
               textDecoration: "none",
               whiteSpace: "nowrap",
             }}

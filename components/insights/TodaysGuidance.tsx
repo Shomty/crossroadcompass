@@ -47,7 +47,7 @@ const quoteText: React.CSSProperties = {
   fontFamily: "'Cormorant Garamond', serif",
   fontSize: "clamp(19px, 2.2vw, 26px)",
   fontWeight: 300, fontStyle: "italic",
-  lineHeight: 1.6, color: "var(--moon)",
+  lineHeight: 1.6, color: "var(--cream)",
   marginBottom: 16,
 };
 
@@ -74,7 +74,7 @@ const ratingRow: React.CSSProperties = {
 const ratingLabel: React.CSSProperties = {
   fontFamily: "'DM Mono', monospace",
   fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase",
-  color: "var(--faint)",
+  color: "var(--mist)",
 };
 
 // ─── Star rating ──────────────────────────────────────────────────────────────
