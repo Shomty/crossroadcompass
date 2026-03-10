@@ -36,12 +36,24 @@ export interface TransitPlanetLine {
   note: string;
 }
 
+export interface RawTransitPlanet {
+  name: string;
+  sign: string;
+  house: number | null;
+  degree: number;
+  degreeFmt: string;
+  nakshatra: string;
+  isRetrograde: boolean;
+}
+
 export interface TransitReading {
   headline: string;
   overview: string;
   keyTransits: TransitPlanetLine[];
   guidance: string;
   generatedAt: string;
+  location: string;
+  allPlanets: RawTransitPlanet[];
 }
 
 function formatPlanets(planets: VedicPlanet[] | undefined): string {
@@ -109,7 +121,8 @@ export async function generateTransitReading(
   natal: VedicChart,
   transit: VedicChart,
   dashaLord: string | null,
-  userName: string
+  userName: string,
+  location: string
 ): Promise<TransitReading> {
   const today = new Intl.DateTimeFormat("en-CA", {
     year: "numeric", month: "2-digit", day: "2-digit",
@@ -118,6 +131,17 @@ export async function generateTransitReading(
   const cacheKey = transitReadingKey(userId, today);
   const cached = await kvGet<TransitReading>(cacheKey);
   if (cached) return cached;
+
+  // Build all-planets snapshot from raw transit chart
+  const allPlanets: RawTransitPlanet[] = (transit.planets ?? []).map((p) => ({
+    name: p.name,
+    sign: p.sign ?? "?",
+    house: p.house ?? null,
+    degree: p.degree ?? 0,
+    degreeFmt: p.degreeDMSFormatted ?? "",
+    nakshatra: p.nakshatra ?? "",
+    isRetrograde: p.isRetrograde ?? false,
+  }));
 
   const prompt = buildTransitPrompt(natal, transit, dashaLord, userName, today);
 
@@ -131,8 +155,8 @@ export async function generateTransitReading(
 
   // Strip markdown fences as a safety net even with responseMimeType set
   const clean = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
-  const parsed = JSON.parse(clean) as Omit<TransitReading, "generatedAt">;
-  const reading: TransitReading = { ...parsed, generatedAt: new Date().toISOString() };
+  const parsed = JSON.parse(clean) as Omit<TransitReading, "generatedAt" | "location" | "allPlanets">;
+  const reading: TransitReading = { ...parsed, generatedAt: new Date().toISOString(), location, allPlanets };
 
   // Cache for the rest of the day
   await kvSet(cacheKey, reading, KV_TTL.TRANSIT_SECONDS);

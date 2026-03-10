@@ -75,13 +75,15 @@ export async function GET() {
 
   // Generate AI reading
   const userName = session.user.name ?? session.user.email?.split("@")[0] ?? "the native";
+  const location = [profile.birthCity, profile.birthCountry].filter(Boolean).join(", ") || "Unknown location";
   try {
     const reading = await generateTransitReading(
       userId,
       natalChart,
       transitChart,
       dashaLord,
-      userName
+      userName,
+      location
     );
     return NextResponse.json({ reading, source: "generated" });
   } catch (err) {

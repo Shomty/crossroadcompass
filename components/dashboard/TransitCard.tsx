@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from "react";
-import type { TransitReading, TransitPlanetLine } from "@/lib/ai/transitReadingService";
+import type { TransitReading, TransitPlanetLine, RawTransitPlanet } from "@/lib/ai/transitReadingService";
 
 const PLANET_GLYPHS: Record<string, string> = {
   sun: "☉", moon: "☽", mars: "♂", mercury: "☿", jupiter: "♃",
@@ -101,6 +101,12 @@ export function TransitCard() {
           <h3 style={{ ...serif, fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 300, color: "var(--cream)", lineHeight: 1.15, margin: 0 }}>
             {reading.headline}
           </h3>
+          {/* Location tag */}
+          {reading.location && (
+            <p style={{ ...mono, fontSize: 8, color: "var(--mist)", marginTop: 5, letterSpacing: "0.1em" }}>
+              ◎ {reading.location}
+            </p>
+          )}
         </div>
         <span style={{ ...mono, fontSize: 8.5, color: "var(--mist)", letterSpacing: "0.08em", marginTop: 4, flexShrink: 0 }}>{today}</span>
       </div>
@@ -113,7 +119,7 @@ export function TransitCard() {
       {/* Divider */}
       <div style={{ height: 1, background: "rgba(200,135,58,0.1)", marginBottom: 20 }} />
 
-      {/* Key Transits */}
+      {/* Key Transits — AI analysis */}
       <p style={{ ...mono, fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 12 }}>
         Key Planetary Movements
       </p>
@@ -183,6 +189,51 @@ export function TransitCard() {
         </p>
       </div>
 
+      {/* All Planetary Positions */}
+      {reading.allPlanets?.length > 0 && (
+        <>
+          <div style={{ height: 1, background: "rgba(200,135,58,0.1)", margin: "24px 0 18px" }} />
+          <p style={{ ...mono, fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 14 }}>
+            All Planetary Positions
+          </p>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", ...mono, fontSize: 11 }}>
+              <thead>
+                <tr>
+                  {["Planet", "Sign", "House", "Degree", "Nakshatra", ""].map((h) => (
+                    <th key={h} style={{ textAlign: "left", padding: "4px 10px 8px 0", fontSize: 7.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", fontWeight: 400, borderBottom: "1px solid rgba(200,135,58,0.12)" }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {reading.allPlanets.map((p: RawTransitPlanet, i: number) => {
+                  const glyph = PLANET_GLYPHS[p.name.toLowerCase()] ?? "·";
+                  return (
+                    <tr key={i} style={{ borderBottom: "1px solid rgba(200,135,58,0.04)" }}>
+                      <td style={{ padding: "7px 10px 7px 0", color: "var(--cream)" }}>
+                        <span style={{ ...serif, fontSize: 14, marginRight: 6 }}>{glyph}</span>
+                        <span style={{ ...sans, fontSize: 12, textTransform: "capitalize" }}>{p.name}</span>
+                      </td>
+                      <td style={{ padding: "7px 10px 7px 0", color: "var(--cream)", ...sans, fontSize: 12, textTransform: "capitalize" }}>{p.sign}</td>
+                      <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: 11 }}>{p.house ?? "—"}</td>
+                      <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: 11 }}>{p.degreeFmt || `${p.degree?.toFixed(1)}°`}</td>
+                      <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: 10, textTransform: "capitalize" }}>
+                        {p.nakshatra?.replace(/_/g, " ") ?? "—"}
+                      </td>
+                      <td style={{ padding: "7px 0 7px 0", color: "rgba(220,120,60,0.7)", fontSize: 9 }}>
+                        {p.isRetrograde ? "℞" : ""}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
       {/* Footer */}
       <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
         <button
@@ -195,3 +246,4 @@ export function TransitCard() {
     </div>
   );
 }
+
