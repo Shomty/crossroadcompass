@@ -44,8 +44,8 @@ export function TopNavV2({ userName, tier }: Props) {
             <line x1="18" y1="12" x2="22" y2="12"/>
           </svg>
         </div>
-        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontWeight: 400, color: "var(--cream)", letterSpacing: "0.01em", display: "none" }} className="v2-topnav-wordmark">
-          Crossroads Compass
+        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontWeight: 600, color: "var(--gold)", letterSpacing: "0.18em", textTransform: "uppercase", display: "none" }} className="v2-topnav-wordmark">
+          Crossroads<span style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "var(--amber)", verticalAlign: "middle", margin: "0 0.4em 1px" }} />Compass
         </span>
       </Link>
 

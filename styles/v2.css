@@ -45,15 +45,15 @@
 /* ── Base overrides inside .v2 ─────────────────────────────────────────────── */
 .v2 body,
 .v2 {
-  background: var(--v2-void);
+  background: var(--cosmos);
   font-family: 'Instrument Sans', sans-serif;
-  color: var(--v2-moon);
+  color: var(--cream);
   -webkit-font-smoothing: antialiased;
 }
 
 .v2 h1, .v2 h2, .v2 h3 {
-  font-family: 'Playfair Display', 'Cormorant Garamond', serif;
-  color: var(--v2-moon);
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--cream);
   font-weight: 400;
 }
 
@@ -305,10 +305,10 @@
   align-items: center;
   gap: 16px;
   padding: 0 24px;
-  background: rgba(2, 4, 10, 0.88);
+  background: linear-gradient(to bottom, rgba(13, 18, 32, 0.95), rgba(13, 18, 32, 0.7));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--v2-border);
+  border-bottom: 1px solid rgba(200, 135, 58, 0.10);
   z-index: 100;
 }
 
@@ -331,24 +331,25 @@
   align-items: center;
   gap: 7px;
   padding: 7px 13px;
-  border-radius: 8px;
+  border-radius: 2px;
   font-family: 'Instrument Sans', sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.01em;
-  color: var(--v2-faint);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist);
   text-decoration: none;
   transition: color 0.2s, background 0.2s;
   border: 1px solid transparent;
   white-space: nowrap;
 }
 .v2-topnav-item:hover {
-  color: var(--v2-bone);
-  background: rgba(255, 255, 255, 0.03);
+  color: var(--gold);
+  background: rgba(200, 135, 58, 0.04);
 }
 .v2-topnav-item.active {
-  color: var(--v2-gold);
-  background: var(--v2-gold-glow);
-  border-color: var(--v2-border-warm);
+  color: var(--gold);
+  background: rgba(200, 135, 58, 0.05);
+  border-color: rgba(200, 135, 58, 0.12);
 }
 @media (max-width: 480px) {
   .v2-topnav-item span, .v2-topnav-item { font-size: 0; gap: 0; padding: 8px 10px; }

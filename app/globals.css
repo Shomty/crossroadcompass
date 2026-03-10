@@ -47,8 +47,8 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: var(--void);
-  color: var(--moon);
+  background: var(--cosmos);
+  color: var(--cream);
   font-family: 'Instrument Sans', sans-serif;
   font-size: 1rem;
   line-height: 1.75;
