@@ -97,7 +97,7 @@ export default async function DashboardPage({
           <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 8 }}>
             Personal Navigation
           </div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(26px, 3.2vw, 38px)", fontWeight: 400, letterSpacing: "0.005em", color: "var(--cream)", lineHeight: 1.1, margin: 0 }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(26px, 3.2vw, 38px)", fontWeight: 400, letterSpacing: "0.005em", color: "var(--cream)", lineHeight: 1.1, margin: 0, animation: "fadeUp 0.8s 0.2s forwards", opacity: 0 }}>
             Good {timeOfDay},{" "}
             <em style={{ fontStyle: "italic", color: "var(--gold)" }}>{firstName}</em>
           </h1>
@@ -111,8 +111,8 @@ export default async function DashboardPage({
           <Link href="/settings" style={{ width: 38, height: 38, borderRadius: 3, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(200, 135, 58, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mist)", textDecoration: "none" }} title="Settings">
             <Settings size={16} />
           </Link>
-          <Link href="/report" style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", background: "rgba(200, 135, 58, 0.05)", border: "1px solid var(--amber)", borderRadius: 2, fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--amber)", textDecoration: "none", whiteSpace: "nowrap" }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <Link href="/report" className="full-chart-btn" style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", background: "rgba(200, 135, 58, 0.05)", border: "1px solid var(--amber)", borderRadius: 2, fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--amber)", textDecoration: "none", whiteSpace: "nowrap", transition: "background 0.2s, color 0.2s" }}>
+            <svg className="full-chart-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ transition: "transform 0.2s" }}>
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14,2 14,8 20,8"/>
             </svg>
@@ -123,7 +123,7 @@ export default async function DashboardPage({
 
       <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: 32, opacity: 0.35 }}>
         <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, transparent, var(--amber), transparent)" }} />
-        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", color: "var(--amber)" }}>✦</span>
+        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", color: "var(--amber)", animation: "pulseDot 2s ease-in-out infinite" }}>✦</span>
         <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, transparent, var(--amber), transparent)" }} />
       </div>
 

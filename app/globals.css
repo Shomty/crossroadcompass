@@ -47,7 +47,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: var(--cosmos);
+  background: radial-gradient(ellipse at top center, #1a1a2e 0%, #0d0d1a 70%);
   color: var(--cream);
   font-family: 'Instrument Sans', sans-serif;
   font-size: 1rem;

@@ -95,18 +95,35 @@ export function DashaCard({
           <div className="dasha-face" style={{ position: "absolute", inset: 0 }}>
             {/* Planet glyph bg */}
             {activeMaha && (
-              <div style={{ position: "absolute", top: 12, right: 16, opacity: 0.08, pointerEvents: "none", fontSize: 88, lineHeight: 1, fontFamily: "serif", color: planetColor, userSelect: "none" }}>
+              <div style={{ position: "absolute", top: 12, right: 16, opacity: 0.08, pointerEvents: "none", fontSize: 88, lineHeight: 1, fontFamily: "serif", color: planetColor, userSelect: "none", animation: "slowSpin 60s linear infinite", display: "inline-block" }}>
                 {planetGlyph}
               </div>
             )}
             <div style={{ position: "relative", zIndex: 1, height: "100%" }}>
               {frontContent}
               {activeMaha && (
-                <div style={{ position: "absolute", bottom: 0, right: 0, display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.12em", color: "var(--amber)", opacity: 0.45, textTransform: "uppercase" }}>
-                    tap for insight
-                  </span>
-                  <span style={{ fontSize: 9, color: "var(--amber)", opacity: 0.45 }}>↺</span>
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  {/* Mini SVG progress ring */}
+                  {mahaProgress != null && (() => {
+                    const r = 14, circ = 2 * Math.PI * r;
+                    const dash = (mahaProgress / 100) * circ;
+                    return (
+                      <svg width={36} height={36} viewBox="0 0 36 36" style={{ flexShrink: 0 }}>
+                        <circle cx={18} cy={18} r={r} fill="none" stroke="rgba(212,175,55,0.1)" strokeWidth={2} />
+                        <circle cx={18} cy={18} r={r} fill="none" stroke="rgba(212,175,55,0.55)" strokeWidth={2}
+                          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+                          transform="rotate(-90 18 18)" />
+                        <text x={18} y={22} textAnchor="middle" fontSize={7}
+                          fill="rgba(212,175,55,0.7)" fontFamily="'DM Mono',monospace">{mahaProgress}%</text>
+                      </svg>
+                    );
+                  })()}
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span className="tap-insight-pill" style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.12em", color: "var(--amber)", textTransform: "uppercase", padding: "3px 10px", borderRadius: 20, border: "1px solid rgba(200,135,58,0.25)", background: "rgba(200,135,58,0.04)" }}>
+                      tap for insight
+                    </span>
+                    <span style={{ fontSize: 9, color: "var(--amber)", opacity: 0.6 }}>↺</span>
+                  </div>
                 </div>
               )}
             </div>

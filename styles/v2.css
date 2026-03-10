@@ -45,7 +45,7 @@
 /* ── Base overrides inside .v2 ─────────────────────────────────────────────── */
 .v2 body,
 .v2 {
-  background: var(--cosmos);
+  background: radial-gradient(ellipse at top center, #1a1a2e 0%, #0d0d1a 70%);
   font-family: 'Instrument Sans', sans-serif;
   color: var(--cream);
   -webkit-font-smoothing: antialiased;
@@ -120,19 +120,15 @@
 
 /* ── V2 Glass Card ──────────────────────────────────────────────────────────── */
 .v2-card {
-  background: linear-gradient(
-    160deg,
-    rgba(14, 22, 44, 0.82) 0%,
-    rgba(9, 16, 31, 0.78) 100%
-  );
-  border: 1px solid rgba(200, 135, 58, 0.12);
-  border-radius: 3px;
-  padding: 28px;
-  backdrop-filter: blur(28px) saturate(1.1);
-  -webkit-backdrop-filter: blur(28px) saturate(1.1);
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 16px;
+  padding: 32px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
-  transition: border-color 0.4s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   animation: v2fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -157,7 +153,9 @@
 }
 
 .v2-card:hover {
-  border-color: rgba(200, 135, 58, 0.22);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+  transform: translateY(-2px);
 }
 
 /* Staggered fade-in */
@@ -219,7 +217,7 @@
 .v2-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  gap: 24px;
 }
 @media (max-width: 1023px) { .v2-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 639px) {
@@ -350,8 +348,51 @@
   color: var(--gold);
   background: rgba(200, 135, 58, 0.05);
   border-color: rgba(200, 135, 58, 0.12);
+  position: relative;
+}
+.v2-topnav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--amber);
 }
 @media (max-width: 480px) {
   .v2-topnav-item span, .v2-topnav-item { font-size: 0; gap: 0; padding: 8px 10px; }
   .v2-topnav-item svg { font-size: initial; }
+}
+
+/* ── Full Chart button hover ────────────────────────────────────────────────── */
+.full-chart-btn:hover {
+  background: var(--amber) !important;
+  color: var(--cosmos) !important;
+}
+.full-chart-btn:hover .full-chart-icon {
+  transform: scale(1.15) rotate(5deg);
+}
+
+/* ── Tap insight pill shimmer on hover ──────────────────────────────────────── */
+.tap-insight-pill {
+  transition: background 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.tap-insight-pill:hover {
+  background: rgba(200, 135, 58, 0.10) !important;
+  box-shadow: 0 0 8px rgba(200, 135, 58, 0.2);
+}
+
+/* ── Skeleton loading ───────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.6s ease-in-out infinite;
+  border-radius: 4px;
+}
+@keyframes skeletonPulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
