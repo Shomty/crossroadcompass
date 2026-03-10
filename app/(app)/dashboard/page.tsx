@@ -94,24 +94,24 @@ export default async function DashboardPage({
     <div className="v2-content">
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 36, gap: 20, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--v2-faint)", marginBottom: 8 }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 8 }}>
             Personal Navigation
           </div>
-          <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(26px, 3.2vw, 38px)", fontWeight: 400, letterSpacing: "0.005em", color: "var(--v2-moon)", lineHeight: 1.1, margin: 0 }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(26px, 3.2vw, 38px)", fontWeight: 400, letterSpacing: "0.005em", color: "var(--cream)", lineHeight: 1.1, margin: 0 }}>
             Good {timeOfDay},{" "}
-            <em style={{ fontStyle: "italic", color: "var(--v2-gold)" }}>{firstName}</em>
+            <em style={{ fontStyle: "italic", color: "var(--gold)" }}>{firstName}</em>
           </h1>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
           {(params.rated || params.subscribed) && (
-            <span style={{ fontSize: 11, color: "var(--v2-gold)", fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em" }}>
+            <span style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em" }}>
               {params.rated ? "✦ Rating saved" : `✦ Welcome to ${tier} — forecasts unlocked`}
             </span>
           )}
-          <Link href="/settings" style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid var(--v2-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--v2-faint)", textDecoration: "none" }} title="Settings">
+          <Link href="/settings" style={{ width: 38, height: 38, borderRadius: 3, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(200, 135, 58, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mist)", textDecoration: "none" }} title="Settings">
             <Settings size={16} />
           </Link>
-          <Link href="/report" style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", background: "var(--v2-gold-glow)", border: "1px solid var(--v2-border-lit)", borderRadius: 8, fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, fontWeight: 500, letterSpacing: "0.04em", color: "var(--v2-gold)", textDecoration: "none", whiteSpace: "nowrap" }}>
+          <Link href="/report" style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", background: "rgba(200, 135, 58, 0.05)", border: "1px solid var(--amber)", borderRadius: 2, fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--amber)", textDecoration: "none", whiteSpace: "nowrap" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14,2 14,8 20,8"/>
@@ -121,7 +121,11 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <div className="v2-ornament" style={{ marginBottom: 28 }}>✦</div>
+      <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: 32, opacity: 0.35 }}>
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, transparent, var(--amber), transparent)" }} />
+        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", color: "var(--amber)" }}>✦</span>
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, transparent, var(--amber), transparent)" }} />
+      </div>
 
       <div className="v2-grid">
 
@@ -134,7 +138,7 @@ export default async function DashboardPage({
               mahaRemainingDays={mahaRemainingDays}
               mahaProgress={mahaProgress}
               planetGlyph={activeMaha ? (PLANET_GLYPH[activeMaha.planetName.toLowerCase()] ?? "★") : "★"}
-              planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--v2-gold)") : "var(--v2-gold)"}
+              planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--gold)") : "var(--gold)"}
               frontContent={
                 <div>
                   <p style={dashaLabel}>Current Period</p>
@@ -147,28 +151,28 @@ export default async function DashboardPage({
                             {activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1)}
                           </div>
                           <div style={dashaType}>Mahadasha</div>
-                          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--v2-gold)", opacity: 0.7, marginTop: 4 }}>
+                          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--gold)", opacity: 0.7, marginTop: 4 }}>
                             {getDashaTheme(activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1))}
                           </div>
                         </div>
                       </div>
                       <div style={{ marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--v2-faint)", letterSpacing: "0.06em" }}>
+                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--mist)", letterSpacing: "0.06em" }}>
                           {fmtDate(activeMaha.startDate)} → {fmtDate(activeMaha.endDate)}
                         </span>
-                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--v2-gold)", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--gold)", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                           {mahaRemainingDays != null ? `${mahaRemainingDays.toLocaleString()} days left` : ""}
                         </span>
                       </div>
                       {mahaProgress != null && (
                         <div style={{ height: 2, background: "rgba(201,168,76,0.1)", borderRadius: 2, marginBottom: 14, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${mahaProgress}%`, background: "linear-gradient(90deg, rgba(201,168,76,0.5), var(--v2-gold))", borderRadius: 2, transition: "width 0.5s" }} />
+                          <div style={{ height: "100%", width: `${mahaProgress}%`, background: "linear-gradient(90deg, rgba(201,168,76,0.5), var(--gold))", borderRadius: 2, transition: "width 0.5s" }} />
                         </div>
                       )}
                       {activeAntar && (
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                           <PlanetOrb name={activeAntar.planetName} size={22} />
-                          <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, color: "var(--v2-gold)" }}>
+                          <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, color: "var(--gold)" }}>
                             Sub: {activeAntar.planetName.split("/")[1]?.charAt(0).toUpperCase()}
                             {activeAntar.planetName.split("/")[1]?.slice(1) ?? ""} Antardasha
                           </span>
@@ -176,7 +180,7 @@ export default async function DashboardPage({
                       )}
                       <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 9, marginTop: activeAntar ? 0 : 14 }}>
                         {getDashaGuidance(activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1)).map((item, i) => (
-                          <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12.5, color: "var(--v2-muted)", lineHeight: 1.55 }}>
+                          <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12.5, color: "var(--mist)", lineHeight: 1.55 }}>
                             <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(201,168,76,0.45)", flexShrink: 0, marginTop: 7 }} />
                             {item}
                           </li>
@@ -185,11 +189,11 @@ export default async function DashboardPage({
                     </>
                   ) : (
                     <>
-                      <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, opacity: 0.25, lineHeight: 1 }}>—</div>
-                      <p style={{ fontSize: 12.5, color: "var(--v2-muted)", marginTop: 10, lineHeight: 1.6 }}>
+                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, opacity: 0.25, lineHeight: 1 }}>—</div>
+                      <p style={{ fontSize: 12.5, color: "var(--mist)", marginTop: 10, lineHeight: 1.6 }}>
                         Complete your birth profile to see your active Dasha period.
                       </p>
-                      <Link href="/settings/profile" style={{ display: "inline-block", marginTop: "1rem", fontSize: 12, fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em", color: "var(--v2-gold)", textDecoration: "none" }}>
+                      <Link href="/settings/profile" style={{ display: "inline-block", marginTop: "1rem", fontSize: 12, fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em", color: "var(--gold)", textDecoration: "none" }}>
                         Set up profile →
                       </Link>
                     </>
@@ -236,7 +240,7 @@ export default async function DashboardPage({
 
         {/* 5. HD Report — full row */}
         <GlassCardV2 span="full" noPadding style={{ background: "transparent", border: "none", boxShadow: "none" }}>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--v2-faint)", marginBottom: 14 }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 14 }}>
             Human Design Report
           </div>
           <DashboardReport />
@@ -295,7 +299,7 @@ const PLANET_COLOR: Record<string, string> = {
 function PlanetOrb({ name, size }: { name: string; size: number }) {
   const key = name.toLowerCase().split("/")[0];
   const glyph = PLANET_GLYPH[key] ?? "?";
-  const color = PLANET_COLOR[key] ?? "var(--v2-gold)";
+  const color = PLANET_COLOR[key] ?? "var(--gold)";
   return (
     <div style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, background: `radial-gradient(circle at 38% 35%, ${color}18 0%, rgba(4,5,15,0.85) 70%)`, border: `${size >= 40 ? 1.5 : 1}px solid ${color}40`, boxShadow: `0 0 ${size * 0.25}px ${color}30, inset 0 0 ${size * 0.3}px ${color}10`, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <span style={{ fontSize: size * 0.48, color, lineHeight: 1, fontFamily: "serif", filter: `drop-shadow(0 0 ${size * 0.1}px ${color}80)`, userSelect: "none" }}>
@@ -308,16 +312,16 @@ function PlanetOrb({ name, size }: { name: string; size: number }) {
 // ─── Inline styles ────────────────────────────────────────────────────────────
 const dashaLabel: React.CSSProperties = {
   fontFamily: "'DM Mono', monospace",
-  fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase",
-  color: "var(--v2-faint)", marginBottom: 12,
+  fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase",
+  color: "var(--amber)", marginBottom: 12,
 };
 const dashaPlanet: React.CSSProperties = {
-  fontFamily: "'Playfair Display', serif",
+  fontFamily: "'Cormorant Garamond', serif",
   fontSize: 42, fontWeight: 400, lineHeight: 0.95,
-  color: "var(--v2-moon)", letterSpacing: "-0.01em",
+  color: "var(--cream)", letterSpacing: "-0.01em",
 };
 const dashaType: React.CSSProperties = {
-  fontFamily: "'Playfair Display', serif",
+  fontFamily: "'Cormorant Garamond', serif",
   fontSize: 22, fontWeight: 400, lineHeight: 1,
-  color: "rgba(232,224,208,0.45)", marginBottom: 12,
+  color: "var(--mist)", marginBottom: 12,
 };

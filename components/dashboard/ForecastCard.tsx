@@ -32,8 +32,8 @@ interface Props {
 
 const eyebrow: React.CSSProperties = {
   fontFamily: "'DM Mono', monospace", fontSize: 9,
-  letterSpacing: "0.22em", textTransform: "uppercase",
-  color: "var(--amber)", opacity: 0.7,
+  letterSpacing: "0.3em", textTransform: "uppercase",
+  color: "var(--amber)",
 };
 
 const headline: React.CSSProperties = {
@@ -64,8 +64,8 @@ const overview: React.CSSProperties = {
 
 const sectionTitle: React.CSSProperties = {
   fontFamily: "'DM Mono', monospace", fontSize: 9,
-  letterSpacing: "0.16em", textTransform: "uppercase",
-  color: "var(--amber)", opacity: 0.7, marginBottom: 4,
+  letterSpacing: "0.3em", textTransform: "uppercase",
+  color: "var(--amber)", marginBottom: 4,
 };
 
 const sectionBody: React.CSSProperties = {
@@ -247,7 +247,7 @@ function ForecastContent({ forecast, type }: { forecast: WeeklyForecast | Monthl
         </div>
       ))}
       <div style={divider} />
-      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.7, marginBottom: 6 }}>
+      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 6 }}>
         {practiceLabel}
       </div>
       <div style={practiceBox}>{practiceText}</div>

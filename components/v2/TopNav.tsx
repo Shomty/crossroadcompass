@@ -30,13 +30,12 @@ export function TopNavV2({ userName, tier }: Props) {
       {/* Logo */}
       <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}>
         <div style={{
-          width: 32, height: 32, borderRadius: 9,
-          border: "1px solid var(--v2-border-lit)",
-          background: "var(--v2-gold-glow)",
+          width: 32, height: 32, borderRadius: 3,
+          border: "1px solid rgba(200, 135, 58, 0.22)",
+          background: "rgba(200, 135, 58, 0.05)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 0 14px rgba(201,168,76,0.08)",
         }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--v2-gold)" strokeWidth="1.4">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.4">
             <circle cx="12" cy="12" r="3"/>
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeDasharray="2 3"/>
             <line x1="12" y1="2" x2="12" y2="6"/>
@@ -45,7 +44,7 @@ export function TopNavV2({ userName, tier }: Props) {
             <line x1="18" y1="12" x2="22" y2="12"/>
           </svg>
         </div>
-        <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 15, fontWeight: 400, color: "var(--v2-moon)", letterSpacing: "0.01em", display: "none" }} className="v2-topnav-wordmark">
+        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontWeight: 400, color: "var(--cream)", letterSpacing: "0.01em", display: "none" }} className="v2-topnav-wordmark">
           Crossroads Compass
         </span>
       </Link>
@@ -73,9 +72,9 @@ export function TopNavV2({ userName, tier }: Props) {
           style={{
             display: "flex", alignItems: "center", gap: 8,
             padding: "6px 10px",
-            borderRadius: 10,
+            borderRadius: 3,
             background: "rgba(255,255,255,0.022)",
-            border: "1px solid var(--v2-border)",
+            border: "1px solid rgba(200, 135, 58, 0.12)",
             cursor: "pointer",
             transition: "background 0.2s",
           }}
@@ -83,25 +82,25 @@ export function TopNavV2({ userName, tier }: Props) {
         >
           <div style={{
             width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
-            background: "linear-gradient(135deg, #4a3fa0, #2c5baa)",
+            background: "linear-gradient(135deg, var(--earth), var(--sky))",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 12, color: "rgba(255,255,255,0.9)",
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 13, color: "var(--gold)",
             position: "relative",
           }}>
             {userName.charAt(0).toUpperCase()}
             <span style={{
               position: "absolute", top: -1, right: -1,
               width: 7, height: 7,
-              background: "var(--v2-gold)", borderRadius: "50%",
-              border: "2px solid var(--v2-surface)",
+              background: "var(--gold)", borderRadius: "50%",
+              border: "2px solid var(--cosmos)",
             }} />
           </div>
           <div style={{ lineHeight: 1 }} className="v2-topnav-username">
-            <div style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, fontWeight: 500, color: "var(--v2-moon)" }}>
+            <div style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, fontWeight: 500, color: "var(--cream)" }}>
               {userName.split(" ")[0]}
             </div>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--v2-gold)", marginTop: 2 }}>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--gold)", marginTop: 2 }}>
               {tier}
             </div>
           </div>
@@ -109,7 +108,7 @@ export function TopNavV2({ userName, tier }: Props) {
 
         <button
           title="Sign out"
-          style={{ background: "none", border: "1px solid var(--v2-border)", color: "var(--v2-faint)", cursor: "pointer", padding: "7px 8px", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.2s, color 0.2s" }}
+          style={{ background: "none", border: "1px solid rgba(200, 135, 58, 0.12)", color: "var(--mist)", cursor: "pointer", padding: "7px 8px", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.2s, color 0.2s" }}
           onClick={() => signOut({ callbackUrl: "/login" })}
         >
           <LogOut size={15} />

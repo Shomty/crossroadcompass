@@ -12,7 +12,7 @@
   --raised:      #111828;
   --border:      rgba(255,255,255,0.06);
   --border-lit:  rgba(212,175,95,0.25);
-  --gold:        #D4AF5F;
+  --gold:        #e8b96a;
   --gold-soft:   rgba(212,175,95,0.15);
   --gold-glow:   rgba(212,175,95,0.08);
   --moon:        #E8E0D0;
@@ -22,16 +22,16 @@
   /* Legacy aliases (keep backward compat for non-dashboard pages) */
   --ink:         #1a1410;
   --earth:       #2e1f0f;
-  --amber:       #D4AF5F;
-  --gold-warm:   #D4AF5F;
+  --amber:       #c8873a;
+  --gold-warm:   #c8873a;
   --clay:        #8b5c38;
   --moss:        #3d4a2e;
-  --cream:       #E8E0D0;
-  --parchment:   #ddd6c6;
-  --mist:        rgba(232,224,208,0.55);
+  --cream:       #f2ead8;
+  --parchment:   #ede0c4;
+  --mist:        #d4c9b0;
   --sky:         #1c2340;
-  --cosmos:      #04050f;
-  --star:        #D4AF5F;
+  --cosmos:      #0d1220;
+  --star:        #e8b96a;
 }
 
 /* ─── Tailwind v4 theme overrides ──────────────────────────────────────── */
