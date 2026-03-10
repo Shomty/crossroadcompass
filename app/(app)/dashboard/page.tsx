@@ -14,6 +14,7 @@ import { DashboardReport } from "@/components/report/DashboardReport";
 import { HumanDesignTypeCard } from "@/components/dashboard/HumanDesignTypeCard";
 import { ForecastCard } from "@/components/dashboard/ForecastCard";
 import { DashaCard } from "@/components/dashboard/DashaCard";
+import { TransitCard } from "@/components/dashboard/TransitCard";
 import { getOrCreateHDChart } from "@/lib/astro/chartService";
 import { getThisWeeksForecast, getThisMonthsForecast, getWeekStart, getMonthStart } from "@/lib/ai/forecastService";
 
@@ -227,7 +228,12 @@ export default async function DashboardPage({
           />
         </GlassCardV2>
 
-        {/* 4. Forecast — full row */}
+        {/* 4. Today's Transits — full row */}
+        <GlassCardV2 span="full">
+          <TransitCard />
+        </GlassCardV2>
+
+        {/* 5. Forecast — full row */}
         <GlassCardV2 span="full">
           <ForecastCard
             initialWeekly={weeklyForecast}
