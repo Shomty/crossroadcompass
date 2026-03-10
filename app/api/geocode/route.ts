@@ -39,6 +39,30 @@ function buildDisplayName(p: PhotonFeature["properties"]): string {
 }
 
 export async function GET(req: NextRequest) {
+  const lat = req.nextUrl.searchParams.get("lat");
+  const lon = req.nextUrl.searchParams.get("lon");
+
+  // ── Reverse geocode mode: ?lat=&lon= ───────────────────────────────────
+  if (lat && lon) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&format=json&zoom=10&addressdetails=1`;
+      const res = await fetch(url, {
+        cache: "no-store",
+        headers: { "User-Agent": "CrossroadsCompass/1.0 (contact@crossroadscompass.com)" },
+      });
+      if (!res.ok) throw new Error(`Nominatim reverse HTTP ${res.status}`);
+      const data = await res.json();
+      const a = data.address ?? {};
+      const city = a.city ?? a.town ?? a.village ?? a.county ?? "";
+      const country = a.country ?? "";
+      const displayName = [city, country].filter(Boolean).join(", ") || data.display_name;
+      return NextResponse.json({ displayName });
+    } catch (e) {
+      console.error("[geocode/reverse] error:", e);
+      return NextResponse.json({ error: "Reverse geocoding failed" }, { status: 502 });
+    }
+  }
+
   const q = req.nextUrl.searchParams.get("q");
   if (!q) {
     return NextResponse.json({ error: "Missing query parameter q" }, { status: 400 });
