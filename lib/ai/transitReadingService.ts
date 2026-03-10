@@ -120,7 +120,7 @@ export async function generateTransitReading(
   if (cached) return cached;
 
   const model = gemini().getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-flash-preview-04-17",
     generationConfig: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 2000 },
   });
   const prompt = buildTransitPrompt(natal, transit, dashaLord, userName, today);

@@ -155,7 +155,7 @@ export async function generateWeeklyForecast(
   const prompt = buildWeeklyPrompt(chart, mahaName, antarName, weekStart, userName);
 
   const model = gemini().getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-flash-preview-04-17",
     generationConfig: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 2000 },
   });
 
@@ -208,7 +208,7 @@ export async function generateMonthlyForecast(
   const prompt = buildMonthlyPrompt(chart, mahaName, antarName, monthStart, userName);
 
   const model = gemini().getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-flash-preview-04-17",
     generationConfig: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 2500 },
   });
 

@@ -89,7 +89,7 @@ export async function generateDailyInsight(
   const prompt = buildDailyPrompt(chart, dashaCtx, today, userName);
 
   const model = gemini().getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-flash-preview-04-17",
     generationConfig: {
       responseMimeType: "application/json",
       temperature: 0.8,
