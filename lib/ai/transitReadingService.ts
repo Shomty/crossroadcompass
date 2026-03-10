@@ -10,15 +10,15 @@
  *   - Natural benefic/malefic classifications
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import type { VedicChart, VedicPlanet } from "@/lib/astro/types";
 import { kvGet, kvSet } from "@/lib/kv/helpers";
 import { KV_TTL } from "@/lib/kv/keys";
 
-let _gemini: GoogleGenerativeAI | null = null;
+let _gemini: GoogleGenAI | null = null;
 function gemini() {
-  if (!_gemini) _gemini = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+  if (!_gemini) _gemini = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
   return _gemini;
 }
 
@@ -119,14 +119,14 @@ export async function generateTransitReading(
   const cached = await kvGet<TransitReading>(cacheKey);
   if (cached) return cached;
 
-  const model = gemini().getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 8192 },
-  });
   const prompt = buildTransitPrompt(natal, transit, dashaLord, userName, today);
 
-  const result = await model.generateContent(prompt);
-  const raw = result.response.text();
+  const result = await gemini().models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+    config: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 8192 },
+  });
+  const raw = result.text;
   if (!raw) throw new Error("Gemini returned empty transit reading");
 
   // Strip markdown fences as a safety net even with responseMimeType set

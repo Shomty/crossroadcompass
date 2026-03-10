@@ -11,7 +11,7 @@
  *  - Every section ends with a practical implication or question
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
 import type { HDChartData } from "@/types";
@@ -31,9 +31,9 @@ export interface HDReport {
 
 // ─── Gemini client (lazy — only created when needed) ──────────────────────
 
-let _gemini: GoogleGenerativeAI | null = null;
+let _gemini: GoogleGenAI | null = null;
 function gemini() {
-  if (!_gemini) _gemini = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+  if (!_gemini) _gemini = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
   return _gemini;
 }
 
@@ -117,17 +117,12 @@ export async function generateHDReport(
 ): Promise<HDReport> {
   const prompt = buildPrompt(chart, intake);
 
-  const model = gemini().getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.7,
-      maxOutputTokens: 4000,
-    },
+  const result = await gemini().models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+    config: { responseMimeType: "application/json", temperature: 0.7, maxOutputTokens: 4000 },
   });
-
-  const result = await model.generateContent(prompt);
-  const raw = result.response.text();
+  const raw = result.text;
   if (!raw) throw new Error("Gemini returned empty response");
 
   const report: HDReport = JSON.parse(raw);

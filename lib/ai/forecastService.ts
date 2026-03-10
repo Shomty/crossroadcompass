@@ -5,14 +5,14 @@
  * Stored as Insight rows: type WEEKLY (Monday of week) or MONTHLY (1st of month).
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
 import type { HDChartData } from "@/types";
 
-let _gemini: GoogleGenerativeAI | null = null;
+let _gemini: GoogleGenAI | null = null;
 function gemini() {
-  if (!_gemini) _gemini = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+  if (!_gemini) _gemini = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
   return _gemini;
 }
 
@@ -154,13 +154,12 @@ export async function generateWeeklyForecast(
 
   const prompt = buildWeeklyPrompt(chart, mahaName, antarName, weekStart, userName);
 
-  const model = gemini().getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 8192 },
+  const result = await gemini().models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+    config: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 8192 },
   });
-
-  const result = await model.generateContent(prompt);
-  const raw = result.response.text();
+  const raw = result.text;
   if (!raw) throw new Error("Gemini returned empty response");
 
   const clean = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
@@ -207,13 +206,12 @@ export async function generateMonthlyForecast(
 
   const prompt = buildMonthlyPrompt(chart, mahaName, antarName, monthStart, userName);
 
-  const model = gemini().getGenerativeModel({
-    model: "gemini-2.0-flash",
-    generationConfig: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 8192 },
+  const result = await gemini().models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+    config: { responseMimeType: "application/json", temperature: 0.75, maxOutputTokens: 8192 },
   });
-
-  const result = await model.generateContent(prompt);
-  const raw = result.response.text();
+  const raw = result.text;
   if (!raw) throw new Error("Gemini returned empty response");
 
   const clean = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
