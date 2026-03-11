@@ -1,6 +1,19 @@
 /**
- * app/dashboard/page.tsx
- * Dashboard — V2 design system (merged from /v2/dashboard)
+ * app/(app)/dashboard/page.tsx
+ * Dashboard — FRONTEND.md v1.0 design system.
+ *
+ * Layout:
+ *   Header (greeting + date + actions)
+ *   ── ✦ ──
+ *   Grid row 1 [1-col: Life Phase] [2-col: Today's Guidance]
+ *   ── ☉ ──
+ *   Full: Today's Transits
+ *   ── ☽ ──
+ *   Full: Weekly / Monthly Forecast
+ *   ── ♃ ──
+ *   Full: Human Design Profile
+ *   ── ♄ ──
+ *   Full: Natal Chart Report
  */
 
 import { redirect } from "next/navigation";
@@ -8,7 +21,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import Link from "next/link";
 import { Settings } from "lucide-react";
-import { GlassCardV2 } from "@/components/v2/GlassCard";
 import { TodaysGuidanceV2 } from "@/components/v2/TodaysGuidance";
 import { DashboardReport } from "@/components/report/DashboardReport";
 import { HumanDesignTypeCard } from "@/components/dashboard/HumanDesignTypeCard";
@@ -16,7 +28,12 @@ import { ForecastCard } from "@/components/dashboard/ForecastCard";
 import { DashaCard } from "@/components/dashboard/DashaCard";
 import { TransitCard } from "@/components/dashboard/TransitCard";
 import { getOrCreateHDChart } from "@/lib/astro/chartService";
-import { getThisWeeksForecast, getThisMonthsForecast, getWeekStart, getMonthStart } from "@/lib/ai/forecastService";
+import {
+  getThisWeeksForecast,
+  getThisMonthsForecast,
+  getWeekStart,
+  getMonthStart,
+} from "@/lib/ai/forecastService";
 
 export default async function DashboardPage({
   searchParams,
@@ -31,28 +48,32 @@ export default async function DashboardPage({
   const userName = session.user?.name ?? session.user?.email?.split("@")[0] ?? "Traveler";
   const firstName = userName.split(" ")[0];
 
+  // ── Subscription ────────────────────────────────────────────────────────────
   const subscription = await db.subscription.findUnique({
     where: { userId },
     select: { tier: true },
   });
-  const tier = subscription?.tier ?? "FREE";
+  const tier    = subscription?.tier ?? "FREE";
   const isAdmin = session.user?.email === "shomty@hotmail.com";
-  const isPaid = isAdmin || tier === "CORE" || tier === "VIP";
+  const isPaid  = isAdmin || tier === "CORE" || tier === "VIP";
 
+  // ── Today's insight ─────────────────────────────────────────────────────────
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+  const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
   const dailyInsightRow = await db.insight.findFirst({
     where: { userId, type: "DAILY", periodDate: { gte: todayStart, lte: todayEnd } },
     orderBy: { generatedAt: "desc" },
   });
 
+  // ── Forecasts ───────────────────────────────────────────────────────────────
   const [weeklyForecast, monthlyForecast] = await Promise.all([
     getThisWeeksForecast(userId),
     getThisMonthsForecast(userId),
   ]);
-  const weekLabel = getWeekStart().toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const weekLabel  = getWeekStart().toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const monthLabel = getMonthStart().toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
+  // ── Active Dasha ────────────────────────────────────────────────────────────
   const now = new Date();
   const activeMaha = await db.dasha.findFirst({
     where: { userId, level: "MAHADASHA", startDate: { lte: now }, endDate: { gte: now } },
@@ -69,195 +90,272 @@ export default async function DashboardPage({
   const mahaTotalDays = activeMaha
     ? Math.ceil((activeMaha.endDate.getTime() - activeMaha.startDate.getTime()) / (1000 * 60 * 60 * 24))
     : null;
-  const mahaProgress = (mahaTotalDays && mahaRemainingDays != null)
+  const mahaProgress = mahaTotalDays && mahaRemainingDays != null
     ? Math.max(0, Math.min(100, Math.round(((mahaTotalDays - mahaRemainingDays) / mahaTotalDays) * 100)))
     : null;
   const fmtDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
+  // ── Human Design ────────────────────────────────────────────────────────────
   const birthProfile = await db.birthProfile.findUnique({ where: { userId } });
-  let hdType: string | null = null;
-  let hdStrategy: string | null = null;
+  let hdType:      string | null = null;
+  let hdStrategy:  string | null = null;
   let hdAuthority: string | null = null;
-  let hdProfile: string | null = null;
+  let hdProfile:   string | null = null;
   if (birthProfile) {
     try {
       const hdChart = await getOrCreateHDChart(userId, birthProfile);
-      hdType = hdChart.type ?? null;
-      hdStrategy = hdChart.strategy ?? null;
+      hdType      = hdChart.type      ?? null;
+      hdStrategy  = hdChart.strategy  ?? null;
       hdAuthority = hdChart.authority ?? null;
-      hdProfile = hdChart.profile ?? null;
-    } catch { /* render without — component will fetch client-side */ }
+      hdProfile   = hdChart.profile   ?? null;
+    } catch { /* render without — component fetches client-side */ }
   }
 
-  const timeOfDay = now.getHours() < 12 ? "morning" : now.getHours() < 17 ? "afternoon" : "evening";
+  // ── Greeting ────────────────────────────────────────────────────────────────
+  const hr        = now.getHours();
+  const timeOfDay = hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening";
+  const dateLabel = now.toLocaleDateString("en-US", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
 
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="v2-content">
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 36, gap: 20, flexWrap: "wrap" }}>
-        <div>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 8 }}>
-            Personal Navigation
+    <div className="dash-page">
+      <div className="dash-inner">
+        <div className="dash-wrap">
+
+          {/* ── HEADER ──────────────────────────────────────────────────────── */}
+          <header className="dash-header">
+
+            <div className="dash-header-left">
+              <span className="dash-eyebrow">Personal Navigation</span>
+              <h1 className="dash-greeting">
+                Good {timeOfDay}, <em>{firstName}</em>
+              </h1>
+              <p className="dash-date-line">{dateLabel}</p>
+            </div>
+
+            <div className="dash-header-actions">
+              {/* Feedback chip */}
+              {(params.rated || params.subscribed) && (
+                <span className="dash-status-chip">
+                  <span style={{ color: "var(--amber)" }}>✦</span>
+                  {params.rated
+                    ? "Rating saved"
+                    : `Welcome to ${tier} — forecasts unlocked`}
+                </span>
+              )}
+
+              {/* Settings */}
+              <Link href="/settings" className="dash-icon-btn" title="Settings">
+                <Settings size={15} />
+              </Link>
+
+              {/* Full Chart CTA */}
+              <Link href="/report" className="dash-chart-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14,2 14,8 20,8" />
+                </svg>
+                Full Chart
+              </Link>
+            </div>
+          </header>
+
+          {/* ── ✦ ──────────────────────────────────────────────────────────── */}
+          <Divider glyph="✦" />
+
+          {/* ── ROW 1  ──────────────────────────────────────────────────────── */}
+          {/*   Left col  : Life Phase (Dasha)                                  */}
+          {/*   Right cols: Today's Cosmic Guidance                             */}
+          <div className="dash-grid dash-mb">
+
+            {/* Life Phase */}
+            <div className="dash-card dash-card-enter">
+              <DashaCard
+                activeMaha={activeMaha
+                  ? { planetName: activeMaha.planetName, startDate: activeMaha.startDate, endDate: activeMaha.endDate }
+                  : null}
+                activeAntar={activeAntar
+                  ? { planetName: activeAntar.planetName, startDate: activeAntar.startDate, endDate: activeAntar.endDate }
+                  : null}
+                mahaRemainingDays={mahaRemainingDays}
+                mahaProgress={mahaProgress}
+                planetGlyph={activeMaha ? (PLANET_GLYPH[activeMaha.planetName.toLowerCase()] ?? "★") : "★"}
+                planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--gold)") : "var(--gold)"}
+                frontContent={
+                  <div>
+                    <span className="dash-eyebrow-sm">☽ Life Phase</span>
+
+                    {activeMaha ? (
+                      <>
+                        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
+                          <PlanetOrb name={activeMaha.planetName} size={58} />
+                          <div>
+                            <div style={st.planet}>{cap(activeMaha.planetName)}</div>
+                            <div style={st.type}>Mahadasha</div>
+                            <div style={st.theme}>{getDashaTheme(cap(activeMaha.planetName))}</div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                          <span style={st.mono}>{fmtDate(activeMaha.startDate)} → {fmtDate(activeMaha.endDate)}</span>
+                          {mahaRemainingDays != null && (
+                            <span style={st.days}>{mahaRemainingDays.toLocaleString()}d left</span>
+                          )}
+                        </div>
+
+                        {mahaProgress != null && (
+                          <div className="dash-progress-track">
+                            <div className="dash-progress-fill" style={{ width: `${mahaProgress}%` }} />
+                          </div>
+                        )}
+
+                        {activeAntar && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, marginBottom: 12 }}>
+                            <PlanetOrb name={activeAntar.planetName} size={20} />
+                            <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--gold)" }}>
+                              {cap(activeAntar.planetName.split("/")[1] ?? activeAntar.planetName)} Antardasha
+                            </span>
+                          </div>
+                        )}
+
+                        <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginTop: activeAntar ? 0 : 14 }}>
+                          {getDashaGuidance(cap(activeMaha.planetName)).map((item, i) => (
+                            <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "var(--mist)", lineHeight: 1.55, fontFamily: "'Instrument Sans', sans-serif" }}>
+                              <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(200,135,58,0.45)", flexShrink: 0, marginTop: 7 }} />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : (
+                      <div className="dash-empty">
+                        <span className="dash-empty-glyph">☽</span>
+                        <p className="dash-empty-text">
+                          Complete your birth profile to see your active life phase.
+                        </p>
+                        <Link href="/settings/profile" style={st.emptyLink}>
+                          Set up profile →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                }
+              />
+            </div>
+
+            {/* Today's Guidance — 2-col span */}
+            <div className="dash-card dash-col-2 dash-card-enter">
+              <TodaysGuidanceV2
+                insight={dailyInsightRow ? {
+                  id:             dailyInsightRow.id,
+                  content:        dailyInsightRow.content as string,
+                  generatedAt:    dailyInsightRow.generatedAt,
+                  accuracyRating: dailyInsightRow.accuracyRating,
+                } : null}
+                isPaid={true}
+              />
+            </div>
           </div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(26px, 3.2vw, 38px)", fontWeight: 400, letterSpacing: "0.005em", color: "var(--cream)", lineHeight: 1.1, margin: 0, animation: "fadeUp 0.8s 0.2s forwards", opacity: 0 }}>
-            Good {timeOfDay},{" "}
-            <em style={{ fontStyle: "italic", color: "var(--gold)" }}>{firstName}</em>
-          </h1>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-          {(params.rated || params.subscribed) && (
-            <span style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em" }}>
-              {params.rated ? "✦ Rating saved" : `✦ Welcome to ${tier} — forecasts unlocked`}
-            </span>
-          )}
-          <Link href="/settings" style={{ width: 38, height: 38, borderRadius: 3, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(200, 135, 58, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mist)", textDecoration: "none" }} title="Settings">
-            <Settings size={16} />
-          </Link>
-          <Link href="/report" className="full-chart-btn" style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 18px", background: "rgba(200, 135, 58, 0.05)", border: "1px solid var(--amber)", borderRadius: 2, fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--amber)", textDecoration: "none", whiteSpace: "nowrap", transition: "background 0.2s, color 0.2s" }}>
-            <svg className="full-chart-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ transition: "transform 0.2s" }}>
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14,2 14,8 20,8"/>
-            </svg>
-            Full Chart
-          </Link>
-        </div>
-      </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", marginBottom: 32, opacity: 0.35 }}>
-        <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, transparent, var(--amber), transparent)" }} />
-        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.2rem", color: "var(--amber)", animation: "pulseDot 2s ease-in-out infinite" }}>✦</span>
-        <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, transparent, var(--amber), transparent)" }} />
-      </div>
+          {/* ── ☉ ──────────────────────────────────────────────────────────── */}
+          <Divider glyph="☉" />
 
-      <div className="v2-grid">
+          {/* ── ROW 2: Today's Transits ──────────────────────────────────────── */}
+          <div className="dash-card dash-card-enter dash-mb">
+            <span className="dash-eyebrow-sm" style={{ marginBottom: "1.25rem", display: "block" }}>☿ Today&apos;s Transits</span>
+            <TransitCard />
+          </div>
 
-        {/* 1. Current Dasha — span 1 LEFT */}
-        <GlassCardV2 style={{ padding: 0 }}>
-          <div style={{ padding: 28, height: "100%", boxSizing: "border-box" }}>
-            <DashaCard
-              activeMaha={activeMaha ? { planetName: activeMaha.planetName, startDate: activeMaha.startDate, endDate: activeMaha.endDate } : null}
-              activeAntar={activeAntar ? { planetName: activeAntar.planetName, startDate: activeAntar.startDate, endDate: activeAntar.endDate } : null}
-              mahaRemainingDays={mahaRemainingDays}
-              mahaProgress={mahaProgress}
-              planetGlyph={activeMaha ? (PLANET_GLYPH[activeMaha.planetName.toLowerCase()] ?? "★") : "★"}
-              planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--gold)") : "var(--gold)"}
-              frontContent={
-                <div>
-                  <p style={dashaLabel}>Current Period</p>
-                  {activeMaha ? (
-                    <>
-                      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 8 }}>
-                        <PlanetOrb name={activeMaha.planetName} size={64} />
-                        <div>
-                          <div style={dashaPlanet}>
-                            {activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1)}
-                          </div>
-                          <div style={dashaType}>Mahadasha</div>
-                          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--gold)", opacity: 0.7, marginTop: 4 }}>
-                            {getDashaTheme(activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1))}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--mist)", letterSpacing: "0.06em" }}>
-                          {fmtDate(activeMaha.startDate)} → {fmtDate(activeMaha.endDate)}
-                        </span>
-                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--gold)", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
-                          {mahaRemainingDays != null ? `${mahaRemainingDays.toLocaleString()} days left` : ""}
-                        </span>
-                      </div>
-                      {mahaProgress != null && (
-                        <div style={{ height: 2, background: "rgba(201,168,76,0.1)", borderRadius: 2, marginBottom: 14, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${mahaProgress}%`, background: "linear-gradient(90deg, rgba(201,168,76,0.5), var(--gold))", borderRadius: 2, transition: "width 0.5s" }} />
-                        </div>
-                      )}
-                      {activeAntar && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                          <PlanetOrb name={activeAntar.planetName} size={22} />
-                          <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, color: "var(--gold)" }}>
-                            Sub: {activeAntar.planetName.split("/")[1]?.charAt(0).toUpperCase()}
-                            {activeAntar.planetName.split("/")[1]?.slice(1) ?? ""} Antardasha
-                          </span>
-                        </div>
-                      )}
-                      <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 9, marginTop: activeAntar ? 0 : 14 }}>
-                        {getDashaGuidance(activeMaha.planetName.charAt(0).toUpperCase() + activeMaha.planetName.slice(1)).map((item, i) => (
-                          <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12.5, color: "var(--mist)", lineHeight: 1.55 }}>
-                            <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(201,168,76,0.45)", flexShrink: 0, marginTop: 7 }} />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, opacity: 0.25, lineHeight: 1 }}>—</div>
-                      <p style={{ fontSize: 12.5, color: "var(--mist)", marginTop: 10, lineHeight: 1.6 }}>
-                        Complete your birth profile to see your active Dasha period.
-                      </p>
-                      <Link href="/settings/profile" style={{ display: "inline-block", marginTop: "1rem", fontSize: 12, fontFamily: "'DM Mono', monospace", letterSpacing: "0.1em", color: "var(--gold)", textDecoration: "none" }}>
-                        Set up profile →
-                      </Link>
-                    </>
-                  )}
-                </div>
-              }
+          {/* ── ☽ ──────────────────────────────────────────────────────────── */}
+          <Divider glyph="☽" />
+
+          {/* ── ROW 3: Forecast ──────────────────────────────────────────────── */}
+          <div className="dash-card dash-card-enter dash-mb">
+            <ForecastCard
+              initialWeekly={weeklyForecast}
+              initialMonthly={monthlyForecast}
+              isPaid={isPaid}
+              weekLabel={weekLabel}
+              monthLabel={monthLabel}
             />
           </div>
-        </GlassCardV2>
 
-        {/* 2. Today's Guidance — span 2 RIGHT */}
-        <GlassCardV2 span="2">
-          <TodaysGuidanceV2
-            insight={dailyInsightRow ? {
-              id: dailyInsightRow.id,
-              content: dailyInsightRow.content as string,
-              generatedAt: dailyInsightRow.generatedAt,
-              accuracyRating: dailyInsightRow.accuracyRating,
-            } : null}
-            isPaid={true}
-          />
-        </GlassCardV2>
+          {/* ── ♃ ──────────────────────────────────────────────────────────── */}
+          <Divider glyph="♃" />
 
-        {/* 3. HD Identity — full row */}
-        <GlassCardV2 span="full">
-          <HumanDesignTypeCard
-            hdType={hdType}
-            hdStrategy={hdStrategy}
-            hdAuthority={hdAuthority}
-            hdProfile={hdProfile}
-          />
-        </GlassCardV2>
-
-        {/* 4. Today's Transits — full row */}
-        <GlassCardV2 span="full">
-          <TransitCard />
-        </GlassCardV2>
-
-        {/* 5. Forecast — full row */}
-        <GlassCardV2 span="full">
-          <ForecastCard
-            initialWeekly={weeklyForecast}
-            initialMonthly={monthlyForecast}
-            isPaid={isPaid}
-            weekLabel={weekLabel}
-            monthLabel={monthLabel}
-          />
-        </GlassCardV2>
-
-        {/* 5. HD Report — full row */}
-        <GlassCardV2 span="full" noPadding style={{ background: "transparent", border: "none", boxShadow: "none" }}>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 14 }}>
-            Human Design Report
+          {/* ── ROW 4: Human Design ──────────────────────────────────────────── */}
+          <div className="dash-card dash-card-enter dash-mb">
+            <span className="dash-eyebrow-sm" style={{ marginBottom: "1.25rem", display: "block" }}>◉ Human Design Profile</span>
+            <HumanDesignTypeCard
+              hdType={hdType}
+              hdStrategy={hdStrategy}
+              hdAuthority={hdAuthority}
+              hdProfile={hdProfile}
+            />
           </div>
-          <DashboardReport />
-        </GlassCardV2>
 
+          {/* ── ♄ ──────────────────────────────────────────────────────────── */}
+          <Divider glyph="♄" />
+
+          {/* ── ROW 5: Natal Chart Report ────────────────────────────────────── */}
+          <div className="dash-card-bare dash-card-enter">
+            <div style={{ padding: "1.75rem 1.75rem 0" }}>
+              <span className="dash-eyebrow-sm">◈ Natal Chart Report</span>
+            </div>
+            <DashboardReport />
+          </div>
+
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── Dasha themes ─────────────────────────────────────────────────────────────
+// ─── Section divider component ────────────────────────────────────────────────
+
+function Divider({ glyph }: { glyph: string }) {
+  return (
+    <div className="dash-divider">
+      <span className="dash-divider-glyph">{glyph}</span>
+    </div>
+  );
+}
+
+// ─── Planet orb ───────────────────────────────────────────────────────────────
+
+function PlanetOrb({ name, size }: { name: string; size: number }) {
+  const key   = name.toLowerCase().split("/")[0];
+  const glyph = PLANET_GLYPH[key] ?? "?";
+  const color = PLANET_COLOR[key] ?? "var(--gold)";
+  return (
+    <div style={{
+      width: size, height: size,
+      borderRadius: "50%",
+      flexShrink: 0,
+      background: `radial-gradient(circle at 38% 35%, ${color}18 0%, rgba(4,5,15,0.85) 70%)`,
+      border: `${size >= 40 ? 1.5 : 1}px solid ${color}40`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <span style={{
+        fontSize: size * 0.48, color, lineHeight: 1,
+        fontFamily: "serif", userSelect: "none",
+        filter: `drop-shadow(0 0 ${size * 0.1}px ${color}80)`,
+      }}>
+        {glyph}
+      </span>
+    </div>
+  );
+}
+
+// ─── Dasha helpers ────────────────────────────────────────────────────────────
+
+function cap(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 const DASHA_THEME: Record<string, string> = {
   Saturn:  "Karma · Discipline · Endurance",
   Jupiter: "Wisdom · Expansion · Grace",
@@ -269,12 +367,12 @@ const DASHA_THEME: Record<string, string> = {
   Rahu:    "Desire · Illusion · Transformation",
   Ketu:    "Liberation · Detachment · Spirituality",
 };
-function getDashaTheme(planet: string): string {
+function getDashaTheme(planet: string) {
   return DASHA_THEME[planet] ?? "Reflection · Growth · Unfolding";
 }
 
-// ─── Dasha guidance ───────────────────────────────────────────────────────────
-const DASHA_GUIDANCE: Record<string, string[]> = {  Saturn:  ["Consolidate career gains and secure your position.", "Review long-term investments and savings.", "Practice patience in relationships."],
+const DASHA_GUIDANCE: Record<string, string[]> = {
+  Saturn:  ["Consolidate career gains and secure your position.", "Review long-term investments and savings.", "Practise patience in relationships."],
   Jupiter: ["Expand through wisdom and teaching others.", "Seek opportunities for growth and abundance.", "Honour your philosophical commitments."],
   Mars:    ["Channel energy into disciplined action.", "Initiate projects you have been holding back.", "Guard against impulsive decisions."],
   Sun:     ["Step into leadership and visibility.", "Focus on self-expression and purpose.", "Honour your father-figures and authority."],
@@ -293,41 +391,55 @@ function getDashaGuidance(planet: string): string[] {
 }
 
 // ─── Planet glyphs & colours ──────────────────────────────────────────────────
+
 const PLANET_GLYPH: Record<string, string> = {
   sun: "☉", moon: "☽", mars: "♂", mercury: "☿",
   jupiter: "♃", venus: "♀", saturn: "♄", rahu: "☊", ketu: "☋",
 };
 const PLANET_COLOR: Record<string, string> = {
-  sun: "#FFD96A", moon: "#C8D8E8", mars: "#E8705A", mercury: "#80D4A0",
-  jupiter: "#D4AF5F", venus: "#E8C0D0", saturn: "#B0A080", rahu: "#8888CC", ketu: "#AA8866",
+  sun:     "#FFD96A",
+  moon:    "#C8D8E8",
+  mars:    "#E8705A",
+  mercury: "#80D4A0",
+  jupiter: "#D4AF5F",
+  venus:   "#E8C0D0",
+  saturn:  "#B0A080",
+  rahu:    "#8888CC",
+  ketu:    "#AA8866",
 };
 
-function PlanetOrb({ name, size }: { name: string; size: number }) {
-  const key = name.toLowerCase().split("/")[0];
-  const glyph = PLANET_GLYPH[key] ?? "?";
-  const color = PLANET_COLOR[key] ?? "var(--gold)";
-  return (
-    <div style={{ width: size, height: size, borderRadius: "50%", flexShrink: 0, background: `radial-gradient(circle at 38% 35%, ${color}18 0%, rgba(4,5,15,0.85) 70%)`, border: `${size >= 40 ? 1.5 : 1}px solid ${color}40`, boxShadow: `0 0 ${size * 0.25}px ${color}30, inset 0 0 ${size * 0.3}px ${color}10`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <span style={{ fontSize: size * 0.48, color, lineHeight: 1, fontFamily: "serif", filter: `drop-shadow(0 0 ${size * 0.1}px ${color}80)`, userSelect: "none" }}>
-        {glyph}
-      </span>
-    </div>
-  );
-}
+// ─── Inline style palette ─────────────────────────────────────────────────────
 
-// ─── Inline styles ────────────────────────────────────────────────────────────
-const dashaLabel: React.CSSProperties = {
-  fontFamily: "'DM Mono', monospace",
-  fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase",
-  color: "var(--amber)", marginBottom: 12,
-};
-const dashaPlanet: React.CSSProperties = {
-  fontFamily: "'Cormorant Garamond', serif",
-  fontSize: 42, fontWeight: 400, lineHeight: 0.95,
-  color: "var(--cream)", letterSpacing: "-0.01em",
-};
-const dashaType: React.CSSProperties = {
-  fontFamily: "'Cormorant Garamond', serif",
-  fontSize: 22, fontWeight: 400, lineHeight: 1,
-  color: "var(--mist)", marginBottom: 12,
-};
+const st = {
+  planet: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: 38, fontWeight: 400, lineHeight: 0.95,
+    color: "var(--cream)", letterSpacing: "-0.01em",
+  } as React.CSSProperties,
+  type: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: 18, fontWeight: 400, lineHeight: 1.1,
+    color: "var(--mist)", marginBottom: 4,
+  } as React.CSSProperties,
+  theme: {
+    fontFamily: "'DM Mono', monospace",
+    fontSize: 9, letterSpacing: "0.14em",
+    textTransform: "uppercase" as const,
+    color: "var(--gold)", opacity: 0.7,
+  } as React.CSSProperties,
+  mono: {
+    fontFamily: "'DM Mono', monospace",
+    fontSize: 9, letterSpacing: "0.1em", color: "var(--mist)",
+  } as React.CSSProperties,
+  days: {
+    fontFamily: "'DM Mono', monospace",
+    fontSize: 9, letterSpacing: "0.08em",
+    color: "var(--gold)", whiteSpace: "nowrap" as const,
+  } as React.CSSProperties,
+  emptyLink: {
+    display: "inline-block", marginTop: "0.75rem",
+    fontSize: 12, fontFamily: "'DM Mono', monospace",
+    letterSpacing: "0.12em", color: "var(--gold)",
+    textDecoration: "none",
+  } as React.CSSProperties,
+} as const;

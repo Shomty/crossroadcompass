@@ -1,0 +1,448 @@
+/*
+ * styles/dashboard.css
+ * Dashboard design system — strict FRONTEND.md compliance.
+ * Source of truth: /instructions/FRONTEND.md v1.0
+ *
+ * Rules:
+ *  - border-radius ≤ 3px on cards, ≤ 2px on buttons
+ *  - NO box-shadow — depth via borders + bg opacity only
+ *  - NO filled icons in content areas — celestial glyphs only
+ *  - Colors exclusively from CSS vars in section 2
+ *  - Animations ≤ 0.5s (except hero ring 60s, entrance 0.8s)
+ */
+
+/* ── Page shell ──────────────────────────────────────────────────────────────── */
+
+.dash-page {
+  background: var(--cosmos);
+  min-height: 100vh;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Noise grain (FRONTEND.md §4 — also applied via body::before in globals.css) */
+.dash-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.028;
+  pointer-events: none;
+}
+
+/* Content layer above noise */
+.dash-inner {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Content wrapper (FRONTEND.md §12) ───────────────────────────────────────── */
+
+.dash-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 6rem 2rem 5rem;
+}
+
+@media (max-width: 900px) {
+  .dash-wrap { padding: calc(64px + 2rem) 1.25rem 4rem; }
+}
+
+@media (max-width: 600px) {
+  .dash-wrap { padding: calc(64px + 1.25rem) 1rem 3rem; }
+}
+
+/* ── Standard card (FRONTEND.md §7) ─────────────────────────────────────────── */
+
+.dash-card {
+  border: 1px solid rgba(200, 135, 58, 0.12);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1.75rem;
+  transition: border-color 0.2s;
+  position: relative;
+}
+
+.dash-card:hover {
+  border-color: rgba(200, 135, 58, 0.28);
+}
+
+/* Featured / highlighted card */
+.dash-card-featured {
+  border-color: rgba(200, 135, 58, 0.45);
+  background: rgba(200, 135, 58, 0.05);
+}
+
+/* Card with no padding — for components that manage their own */
+.dash-card-bare {
+  border: 1px solid rgba(200, 135, 58, 0.12);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-card-bare:hover {
+  border-color: rgba(200, 135, 58, 0.28);
+}
+
+/* ── Grid layouts ──────────────────────────────────────────────────────────── */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 0;
+}
+
+/* Span helpers */
+.dash-col-2  { grid-column: span 2; }
+.dash-col-3  { grid-column: span 3; }
+.dash-col-full { grid-column: 1 / -1; }
+
+@media (max-width: 900px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .dash-col-2, .dash-col-3, .dash-col-full { grid-column: 1 / -1; }
+}
+
+/* ── Section divider (FRONTEND.md §8) ───────────────────────────────────────── */
+
+.dash-divider {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  opacity: 0.35;
+  margin: 2.75rem 0;
+}
+
+.dash-divider::before,
+.dash-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--amber), transparent);
+}
+
+.dash-divider-glyph {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  color: var(--amber);
+}
+
+/* ── Dashboard header ────────────────────────────────────────────────────────── */
+
+.dash-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+
+.dash-header-left {
+  min-width: 0;
+}
+
+.dash-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.dash-greeting {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 300;
+  line-height: 1.05;
+  color: var(--cream);
+  margin: 0;
+  animation: fadeUp 0.8s 0.2s forwards;
+  opacity: 0;
+}
+
+.dash-greeting em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.dash-date-line {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mist);
+  opacity: 0.6;
+  margin-top: 0.5rem;
+  animation: fadeUp 0.8s 0.35s forwards;
+  opacity: 0;
+}
+
+/* ── Eyebrow label (FRONTEND.md §8) ─────────────────────────────────────────── */
+
+.dash-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.dash-eyebrow-sm {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: block;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+/* ── Card headings ───────────────────────────────────────────────────────────── */
+
+.dash-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.1;
+  margin: 0 0 0.35rem;
+}
+
+.dash-card-sub {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.85rem;
+  color: var(--mist);
+  line-height: 1.6;
+}
+
+/* ── Tier gate (FRONTEND.md §12) ────────────────────────────────────────────── */
+
+.tier-gate-wrap {
+  position: relative;
+}
+
+.tier-gate-blurred {
+  opacity: 0.4;
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.tier-gate-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 2;
+}
+
+.tier-gate-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--amber);
+  opacity: 0.9;
+}
+
+.tier-gate-btn {
+  display: inline-block;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  background: transparent;
+  padding: 0.55rem 1.4rem;
+  border-radius: 2px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tier-gate-btn:hover {
+  background: var(--amber);
+  color: var(--cosmos);
+}
+
+/* ── Notification banner (subscribed / rated) ───────────────────────────────── */
+
+.dash-notice {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  animation: fadeUp 0.5s forwards;
+  opacity: 0;
+}
+
+/* ── Icon-like action buttons ────────────────────────────────────────────────── */
+
+.dash-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(200, 135, 58, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mist);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.dash-icon-btn:hover {
+  border-color: rgba(200, 135, 58, 0.3);
+  color: var(--gold);
+}
+
+/* ── Full-chart CTA button ────────────────────────────────────────────────────── */
+
+.dash-chart-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--amber);
+  border-radius: 2px;
+  background: rgba(200, 135, 58, 0.04);
+  color: var(--amber);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.dash-chart-btn:hover {
+  background: var(--amber);
+  color: var(--cosmos);
+}
+
+/* ── Inline amber pill / theme tag ──────────────────────────────────────────── */
+
+.dash-pill {
+  display: inline-block;
+  border: 1px solid rgba(200, 135, 58, 0.3);
+  border-radius: 2px;
+  padding: 0.18rem 0.65rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: var(--amber);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Staggered card entrance ─────────────────────────────────────────────────── */
+
+.dash-card-enter {
+  animation: fadeUp 0.5s both;
+  opacity: 0;
+}
+
+.dash-card-enter:nth-child(1) { animation-delay: 0.10s; }
+.dash-card-enter:nth-child(2) { animation-delay: 0.18s; }
+.dash-card-enter:nth-child(3) { animation-delay: 0.26s; }
+.dash-card-enter:nth-child(4) { animation-delay: 0.34s; }
+.dash-card-enter:nth-child(5) { animation-delay: 0.42s; }
+
+/* ── Section heading inside a card ──────────────────────────────────────────── */
+
+.dash-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* ── Progress track (Dasha / Life Phase) ─────────────────────────────────────── */
+
+.dash-progress-track {
+  height: 2px;
+  background: rgba(200, 135, 58, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0.75rem 0;
+}
+
+.dash-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(200, 135, 58, 0.5), var(--gold));
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* ── Bordered action block (forecast / today's focus) ──────────────────────── */
+
+.dash-action-block {
+  padding: 0.75rem 1rem;
+  border-left: 2px solid rgba(200, 135, 58, 0.35);
+  background: rgba(200, 135, 58, 0.03);
+}
+
+/* ── Status chip (rated / subscribed feedback) ───────────────────────────────── */
+
+.dash-status-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  animation: fadeUp 0.4s forwards;
+  opacity: 0;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────────── */
+
+.dash-empty {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.dash-empty-glyph {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem;
+  color: var(--amber);
+  opacity: 0.3;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.dash-empty-text {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.875rem;
+  color: var(--mist);
+  line-height: 1.65;
+  max-width: 320px;
+  margin: 0 auto 1.25rem;
+}
+
+/* ── Bottom spacing utility ───────────────────────────────────────────────────── */
+
+.dash-mt { margin-top: 1.5rem; }
+.dash-mb { margin-bottom: 1.5rem; }

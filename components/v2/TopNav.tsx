@@ -9,11 +9,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { LayoutGrid, FileText, User, Settings, LogOut } from "lucide-react";
 
+/* FRONTEND.md §12 — dashboard nav links: Dashboard, My Chart, Consultations, Account */
 const NAV_ITEMS = [
-  { href: "/dashboard",        icon: LayoutGrid, label: "Dashboard" },
-  { href: "/report",           icon: FileText,   label: "Reports"   },
-  { href: "/settings/profile", icon: User,       label: "Profile"   },
-  { href: "/settings",         icon: Settings,   label: "Settings"  },
+  { href: "/dashboard", icon: LayoutGrid, label: "Dashboard"     },
+  { href: "/report",    icon: FileText,   label: "My Chart"      },
+  { href: "/transit",   icon: User,       label: "Consultations" },
+  { href: "/settings",  icon: Settings,   label: "Account"       },
 ];
 
 interface Props {
