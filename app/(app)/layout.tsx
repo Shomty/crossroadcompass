@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { SidebarNav } from "@/components/app/SidebarNav";
+import { TimeColorProvider } from "@/components/app/TimeColorProvider";
 import "@/styles/v2.css";
 import "@/styles/dashboard.css";
 
@@ -27,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     /* FRONTEND.md §12: var(--cosmos) background + noise overlay only — no starfield */
     <div style={{ minHeight: "100vh", background: "var(--cosmos)" }}>
+      <TimeColorProvider />
       <div className="v2-bg" />
       <div style={{ position: "relative", zIndex: 2, display: "flex", minHeight: "100vh" }}>
         <SidebarNav userName={userName} tier={tier} />

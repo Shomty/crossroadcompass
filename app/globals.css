@@ -32,6 +32,26 @@
   --sky:         #1c2340;
   --cosmos:      #0d1220;
   --star:        #e8b96a;
+
+  /* ── dharma-compass 2 accent system ─────────────────────────────────────
+     These are overridden at runtime by TimeColorProvider based on time of day */
+  --accent-indigo:     #818CF8;   /* periwinkle blue — shifts by time */
+  --accent-indigo-rgb: 129, 140, 248;
+  --accent-gold-cool:  #D4AF37;   /* classic gold — shifts by time */
+
+  /* Neutral text hierarchy (cooler than cream/mist) */
+  --text-primary:   rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted:     rgba(255, 255, 255, 0.4);
+
+  /* Dynamic gradient controls — driven by TimeColorProvider */
+  --grad-1-color: rgba(129, 140, 248, 0.18);
+  --grad-2-color: rgba(212, 175, 55, 0.12);
+  --grad-3-color: rgba(129, 140, 248, 0.08);
+  --grad-1-x: 0%;
+  --grad-1-y: 0%;
+  --grad-2-x: 100%;
+  --grad-2-y: 0%;
 }
 
 /* ─── Tailwind v4 theme overrides ──────────────────────────────────────── */

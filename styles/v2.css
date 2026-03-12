@@ -58,16 +58,18 @@
 }
 
 /* ── V2 Background ──────────────────────────────────────────────────────────── */
+/* Gradient positions and colors are driven by TimeColorProvider (JS CSS vars) */
 .v2-bg {
   position: fixed;
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 70% 55% at 10% -5%, rgba(55, 40, 140, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 92% 100%, rgba(40, 60, 160, 0.13) 0%, transparent 60%),
-    radial-gradient(ellipse 80% 40% at 50% 110%, rgba(201, 168, 76, 0.06) 0%, transparent 55%),
-    #010208;
+    radial-gradient(circle at var(--grad-1-x, 0%) var(--grad-1-y, 0%), var(--grad-1-color, rgba(129,140,248,0.18)) 0%, transparent 60%),
+    radial-gradient(circle at var(--grad-2-x, 100%) var(--grad-2-y, 0%), var(--grad-2-color, rgba(212,175,55,0.12)) 0%, transparent 60%),
+    radial-gradient(circle at 50% 100%, var(--grad-3-color, rgba(129,140,248,0.08)) 0%, transparent 50%),
+    #0F0F17;
   pointer-events: none;
+  transition: background-color 2s ease-in-out;
 }
 
 /* Limbal ring — warm amber glow around screen edge */
