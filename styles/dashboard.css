@@ -14,10 +14,9 @@
 /* ── Page shell ──────────────────────────────────────────────────────────────── */
 
 .dash-page {
-  background: var(--cosmos);
+  background: transparent;
   min-height: 100vh;
   position: relative;
-  isolation: isolate;
 }
 
 /* Noise grain (FRONTEND.md §4 — also applied via body::before in globals.css) */
