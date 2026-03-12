@@ -139,7 +139,7 @@ export default async function DashboardPage({
               {/* Feedback chip */}
               {(params.rated || params.subscribed) && (
                 <span className="dash-status-chip">
-                  <span style={{ color: "var(--amber)" }}>✦</span>
+                  <span style={{ color: "var(--accent-gold-cool, #D4AF37)" }}>✦</span>
                   {params.rated
                     ? "Rating saved"
                     : `Welcome to ${tier} — forecasts unlocked`}
@@ -200,7 +200,7 @@ export default async function DashboardPage({
                 mahaRemainingDays={mahaRemainingDays}
                 mahaProgress={mahaProgress}
                 planetGlyph={activeMaha ? (PLANET_GLYPH[activeMaha.planetName.toLowerCase()] ?? "★") : "★"}
-                planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--gold)") : "var(--gold)"}
+                planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--accent-gold-cool, #D4AF37)") : "var(--accent-gold-cool, #D4AF37)"}
                 frontContent={
                   <div>
                     {activeMaha ? (
@@ -230,7 +230,7 @@ export default async function DashboardPage({
                         {activeAntar && (
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, marginBottom: 12 }}>
                             <PlanetOrb name={activeAntar.planetName} size={20} />
-                            <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--gold)" }}>
+                            <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--accent-gold-cool, #D4AF37)" }}>
                               {cap(activeAntar.planetName.split("/")[1] ?? activeAntar.planetName)} Antardasha
                             </span>
                           </div>
@@ -238,8 +238,8 @@ export default async function DashboardPage({
 
                         <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginTop: activeAntar ? 0 : 14 }}>
                           {getDashaGuidance(cap(activeMaha.planetName)).map((item, i) => (
-                            <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "var(--mist)", lineHeight: 1.55, fontFamily: "'Instrument Sans', sans-serif" }}>
-                              <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(200,135,58,0.45)", flexShrink: 0, marginTop: 7 }} />
+                            <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "var(--text-secondary, rgba(255,255,255,0.6))", lineHeight: 1.55, fontFamily: "'Instrument Sans', sans-serif" }}>
+                              <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(var(--accent-indigo-rgb, 129,140,248), 0.5)", flexShrink: 0, marginTop: 7 }} />
                               {item}
                             </li>
                           ))}
@@ -326,7 +326,7 @@ function Divider({ glyph }: { glyph: string }) {
 function PlanetOrb({ name, size }: { name: string; size: number }) {
   const key   = name.toLowerCase().split("/")[0];
   const glyph = PLANET_GLYPH[key] ?? "?";
-  const color = PLANET_COLOR[key] ?? "var(--gold)";
+  const color = PLANET_COLOR[key] ?? "var(--accent-gold-cool, #D4AF37)";
   return (
     <div style={{
       width: size, height: size,
@@ -411,32 +411,32 @@ const st = {
   planet: {
     fontFamily: "'Cormorant Garamond', serif",
     fontSize: 38, fontWeight: 400, lineHeight: 0.95,
-    color: "var(--cream)", letterSpacing: "-0.01em",
+    color: "var(--text-primary, rgba(255,255,255,0.9))", letterSpacing: "-0.01em",
   } as React.CSSProperties,
   type: {
     fontFamily: "'Cormorant Garamond', serif",
     fontSize: 18, fontWeight: 400, lineHeight: 1.1,
-    color: "var(--mist)", marginBottom: 4,
+    color: "var(--text-secondary, rgba(255,255,255,0.6))", marginBottom: 4,
   } as React.CSSProperties,
   theme: {
     fontFamily: "'DM Mono', monospace",
     fontSize: 9, letterSpacing: "0.14em",
     textTransform: "uppercase" as const,
-    color: "var(--gold)", opacity: 0.7,
+    color: "var(--accent-gold-cool, #D4AF37)", opacity: 0.8,
   } as React.CSSProperties,
   mono: {
     fontFamily: "'DM Mono', monospace",
-    fontSize: 9, letterSpacing: "0.1em", color: "var(--mist)",
+    fontSize: 9, letterSpacing: "0.1em", color: "var(--text-muted, rgba(255,255,255,0.4))",
   } as React.CSSProperties,
   days: {
     fontFamily: "'DM Mono', monospace",
     fontSize: 9, letterSpacing: "0.08em",
-    color: "var(--gold)", whiteSpace: "nowrap" as const,
+    color: "var(--accent-gold-cool, #D4AF37)", whiteSpace: "nowrap" as const,
   } as React.CSSProperties,
   emptyLink: {
     display: "inline-block", marginTop: "0.75rem",
     fontSize: 12, fontFamily: "'DM Mono', monospace",
-    letterSpacing: "0.12em", color: "var(--gold)",
+    letterSpacing: "0.12em", color: "var(--accent-indigo, #818CF8)",
     textDecoration: "none",
   } as React.CSSProperties,
 } as const;
