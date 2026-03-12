@@ -35,6 +35,7 @@
 
   /* ── dharma-compass 2 accent system ─────────────────────────────────────
      These are overridden at runtime by TimeColorProvider based on time of day */
+  --bg-color:          #0F0F17;   /* base background — overridden by TimeColorProvider */
   --accent-indigo:     #818CF8;   /* periwinkle blue — shifts by time */
   --accent-indigo-rgb: 129, 140, 248;
   --accent-gold-cool:  #D4AF37;   /* classic gold — shifts by time */
@@ -59,6 +60,15 @@
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-mono:  'DM Mono', monospace;
   --font-sans:  'Instrument Sans', sans-serif;
+
+  /* Accent color tokens — driven by TimeColorProvider at runtime */
+  --color-accent-indigo: var(--accent-indigo, #818CF8);
+  --color-accent-gold:   var(--accent-gold-cool, #D4AF37);
+
+  /* Mystic surface tokens */
+  --color-mystic-bg:     var(--bg-color, #0F0F17);
+  --color-mystic-card:   rgba(255, 255, 255, 0.04);
+  --color-mystic-border: rgba(255, 255, 255, 0.10);
 }
 
 /* ─── Base styles ──────────────────────────────────────────────────────── */
@@ -67,8 +77,13 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: radial-gradient(ellipse at top center, #1a1a2e 0%, #0d0d1a 70%);
-  color: var(--cream);
+  background-color: var(--bg-color, #0F0F17);
+  background-image:
+    radial-gradient(circle at var(--grad-1-x, 0%) var(--grad-1-y, 0%), var(--grad-1-color, rgba(129,140,248,0.18)) 0%, transparent 60%),
+    radial-gradient(circle at var(--grad-2-x, 100%) var(--grad-2-y, 0%), var(--grad-2-color, rgba(212,175,55,0.12)) 0%, transparent 60%),
+    radial-gradient(circle at 50% 100%, var(--grad-3-color, rgba(129,140,248,0.08)) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: rgba(255, 255, 255, 0.9);
   font-family: 'Instrument Sans', sans-serif;
   font-size: 1rem;
   line-height: 1.75;
@@ -90,16 +105,16 @@ body::before {
 /* ─── Typography ───────────────────────────────────────────────────────── */
 h1, h2, h3, h4 {
   font-family: 'Cormorant Garamond', serif;
-  color: var(--cream);
+  color: rgba(255, 255, 255, 0.9);
   line-height: 1.1;
 }
 
 h1 em, h2 em, h3 em, h4 em {
   font-style: italic;
-  color: var(--gold);
+  color: var(--accent-gold-cool, #D4AF37);
 }
 
-p { color: var(--mist); }
+p { color: rgba(255, 255, 255, 0.6); }
 
 a { color: inherit; text-decoration: none; }
 
@@ -117,6 +132,38 @@ a { color: inherit; text-decoration: none; }
 @keyframes twinkle {
   0%, 100% { opacity: 0.2; }
   50%       { opacity: 1; }
+}
+
+/* ─── Glassmorphism utilities (match reference index.css) ─────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+}
+
+.glass-hover {
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.20);
+}
+
+/* Mono-data: small uppercase label — 10px, widest tracking, 60% opacity */
+.mono-data {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.6;
+}
+
+/* Serif italic — for "oracle" tone quotes and insight text */
+.serif-italic {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
 }
 
 /* ─── Buttons ──────────────────────────────────────────────────────────── */

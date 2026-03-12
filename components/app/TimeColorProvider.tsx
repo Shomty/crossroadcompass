@@ -68,11 +68,21 @@ function getPhase(hour: number): Phase {
   return "night";
 }
 
-function applyColors(colors: TimeColors) {
+const BG_COLORS: Record<Phase, string> = {
+  morning:   "#0F172A",
+  afternoon: "#0D0D12",
+  evening:   "#110C1D",
+  night:     "#08080C",
+};
+
+function applyColors(colors: TimeColors, phase: Phase) {
   const root = document.documentElement;
+  root.style.setProperty("--bg-color",          BG_COLORS[phase]);
   root.style.setProperty("--accent-indigo",     colors.accentIndigo);
   root.style.setProperty("--accent-indigo-rgb", colors.accentIndioRgb);
   root.style.setProperty("--accent-gold-cool",  colors.accentGoldCool);
+  /* alias for Tailwind @theme token --color-accent-gold → var(--accent-gold-cool) */
+  root.style.setProperty("--accent-gold",       colors.accentGoldCool);
   root.style.setProperty("--grad-1-color",       colors.grad1Color);
   root.style.setProperty("--grad-2-color",       colors.grad2Color);
   root.style.setProperty("--grad-3-color",       colors.grad3Color);
@@ -94,12 +104,14 @@ function driftGradients() {
 export function TimeColorProvider() {
   useEffect(() => {
     // Apply immediately
-    applyColors(PHASE_COLORS[getPhase(new Date().getHours())]);
+    const phase = getPhase(new Date().getHours());
+    applyColors(PHASE_COLORS[phase], phase);
     driftGradients();
 
     // Re-check time every minute
     const colorInterval = setInterval(() => {
-      applyColors(PHASE_COLORS[getPhase(new Date().getHours())]);
+      const p = getPhase(new Date().getHours());
+      applyColors(PHASE_COLORS[p], p);
     }, 60_000);
 
     // Drift gradients every 10s for cosmic movement
