@@ -163,16 +163,33 @@ export default async function DashboardPage({
             </div>
           </header>
 
-          {/* ── ✦ ──────────────────────────────────────────────────────────── */}
-          <Divider glyph="✦" />
+          {/* ── ROW 1: Cosmic Guidance (8) + Current Period / Dasha (4) ─────── */}
+          <div className="dash-grid-12 dash-mb">
 
-          {/* ── ROW 1  ──────────────────────────────────────────────────────── */}
-          {/*   Left col  : Life Phase (Dasha)                                  */}
-          {/*   Right cols: Today's Cosmic Guidance                             */}
-          <div className="dash-grid dash-mb">
+            {/* Cosmic Guidance — 8 cols */}
+            <div className="glass-card dash-col-8 dash-card-enter">
+              <div className="dash-card-header">
+                <div>
+                  <h2 className="dash-section-title">Cosmic Guidance</h2>
+                  <span className="dash-section-subtitle">Today&apos;s personal navigation</span>
+                </div>
+                <span className="dash-sparkle">✦</span>
+              </div>
+              <TodaysGuidanceV2
+                insight={dailyInsightRow ? {
+                  id:             dailyInsightRow.id,
+                  content:        dailyInsightRow.content as string,
+                  generatedAt:    dailyInsightRow.generatedAt,
+                  accuracyRating: dailyInsightRow.accuracyRating,
+                } : null}
+                isPaid={true}
+              />
+            </div>
 
-            {/* Life Phase */}
-            <div className="dash-card dash-card-enter">
+            {/* Current Period (Dasha) — 4 cols */}
+            <div className="glass-card dash-col-4 dash-card-enter">
+              <h2 className="dash-section-title">Current Period</h2>
+              <span className="dash-section-subtitle">☽ Life phase · Dasha</span>
               <DashaCard
                 activeMaha={activeMaha
                   ? { planetName: activeMaha.planetName, startDate: activeMaha.startDate, endDate: activeMaha.endDate }
@@ -186,8 +203,6 @@ export default async function DashboardPage({
                 planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--gold)") : "var(--gold)"}
                 frontContent={
                   <div>
-                    <span className="dash-eyebrow-sm">☽ Life Phase</span>
-
                     {activeMaha ? (
                       <>
                         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
@@ -245,35 +260,35 @@ export default async function DashboardPage({
                 }
               />
             </div>
+          </div>
 
-            {/* Today's Guidance — 2-col span */}
-            <div className="dash-card dash-col-2 dash-card-enter">
-              <TodaysGuidanceV2
-                insight={dailyInsightRow ? {
-                  id:             dailyInsightRow.id,
-                  content:        dailyInsightRow.content as string,
-                  generatedAt:    dailyInsightRow.generatedAt,
-                  accuracyRating: dailyInsightRow.accuracyRating,
-                } : null}
-                isPaid={true}
+          {/* ── ROW 2: Human Design (4) + Today's Transits (8) ──────────────── */}
+          <div className="dash-grid-12 dash-mb">
+
+            {/* Human Design — 4 cols */}
+            <div className="glass-card dash-col-4 dash-card-enter">
+              <h2 className="dash-section-title">Human Design</h2>
+              <span className="dash-section-subtitle">◉ Energy type · Strategy</span>
+              <HumanDesignTypeCard
+                hdType={hdType}
+                hdStrategy={hdStrategy}
+                hdAuthority={hdAuthority}
+                hdProfile={hdProfile}
               />
+            </div>
+
+            {/* Today's Transits — 8 cols */}
+            <div className="glass-card dash-col-8 dash-card-enter">
+              <h2 className="dash-section-title">Today&apos;s Transits</h2>
+              <span className="dash-section-subtitle">☿ Planetary positions</span>
+              <TransitCard />
             </div>
           </div>
 
-          {/* ── ☉ ──────────────────────────────────────────────────────────── */}
-          <Divider glyph="☉" />
-
-          {/* ── ROW 2: Today's Transits ──────────────────────────────────────── */}
-          <div className="dash-card dash-card-enter dash-mb">
-            <span className="dash-eyebrow-sm" style={{ marginBottom: "1.25rem", display: "block" }}>☿ Today&apos;s Transits</span>
-            <TransitCard />
-          </div>
-
-          {/* ── ☽ ──────────────────────────────────────────────────────────── */}
-          <Divider glyph="☽" />
-
-          {/* ── ROW 3: Forecast ──────────────────────────────────────────────── */}
-          <div className="dash-card dash-card-enter dash-mb">
+          {/* ── ROW 3: Life Forecast — full width ───────────────────────────── */}
+          <div className="glass-card dash-card-enter dash-mb">
+            <h2 className="dash-section-title">Life Forecast</h2>
+            <span className="dash-section-subtitle">♃ Weekly &amp; monthly outlook</span>
             <ForecastCard
               initialWeekly={weeklyForecast}
               initialMonthly={monthlyForecast}
@@ -283,28 +298,10 @@ export default async function DashboardPage({
             />
           </div>
 
-          {/* ── ♃ ──────────────────────────────────────────────────────────── */}
-          <Divider glyph="♃" />
-
-          {/* ── ROW 4: Human Design ──────────────────────────────────────────── */}
-          <div className="dash-card dash-card-enter dash-mb">
-            <span className="dash-eyebrow-sm" style={{ marginBottom: "1.25rem", display: "block" }}>◉ Human Design Profile</span>
-            <HumanDesignTypeCard
-              hdType={hdType}
-              hdStrategy={hdStrategy}
-              hdAuthority={hdAuthority}
-              hdProfile={hdProfile}
-            />
-          </div>
-
-          {/* ── ♄ ──────────────────────────────────────────────────────────── */}
-          <Divider glyph="♄" />
-
-          {/* ── ROW 5: Natal Chart Report ────────────────────────────────────── */}
-          <div className="dash-card-bare dash-card-enter">
-            <div style={{ padding: "1.75rem 1.75rem 0" }}>
-              <span className="dash-eyebrow-sm">◈ Natal Chart Report</span>
-            </div>
+          {/* ── ROW 4: Natal Chart Report — full width ───────────────────────── */}
+          <div className="glass-card dash-card-enter">
+            <h2 className="dash-section-title">Natal Chart Report</h2>
+            <span className="dash-section-subtitle">◈ Full birth chart analysis</span>
             <DashboardReport />
           </div>
 

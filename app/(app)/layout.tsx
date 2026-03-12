@@ -8,7 +8,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { TopNavV2 } from "@/components/v2/TopNav";
+import { SidebarNav } from "@/components/app/SidebarNav";
 import "@/styles/v2.css";
 import "@/styles/dashboard.css";
 
@@ -27,9 +27,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     /* FRONTEND.md §12: var(--cosmos) background + noise overlay only — no starfield */
     <div style={{ minHeight: "100vh", background: "var(--cosmos)" }}>
-      <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-        <TopNavV2 userName={userName} tier={tier} />
-        <main style={{ flex: 1 }}>
+      <div className="v2-bg" />
+      <div style={{ position: "relative", zIndex: 2, display: "flex", minHeight: "100vh" }}>
+        <SidebarNav userName={userName} tier={tier} />
+        <main className="app-main-content" style={{ flex: 1, minWidth: 0 }}>
           {children}
         </main>
       </div>

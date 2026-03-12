@@ -42,10 +42,10 @@
 .dash-wrap {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 6rem 2rem 5rem;
+  padding: 2.5rem 2rem 5rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .dash-wrap { padding: calc(64px + 2rem) 1.25rem 4rem; }
 }
 
@@ -446,3 +446,324 @@
 
 .dash-mt { margin-top: 1.5rem; }
 .dash-mb { margin-bottom: 1.5rem; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SIDEBAR NAVIGATION
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Main content offset for fixed sidebar */
+.app-main-content {
+  padding-left: 256px;
+}
+
+@media (max-width: 1024px) {
+  .app-main-content {
+    padding-left: 0;
+  }
+}
+
+/* Desktop sidebar */
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 256px;
+  height: 100vh;
+  background: rgba(13, 18, 32, 0.92);
+  border-right: 1px solid rgba(200, 135, 58, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  z-index: 100;
+}
+
+@media (max-width: 1024px) {
+  .app-sidebar { display: none; }
+}
+
+.app-sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+}
+
+.app-sidebar-logo-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 3px;
+  border: 1px solid rgba(200, 135, 58, 0.22);
+  background: rgba(200, 135, 58, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-sidebar-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.app-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  margin-top: 8px;
+}
+
+.app-sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--mist);
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.app-sidebar-item:hover {
+  color: var(--cream);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.app-sidebar-item.active {
+  color: var(--cream);
+  background: rgba(72, 82, 180, 0.12);
+  border-color: rgba(200, 135, 58, 0.25);
+}
+
+.app-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(200, 135, 58, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  margin-top: auto;
+}
+
+.app-sidebar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--earth), var(--sky));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.app-sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.app-sidebar-user-name {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-sidebar-user-tier {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 2px;
+}
+
+.app-sidebar-signout {
+  background: none;
+  border: none;
+  color: var(--mist);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.app-sidebar-signout:hover {
+  color: var(--cream);
+}
+
+/* Mobile top header bar */
+.app-sidebar-mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(13, 18, 32, 0.92);
+  border-bottom: 1px solid rgba(200, 135, 58, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  z-index: 100;
+}
+
+@media (max-width: 1024px) {
+  .app-sidebar-mobile-header { display: flex; }
+}
+
+.app-sidebar-hamburger {
+  background: none;
+  border: none;
+  color: var(--mist);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+}
+
+/* Backdrop overlay for mobile drawer */
+.app-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 110;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+  .app-sidebar-overlay { display: block; }
+}
+
+.app-sidebar-overlay.visible {
+  opacity: 1;
+}
+
+/* Mobile slide-in drawer */
+.app-sidebar-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 256px;
+  height: 100vh;
+  background: rgba(13, 18, 32, 0.98);
+  border-right: 1px solid rgba(200, 135, 58, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  z-index: 120;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.app-sidebar-drawer.open {
+  transform: translateX(0);
+}
+
+.app-sidebar-drawer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.app-sidebar-close {
+  background: none;
+  border: none;
+  color: var(--mist);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   GLASS CARD + 12-COLUMN DASHBOARD GRID
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 24px;
+}
+
+.dash-grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+}
+
+.dash-col-8  { grid-column: span 8; }
+.dash-col-4  { grid-column: span 4; }
+.dash-col-12 { grid-column: span 12; }
+
+@media (max-width: 1024px) {
+  .dash-col-8,
+  .dash-col-4,
+  .dash-col-12 {
+    grid-column: span 12;
+  }
+}
+
+/* Section header inside glass cards */
+.dash-section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--cream);
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.dash-section-subtitle {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mist);
+  margin-bottom: 16px;
+  display: block;
+}
+
+.dash-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.dash-sparkle {
+  color: var(--gold);
+  font-size: 14px;
+  opacity: 0.6;
+  margin-top: 2px;
+}
