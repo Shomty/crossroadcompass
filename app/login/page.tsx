@@ -54,7 +54,7 @@ export default function LoginPage() {
       <Link
         href="/"
         style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: "1.35rem",
           fontWeight: 600,
           color: "var(--gold)",

@@ -62,7 +62,7 @@ export function UpgradeButton({ tier, label, disabled }: Props) {
         {loading ? "Redirecting…" : label}
       </button>
       {error && (
-        <p style={{ marginTop: 8, fontSize: 12, color: "#c0392b", fontFamily: "'Instrument Sans', sans-serif" }}>
+        <p style={{ marginTop: 8, fontSize: 12, color: "#c0392b", fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" }}>
           {error}
         </p>
       )}

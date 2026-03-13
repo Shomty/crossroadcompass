@@ -35,10 +35,10 @@ export default async function SubscribePage() {
           <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--amber, #c8873a)", marginBottom: 12 }}>
             ✦ Membership
           </p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 300, color: "var(--moon, #f2ead8)", margin: "0 0 16px", lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "Cinzel, serif", fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 300, color: "var(--moon, #f2ead8)", margin: "0 0 16px", lineHeight: 1.1 }}>
             Choose Your Path
           </h1>
-          <p style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 15, color: "var(--muted, #8a8070)", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
+          <p style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 15, color: "var(--muted, #8a8070)", maxWidth: 480, margin: "0 auto", lineHeight: 1.6 }}>
             Deepen your practice with personalised weekly forecasts, monthly cosmic maps, and priority consultations.
           </p>
         </div>
@@ -147,7 +147,7 @@ function PlanCard({
           {isCurrent && <span style={{ marginLeft: 8, color: "var(--gold, #d4af5f)" }}>✓</span>}
         </p>
         <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 40, fontWeight: 300, color: "var(--moon, #f2ead8)", lineHeight: 1 }}>{price}</span>
+          <span style={{ fontFamily: "Cinzel, serif", fontSize: 40, fontWeight: 300, color: "var(--moon, #f2ead8)", lineHeight: 1 }}>{price}</span>
           <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--muted, #8a8070)" }}>{interval}</span>
         </div>
       </div>
@@ -155,7 +155,7 @@ function PlanCard({
       {/* Features */}
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
         {features.map((f) => (
-          <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontFamily: "'Instrument Sans', sans-serif", fontSize: 13.5, color: "var(--muted, #8a8070)", lineHeight: 1.45 }}>
+          <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13.5, color: "var(--muted, #8a8070)", lineHeight: 1.45 }}>
             <span style={{ color: "var(--gold, #d4af5f)", flexShrink: 0, marginTop: 1 }}>✦</span>
             {f}
           </li>

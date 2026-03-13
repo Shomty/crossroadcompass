@@ -44,7 +44,7 @@ const themeTag: React.CSSProperties = {
 };
 
 const quoteText: React.CSSProperties = {
-  fontFamily: "'Cormorant Garamond', serif",
+  fontFamily: "Cinzel, serif",
   fontSize: "clamp(19px, 2.2vw, 26px)",
   fontWeight: 300, fontStyle: "italic",
   lineHeight: 1.6, color: "var(--cream)",
@@ -55,7 +55,7 @@ const actionBox: React.CSSProperties = {
   padding: "9px 13px",
   borderLeft: "2px solid rgba(200,135,58,0.4)",
   background: "rgba(200,135,58,0.05)",
-  fontFamily: "'Instrument Sans', sans-serif",
+  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
   fontSize: 12.5, color: "var(--gold)", lineHeight: 1.6,
   marginBottom: 18,
 };
@@ -173,32 +173,32 @@ export function TodaysGuidance({ insight, isPaid }: Props) {
           <StarRating insightId={generated!.id} initial={generated!.accuracyRating} />
         </>
       ) : loading ? (
-        <p style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 13, color: "var(--mist)", opacity: 0.55, fontStyle: "italic" }}>
+        <p style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--mist)", opacity: 0.55, fontStyle: "italic" }}>
           Channeling today&apos;s energy…
         </p>
       ) : isPaid ? (
         <>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontStyle: "italic", color: "var(--mist)", opacity: 0.4, lineHeight: 1.7, marginBottom: 14 }}>
+          <p style={{ fontFamily: "Cinzel, serif", fontSize: 17, fontStyle: "italic", color: "var(--mist)", opacity: 0.4, lineHeight: 1.7, marginBottom: 14 }}>
             Your guidance for today is ready to be revealed…
           </p>
           <button onClick={handleGenerate} style={{
             padding: "9px 20px", background: "rgba(212,175,95,0.1)",
             border: "1px solid rgba(212,175,95,0.4)", borderRadius: 2,
-            color: "var(--gold)", fontFamily: "'Instrument Sans', sans-serif",
+            color: "var(--gold)", fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
             fontSize: 13, cursor: "pointer", letterSpacing: "0.04em",
           }}>✦ Reveal Today&apos;s Guidance</button>
           {error && <p style={{ marginTop: 8, fontSize: 12, color: "rgba(220,80,80,0.8)" }}>{error}</p>}
         </>
       ) : (
         <>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontStyle: "italic", color: "var(--mist)", opacity: 0.35, lineHeight: 1.7, filter: "blur(3px)", userSelect: "none", marginBottom: 14 }}>
+          <p style={{ fontFamily: "Cinzel, serif", fontSize: 17, fontStyle: "italic", color: "var(--mist)", opacity: 0.35, lineHeight: 1.7, filter: "blur(3px)", userSelect: "none", marginBottom: 14 }}>
             With the stars aligned in your chart, today calls for deep presence and inner clarity as you move through the world.
           </p>
           <a href="/subscribe" style={{
             display: "inline-block", padding: "8px 18px",
             background: "rgba(212,175,95,0.1)", border: "1px solid rgba(212,175,95,0.4)",
             borderRadius: 2, color: "var(--gold)", fontSize: 12, textDecoration: "none",
-            fontFamily: "'Instrument Sans', sans-serif", letterSpacing: "0.06em",
+            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", letterSpacing: "0.06em",
           }}>Unlock Daily Guidance →</a>
         </>
       )}

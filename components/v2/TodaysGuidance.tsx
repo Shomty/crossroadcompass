@@ -124,7 +124,7 @@ export function TodaysGuidanceV2({ insight, isPaid }: Props) {
           {/* Quote */}
           {parsed.insight && (
             <p style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "Cinzel, serif",
               fontSize: "clamp(16px, 1.8vw, 22px)",
               fontWeight: 400, fontStyle: "italic",
               lineHeight: 1.65, color: "var(--cream)",
@@ -148,7 +148,7 @@ export function TodaysGuidanceV2({ insight, isPaid }: Props) {
               <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "var(--amber)", display: "block", marginBottom: 5 }}>
                 Today&apos;s Focus
               </span>
-              <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 13, color: "var(--cream)", lineHeight: 1.6 }}>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--cream)", lineHeight: 1.6 }}>
                 {parsed.action}
               </span>
             </div>
@@ -157,12 +157,12 @@ export function TodaysGuidanceV2({ insight, isPaid }: Props) {
           <StarRating insightId={generated!.id} initial={generated!.accuracyRating} />
         </>
       ) : loading ? (
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontStyle: "italic", color: "var(--mist)", lineHeight: 1.7, marginTop: 8 }}>
+        <p style={{ fontFamily: "Cinzel, serif", fontSize: 17, fontStyle: "italic", color: "var(--mist)", lineHeight: 1.7, marginTop: 8 }}>
           Channeling today&apos;s cosmic energy…
         </p>
       ) : isPaid ? (
         <>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontStyle: "italic", color: "var(--mist)", lineHeight: 1.7, marginBottom: 20 }}>
+          <p style={{ fontFamily: "Cinzel, serif", fontSize: 18, fontStyle: "italic", color: "var(--mist)", lineHeight: 1.7, marginBottom: 20 }}>
             Your guidance for today awaits…
           </p>
           <button onClick={handleGenerate} style={{
@@ -170,7 +170,7 @@ export function TodaysGuidanceV2({ insight, isPaid }: Props) {
             background: "rgba(200,135,58,0.05)",
             border: "1px solid rgba(200,135,58,0.22)",
             borderRadius: 2, color: "var(--gold)",
-            fontFamily: "'Instrument Sans', sans-serif",
+            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
             fontSize: 13, cursor: "pointer", letterSpacing: "0.06em",
             transition: "background 0.2s, border-color 0.2s",
           }}>
@@ -180,14 +180,14 @@ export function TodaysGuidanceV2({ insight, isPaid }: Props) {
         </>
       ) : (
         <>
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontStyle: "italic", color: "var(--mist)", lineHeight: 1.75, filter: "blur(4px)", userSelect: "none" as const, marginBottom: 20 }}>
+          <p style={{ fontFamily: "Cinzel, serif", fontSize: 18, fontStyle: "italic", color: "var(--mist)", lineHeight: 1.75, filter: "blur(4px)", userSelect: "none" as const, marginBottom: 20 }}>
             With the stars aligned in your chart, today calls for deep presence and inner clarity as you move with purpose.
           </p>
           <a href="/subscribe" style={{
             display: "inline-block", padding: "9px 22px",
             background: "rgba(200,135,58,0.05)", border: "1px solid rgba(200,135,58,0.22)",
             borderRadius: 2, color: "var(--gold)", fontSize: 12, textDecoration: "none",
-            fontFamily: "'Instrument Sans', sans-serif", letterSpacing: "0.08em",
+            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", letterSpacing: "0.08em",
           }}>Unlock Daily Guidance →</a>
         </>
       )}

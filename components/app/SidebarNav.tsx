@@ -13,10 +13,10 @@ import { LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/report",    label: "My Chart"  },
-  { href: "/transit",   label: "Transits"  },
-  { href: "/settings",  label: "Settings"  },
+  { href: "/dashboard",        label: "Dashboard" },
+  { href: "/report",           label: "My Chart"  },
+  { href: "/transit",          label: "Transits"  },
+  { href: "/settings/profile", label: "Settings"  },
 ];
 
 interface Props {

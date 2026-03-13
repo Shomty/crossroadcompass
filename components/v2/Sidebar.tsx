@@ -109,7 +109,7 @@ export function SidebarV2({ userName, tier }: Props) {
           }} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, fontWeight: 500, color: "var(--v2-moon)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12.5, fontWeight: 500, color: "var(--v2-moon)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
             {userName}
           </div>
           <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8.5, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--v2-gold)", marginTop: 2 }}>

@@ -72,7 +72,7 @@ function SocialButton({ id, label, icon }: SocialProvider) {
         border: "1px solid rgba(200,135,58,0.22)",
         borderRadius: 3,
         color: "var(--mist)",
-        fontFamily: "'Instrument Sans', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
         fontSize: 13.5, cursor: loading ? "wait" : "pointer",
         transition: "border-color 0.18s, background 0.18s",
         opacity: loading ? 0.6 : 1,
@@ -120,8 +120,8 @@ export function LoginForm({ enabledProviders, missingSecret = [] }: Props) {
   if (sent) {
     return (
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "2.5rem", color: "var(--amber)", marginBottom: "1rem" }} aria-hidden>✦</div>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.4rem", fontWeight: 400, color: "var(--cream)", marginBottom: "0.75rem" }}>
+        <div style={{ fontFamily: "Cinzel, serif", fontSize: "2.5rem", color: "var(--amber)", marginBottom: "1rem" }} aria-hidden>✦</div>
+        <h2 style={{ fontFamily: "Cinzel, serif", fontSize: "1.4rem", fontWeight: 400, color: "var(--cream)", marginBottom: "0.75rem" }}>
           Check your inbox
         </h2>
         <p style={{ fontSize: "0.9rem", color: "var(--mist)", lineHeight: 1.7 }}>
@@ -141,7 +141,7 @@ export function LoginForm({ enabledProviders, missingSecret = [] }: Props) {
   return (
     <>
       <p className="eyebrow" style={{ marginBottom: "1.5rem" }}>Welcome</p>
-      <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.6rem", fontWeight: 300, color: "var(--cream)", marginBottom: "0.5rem", lineHeight: 1.2 }}>
+      <h2 style={{ fontFamily: "Cinzel, serif", fontSize: "1.6rem", fontWeight: 300, color: "var(--cream)", marginBottom: "0.5rem", lineHeight: 1.2 }}>
         Sign in to your <em style={{ color: "var(--gold)", fontStyle: "italic" }}>chart</em>
       </h2>
       <p style={{ fontSize: "0.85rem", color: "var(--mist)", marginBottom: "2rem", lineHeight: 1.7 }}>

@@ -53,8 +53,8 @@ export function TransitCard() {
   }
 
   const mono: React.CSSProperties = { fontFamily: "'DM Mono', monospace" };
-  const sans: React.CSSProperties = { fontFamily: "'Instrument Sans', sans-serif" };
-  const serif: React.CSSProperties = { fontFamily: "'Cormorant Garamond', serif" };
+  const sans: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" };
+  const serif: React.CSSProperties = { fontFamily: "Cinzel, serif" };
 
   // ── Loading ────────────────────────────────────────────────────────────
   if (loading) {

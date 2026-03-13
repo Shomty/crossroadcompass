@@ -18,6 +18,7 @@ import { KV_TTL } from "@/lib/kv/keys";
 
 let _gemini: GoogleGenAI | null = null;
 function gemini() {
+  if (!env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not set");
   if (!_gemini) _gemini = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
   return _gemini;
 }
@@ -70,10 +71,15 @@ function buildTransitPrompt(
   userName: string,
   today: string
 ): string {
-  const natalPlanets = formatPlanets(natal.planets);
-  const transitPlanets = formatPlanets(transit.planets);
-  const moonSign = natal.moonSign ?? natal.ascendant?.sign ?? "unknown";
-  const ascendant = natal.ascendant ? `${natal.ascendant.sign} ${natal.ascendant.degree?.toFixed(1) ?? ""}°` : "unknown";
+  const natalD1   = natal.rawResponse.chartD1;
+  const transitD1 = transit.rawResponse.chartD1;
+  const natalPlanets   = formatPlanets(natalD1.planets);
+  const transitPlanets = formatPlanets(transitD1.planets);
+  const moonPlanet = natalD1.planets.find(p => p.name === "moon");
+  const moonSign = moonPlanet?.sign ?? natalD1.ascendant?.sign ?? "unknown";
+  const ascendant = natalD1.ascendant
+    ? `${natalD1.ascendant.sign} ${natalD1.ascendant.degree?.toFixed(1) ?? ""}°`
+    : "unknown";
 
   return `You are a Vedic astrologer trained in Parasara Hora Shastra. Generate a concise, practical transit reading.
 
@@ -133,7 +139,7 @@ export async function generateTransitReading(
   if (cached) return cached;
 
   // Build all-planets snapshot from raw transit chart
-  const allPlanets: RawTransitPlanet[] = (transit.planets ?? []).map((p) => ({
+  const allPlanets: RawTransitPlanet[] = (transit.rawResponse.chartD1.planets ?? []).map((p) => ({
     name: p.name,
     sign: p.sign ?? "?",
     house: p.house ?? null,

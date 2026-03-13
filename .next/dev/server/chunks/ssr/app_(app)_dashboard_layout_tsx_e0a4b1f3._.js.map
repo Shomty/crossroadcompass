@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/miloshmarkovic/Documents/crossroadcompass/app/%28app%29/dashboard/layout.tsx"],"sourcesContent":["// Pass-through — shell provided by (app)/layout.tsx\nexport default function DashboardLayout({ children }: { children: React.ReactNode }) {\n  return <>{children}</>;\n}\n"],"names":[],"mappings":"AAAA,oDAAoD;;;;;;;AACrC,SAAS,gBAAgB,EAAE,QAAQ,EAAiC;IACjF,qBAAO;kBAAG;;AACZ"}}]
+}

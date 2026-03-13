@@ -5,17 +5,13 @@
  * No other file in the codebase may import fetch against this endpoint directly.
  * See copilot-instructions section 16.1.
  *
- * Confirmed endpoint: POST /api/v1/birth-charts
- * Auth: X-Api-Key header
- * Response shape: { success: boolean, data: VedicBirthChartResponse }
- *
  * Rate-limit awareness: every call costs money. All callers must check the
  * DB cache first. This file has no caching logic — that lives in chartService,
  * transitService, and dashaService.
  */
 
 import { env } from "@/lib/env";
-import type { VedicChart, VedicBirthChartRequest, VedicBirthChartResponse } from "@/lib/astro/types";
+import { VedicChart, VedicBirthChartResponse, TransitData, DashaPeriod } from "@/lib/astro/types";
 
 // ─── Error class ─────────────────────────────────────────────────────────
 
@@ -32,10 +28,6 @@ export class VedicApiError extends Error {
 // ─── Core fetch wrapper ───────────────────────────────────────────────────
 
 async function vedicFetch<T>(path: string, body: unknown): Promise<T> {
-  if (!env.VEDIC_API_URL || !env.VEDIC_API_KEY) {
-    throw new VedicApiError(0, "Vedic API is not configured (VEDIC_API_URL / VEDIC_API_KEY missing)");
-  }
-
   const url = `${env.VEDIC_API_URL}${path}`;
 
   const res = await fetch(url, {
@@ -49,92 +41,89 @@ async function vedicFetch<T>(path: string, body: unknown): Promise<T> {
   });
 
   if (!res.ok) {
+    // Log status server-side only — never surface the key or raw body to client
     const text = await res.text();
     console.error(`[VedicAPI] ${res.status} on ${path}:`, text);
     throw new VedicApiError(res.status, text);
   }
 
-  // Response is wrapped in { success: boolean, data: T }
-  const json = await res.json() as { success: boolean; data: T };
-  return json.data;
+  return res.json() as Promise<T>;
 }
 
-// ─── Birth chart (natal + dashas) ────────────────────────────────────────
+// ─── Natal chart ─────────────────────────────────────────────────────────
+
+// API response envelope — all endpoints wrap their payload in this shape
+interface VedicApiEnvelope<T> {
+  success: boolean;
+  data: T;
+  timestamp: string;
+  requestId: string;
+}
 
 /**
- * Fetch the Vedic birth chart.
- * Endpoint: POST /api/v1/birth-charts
- *
- * The response contains the full natal chart. Dasha and transit data
- * may be embedded in the response or require separate endpoints —
- * confirm once the API key is activated and map VedicChart fields accordingly.
+ * Fetch the Vedic natal chart for a given birth profile.
+ * Endpoint: POST /birth-charts
+ * The API wraps the chart in { success, data, timestamp, requestId }.
  */
-export async function fetchVedicNatalChart(
-  params: VedicBirthChartRequest
-): Promise<VedicChart> {
-  const payload = {
-    birthInfo: {
-      dateOfBirth: params.dateOfBirth,         // "YYYY-MM-DD"
-      timeOfBirth: params.timeOfBirth,         // "HH:MM"
-      location: params.location,               // "City, Country"
-      isTimeApproximate: params.isTimeApproximate,
-      gender: params.gender,
-      name: params.name,
-    },
+export async function fetchVedicNatalChart(params: {
+  dateOfBirth: string;        // "YYYY-MM-DD"
+  timeOfBirth: string;        // "HH:MM"
+  location: string;           // "City, Country" — API geocodes internally
+  isTimeApproximate: boolean;
+  gender: "male" | "female" | "other";
+  name: string;
+}): Promise<VedicChart> {
+  const envelope = await vedicFetch<VedicApiEnvelope<VedicBirthChartResponse>>("/birth-charts", {
+    birthInfo: params,
     chartStyle: "north_indian",
     ayanamsa: "lahiri",
     houseSystem: "equal",
-    metadata: {},
-  };
-
-  const raw = await vedicFetch<VedicBirthChartResponse>("/birth-charts", payload);
-
-  // Extract convenience fields from the raw response
-  const d1 = raw.chartD1;
-  const sun = d1.planets.find((p) => p.name === "sun");
-  const moon = d1.planets.find((p) => p.name === "moon");
-  const now = new Date();
-  const currentDasha = d1.dashas?.vimshottari?.dashaPeriods?.find(
-    (p) => new Date(p.startDate) <= now && new Date(p.endDate) >= now
-  );
-
-  return {
-    rawResponse: raw,
-    ascendant: d1.ascendant,
-    sunSign: sun?.sign,
-    moonSign: moon?.sign,
-    currentDasha,
-    planets: d1.planets,
-  };
+  });
+  return { rawResponse: envelope.data };
 }
 
 // ─── Daily transits ───────────────────────────────────────────────────────
 
 /**
- * Fetch today's transits.
- * Transits are NOT embedded in /birth-charts — they require a separate endpoint.
- * Endpoint to be confirmed (e.g. POST /api/v1/transits). Not yet implemented.
+ * Fetch today's transits for a given user's chart configuration.
+ *
+ * DECISION NEEDED: confirm endpoint path and payload schema with Milosh.
  */
-export async function fetchDailyTransits(_params: {
-  date: string;       // YYYY-MM-DD
-  location: string;   // "City, Country"
-}): Promise<unknown> {
-  throw new Error(
-    "[VedicAPI] Transit endpoint not yet implemented."
-  );
+export async function fetchDailyTransits(params: {
+  date: string; // YYYY-MM-DD
+  latitude: number;
+  longitude: number;
+  timezone?: string; // DECISION NEEDED: confirm Vedic API timezone format
+}): Promise<TransitData> {
+  // DECISION NEEDED: confirm endpoint path and payload schema
+  const raw = await vedicFetch<unknown>("/transits", params);
+  return {
+    rawResponse: raw,
+    date: params.date,
+  };
 }
 
 // ─── Dasha timeline ───────────────────────────────────────────────────────
 
 /**
- * Dashas are embedded in the /birth-charts response (chartD1.dashas.vimshottari).
- * Use fetchVedicNatalChart + extract currentDasha from the returned VedicChart.
- * This function is a no-op stub kept for interface compatibility.
+ * Fetch the full dasha timeline for a birth chart.
+ * Returns multi-year coverage so the result can be cached in the DB.
+ *
+ * DECISION NEEDED: confirm endpoint path and payload schema with Milosh.
  */
-export async function fetchDashaTimeline(
-  _params: VedicBirthChartRequest
-): Promise<unknown> {
-  throw new Error(
-    "[VedicAPI] Use fetchVedicNatalChart — dashas are embedded in chartD1.dashas."
-  );
+export async function fetchDashaTimeline(params: {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  latitude: number;
+  longitude: number;
+  timezone?: string; // DECISION NEEDED: confirm Vedic API timezone format
+}): Promise<DashaPeriod[]> {
+  // DECISION NEEDED: confirm endpoint path and payload schema
+  const raw = await vedicFetch<unknown>("/dashas", params);
+
+  // DECISION NEEDED: map raw API response to DashaPeriod[] once shape known
+  return raw as DashaPeriod[];
 }

@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const appUrl = env.APP_URL.replace(/\/$/, "");
+  const appUrl = (env.APP_URL ?? env.NEXTAUTH_URL).replace(/\/$/, "");
 
   // ── Fetch all users with birth profiles ───────────────────────────────────
   const profilesIndex = await db.birthProfile.findMany({

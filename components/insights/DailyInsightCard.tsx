@@ -32,7 +32,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 const bodyStyle: React.CSSProperties = {
-  fontFamily: "'Cormorant Garamond', serif",
+  fontFamily: "Cinzel, serif",
   fontSize: 15,
   fontWeight: 400,
   lineHeight: 1.7,
@@ -45,7 +45,7 @@ const actionStyle: React.CSSProperties = {
   background: "rgba(212,175,95,0.07)",
   borderLeft: "2px solid rgba(212,175,95,0.4)",
   borderRadius: 4,
-  fontFamily: "'Instrument Sans', sans-serif",
+  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
   fontSize: 12,
   color: "var(--gold)",
   lineHeight: 1.5,
@@ -71,7 +71,7 @@ const generateBtnStyle: React.CSSProperties = {
   border: "1px solid rgba(212,175,95,0.4)",
   borderRadius: 8,
   color: "var(--gold)",
-  fontFamily: "'Instrument Sans', sans-serif",
+  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
   fontSize: 13,
   cursor: "pointer",
   letterSpacing: "0.04em",
@@ -153,7 +153,7 @@ export function DailyInsightCard({ initialInsight, isPaid, todayDate }: Props) {
               background: "linear-gradient(135deg,rgba(212,175,95,0.18),rgba(212,175,95,0.06))",
               border: "1px solid rgba(212,175,95,0.4)", borderRadius: 20,
               color: "var(--gold)", fontSize: 12, textDecoration: "none",
-              fontFamily: "'Instrument Sans', sans-serif", letterSpacing: "0.06em",
+              fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", letterSpacing: "0.06em",
             }}>
               Upgrade for Daily Insights
             </a>

@@ -21,31 +21,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-// chartService imports Swiss Ephemeris native binaries — loaded lazily to avoid
-// module evaluation errors when the route is first compiled.
-async function getChartService() {
-  return import("@/lib/astro/chartService");
-}
-
-// ─── GET — fetch birth profile ─────────────────────────────────────────────
-
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const profile = await db.birthProfile.findUnique({
-    where: { userId: session.user.id },
-    select: {
-      birthName: true, birthDate: true, birthTimeKnown: true,
-      birthHour: true, birthMinute: true, gender: true,
-      birthCity: true, birthCountry: true, latitude: true,
-      longitude: true, timezone: true, profileVersion: true,
-    },
-  });
-  if (!profile) return NextResponse.json({ error: "No profile found" }, { status: 404 });
-  return NextResponse.json({ profile });
-}
+import { invalidateChartCache } from "@/lib/astro/chartService";
 
 // ─── Validation schema ─────────────────────────────────────────────────────
 
@@ -60,7 +36,7 @@ const birthDataSchema = z.object({
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   timezone: z.string().min(1), // IANA timezone e.g. "Europe/Belgrade"
-  gender: z.enum(["male", "female", "other"]).optional().nullable(),
+  gender: z.enum(["male", "female", "other"]).nullable().optional(),
   // Onboarding intake fields (OB-05) — optional, present on first create only
   intakeLifeSituation: z.string().max(500).optional().nullable(),
   intakePrimaryFocus: z.string().max(500).optional().nullable(),
@@ -74,6 +50,38 @@ const birthDataSchema = z.object({
       d.birthMinute !== null),
   { message: "birthHour and birthMinute are required when birthTimeKnown=true" }
 );
+
+// ─── GET — fetch birth profile ───────────────────────────────────────────
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const profile = await db.birthProfile.findUnique({
+    where: { userId: session.user.id },
+    select: {
+      birthName: true,
+      birthDate: true,
+      birthTimeKnown: true,
+      birthHour: true,
+      birthMinute: true,
+      gender: true,
+      birthCity: true,
+      birthCountry: true,
+      latitude: true,
+      longitude: true,
+      timezone: true,
+    },
+  });
+
+  if (!profile) {
+    return NextResponse.json({ error: "No birth profile found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ profile });
+}
 
 // ─── POST — create birth profile ──────────────────────────────────────────
 
@@ -123,18 +131,8 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Pre-calculate both charts in the background so dashboard data is ready immediately.
-  // Fire-and-forget — don't await so the 201 response is immediate.
-  const userId = session.user.id;
-  void getChartService().then(({ getOrCreateHDChart, getOrCreateVedicChart }) =>
-    Promise.all([
-      getOrCreateHDChart(userId, profile),
-      // Vedic chart populates the Dasha table — required for DashaCard to show Current Period
-      getOrCreateVedicChart(userId, profile),
-    ])
-  ).catch((err) =>
-    console.error("[birth-profile] chart pre-calc failed:", err)
-  );
+  // TODO: queue background job to pre-calculate HD + Vedic charts
+  // Do not calculate inline — user gets an immediate response (section 19, step 5)
 
   return NextResponse.json({ profileId: profile.id }, { status: 201 });
 }
@@ -198,20 +196,7 @@ export async function PATCH(req: NextRequest) {
   });
 
   // Invalidate KV cache keys (separate from DB tx — KV is not transactional)
-  const { invalidateChartCache, getOrCreateHDChart, getOrCreateVedicChart } = await getChartService();
   await invalidateChartCache(userId);
-
-  // Re-fetch both charts in the background so dashboard data is ready immediately.
-  const updatedProfile = await db.birthProfile.findUnique({ where: { userId } });
-  if (updatedProfile) {
-    void Promise.all([
-      getOrCreateHDChart(userId, updatedProfile),
-      // Vedic chart re-populates the Dasha table after birth data change
-      getOrCreateVedicChart(userId, updatedProfile),
-    ]).catch((err) =>
-      console.error("[birth-profile] chart re-calc failed:", err)
-    );
-  }
 
   // AC-04: notify user that past insights were based on prior birth data
   return NextResponse.json({

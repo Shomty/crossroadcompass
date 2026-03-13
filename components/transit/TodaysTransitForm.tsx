@@ -50,15 +50,16 @@ export function TodaysTransitForm({ userName }: Props) {
   const [citySearching, setCitySearching] = useState(false);
   const [noResults, setNoResults] = useState(false);
 
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<TransitResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Live clock
+  // Live clock — initialised client-side only to avoid SSR/hydration mismatch
   useEffect(() => {
+    setNow(new Date());
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -187,8 +188,8 @@ export function TodaysTransitForm({ userName }: Props) {
 
   const mono: React.CSSProperties = { fontFamily: "'DM Mono', monospace" };
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const serif: React.CSSProperties = { fontFamily: "'Cormorant Garamond', serif" };
-  const sans: React.CSSProperties = { fontFamily: "'Instrument Sans', sans-serif" };
+  const serif: React.CSSProperties = { fontFamily: "Cinzel, serif" };
+  const sans: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" };
   const eyebrow: React.CSSProperties = { ...mono, fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 6 };
   const label: React.CSSProperties = { ...mono, fontSize: 8.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--mist)", marginBottom: 4 };
   const value: React.CSSProperties = { ...sans, fontSize: 14, color: "var(--cream)", lineHeight: 1.5 };
@@ -214,11 +215,11 @@ export function TodaysTransitForm({ userName }: Props) {
           </div>
           <div>
             <p style={label}>Date</p>
-            <p style={value}>{formatDate(now)}</p>
+            <p style={value}>{now ? formatDate(now) : '—'}</p>
           </div>
           <div>
             <p style={label}>Time (live)</p>
-            <p style={{ ...value, ...mono, fontSize: 16, letterSpacing: "0.06em" }}>{formatTime(now)}</p>
+            <p style={{ ...value, ...mono, fontSize: 16, letterSpacing: "0.06em" }}>{now ? formatTime(now) : '--:--:--'}</p>
           </div>
           <div>
             <p style={label}>Location</p>

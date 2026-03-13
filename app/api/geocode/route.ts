@@ -9,9 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-// tz-lookup: pure-JS timezone lookup (no filesystem reads — works in Turbopack)
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const tzlookup = require("tz-lookup") as (lat: number, lon: number) => string;
+import tzlookup from "tz-lookup";
 
 interface PhotonFeature {
   geometry: { coordinates: [number, number] };

@@ -24,6 +24,8 @@ export async function POST() {
   });
   if (!maha) return NextResponse.json({ insight: null });
 
+  if (!env.GEMINI_API_KEY) return NextResponse.json({ insight: null });
+
   const antar = await db.dasha.findFirst({
     where: { userId, level: "ANTARDASHA", startDate: { lte: now }, endDate: { gte: now } },
   });
@@ -46,6 +48,7 @@ export async function POST() {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
+    if (!text) return NextResponse.json({ insight: null });
     return NextResponse.json({ insight: text, planet: mahaName, subPlanet: antarName });
   } catch (e) {
     console.error("[dasha-insight]", e);

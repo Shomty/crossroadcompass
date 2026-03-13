@@ -199,7 +199,7 @@ function Front({ type }: { type: HDTypeData }) {
       {/* Faint background glyph */}
       <div aria-hidden style={{
         position: "absolute", top: -8, right: -4,
-        fontFamily: "'Cormorant Garamond', serif",
+        fontFamily: "Cinzel, serif",
         fontSize: 120, lineHeight: 1,
         color: "rgba(200,135,58,0.07)",
         pointerEvents: "none", userSelect: "none",
@@ -217,11 +217,11 @@ function Front({ type }: { type: HDTypeData }) {
         {/* Glyph inline + type name */}
         <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 3, flexWrap: "wrap" }}>
           <span style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "Cinzel, serif",
             fontSize: 22, color: "var(--amber)", lineHeight: 1,
           }}>{type.glyph}</span>
           <span style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "Cinzel, serif",
             fontSize: 32, fontWeight: 300,
             color: "var(--cream)", letterSpacing: "0.03em", lineHeight: 1,
           }}>{type.name}</span>
@@ -255,14 +255,14 @@ function Front({ type }: { type: HDTypeData }) {
             color: "var(--amber)", opacity: 0.6, marginBottom: 4,
           }}>Strategy</div>
           <div style={{
-            fontFamily: "'Instrument Sans', sans-serif",
+            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
             fontSize: 13, color: "var(--mist)", lineHeight: 1.6,
           }}>{type.strategyShort}</div>
         </div>
 
         {/* Core question */}
         <div style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: 14, fontStyle: "italic",
           color: "var(--gold)", lineHeight: 1.5,
         }}>"{type.question}"</div>
@@ -294,13 +294,13 @@ function Back({ type, authority, profile, strategyText }: {
           {authority && (
             <div>
               <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 3 }}>Authority</div>
-              <div style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 13, color: "var(--cream)" }}>{authority}</div>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--cream)" }}>{authority}</div>
             </div>
           )}
           {profile && (
             <div>
               <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 3 }}>Profile</div>
-              <div style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 13, color: "var(--cream)" }}>{profile}</div>
+              <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--cream)" }}>{profile}</div>
             </div>
           )}
         </div>
@@ -312,18 +312,18 @@ function Back({ type, authority, profile, strategyText }: {
       {/* Strategy */}
       <div style={{ marginBottom: 12 }}>
         <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 4 }}>Strategy</div>
-        <div style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65 }}>{strategyText}</div>
+        <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65 }}>{strategyText}</div>
       </div>
 
       {/* Key insight */}
       <div style={{ marginBottom: 12 }}>
         <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 4 }}>Key Insight</div>
-        <div style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65 }}>{type.key}</div>
+        <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65 }}>{type.key}</div>
       </div>
 
       {/* Description */}
       <div style={{
-        fontFamily: "'Instrument Sans', sans-serif",
+        fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
         fontSize: 12, color: "var(--mist)", lineHeight: 1.7, opacity: 0.8,
       }}>{type.desc}</div>
     </div>

@@ -63,7 +63,7 @@ export default function ProfileSettingsPage() {
         <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--gold)", opacity: 0.7, marginBottom: "0.5rem" }}>
           Account
         </p>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(1.75rem, 4vw, 2.4rem)", fontWeight: 500, color: "var(--cream)", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
+        <h1 style={{ fontFamily: "Cinzel, serif", fontSize: "clamp(1.75rem, 4vw, 2.4rem)", fontWeight: 500, color: "var(--cream)", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
           Birth Profile
         </h1>
         <p style={{ fontSize: "0.875rem", color: "var(--mist)", lineHeight: 1.7, marginTop: "0.5rem" }}>
@@ -102,6 +102,25 @@ export default function ProfileSettingsPage() {
           )}
         </div>
       </div>
+
+      {/* Chart data download */}
+      {!loading && profile && (
+        <div style={{ marginTop: "1.5rem", padding: "1.25rem 1.5rem", borderRadius: 10, border: "1px solid rgba(212,175,95,0.15)", background: "rgba(212,175,95,0.04)" }}>
+          <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--gold)", opacity: 0.7, margin: "0 0 0.5rem" }}>
+            Chart Data
+          </p>
+          <p style={{ fontSize: "0.8rem", color: "var(--mist)", lineHeight: 1.6, margin: "0 0 0.75rem" }}>
+            Download the raw Vedic natal chart JSON. Regenerated only when you update your birth data.
+          </p>
+          <a
+            href="/api/chart/vedic-data"
+            download
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--gold)", border: "1px solid rgba(212,175,95,0.3)", borderRadius: 6, padding: "0.4rem 0.9rem", textDecoration: "none" }}
+          >
+            ↓ Download chart JSON
+          </a>
+        </div>
+      )}
     </div>
   );
 }

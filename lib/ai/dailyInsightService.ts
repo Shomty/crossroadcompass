@@ -12,6 +12,7 @@ import type { HDChartData } from "@/types";
 
 let _gemini: GoogleGenAI | null = null;
 function gemini() {
+  if (!env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not set");
   if (!_gemini) _gemini = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
   return _gemini;
 }

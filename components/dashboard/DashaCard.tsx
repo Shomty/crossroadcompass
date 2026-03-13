@@ -5,7 +5,7 @@
  * Click anywhere to flip. Insight is fetched lazily on first flip.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface DashaData {
   planetName: string;
@@ -24,8 +24,21 @@ interface Props {
   frontContent: React.ReactNode;
 }
 
+const PLANET_COLOR_2: Record<string, string> = {
+  sun:     "#FF8C00",
+  moon:    "#E8E0FF",
+  mars:    "#300000",
+  mercury: "#B0E0FF",
+  jupiter: "#4B7BCC",
+  venus:   "#60C080",
+  saturn:  "#303030",
+  rahu:    "#220044",
+  ketu:    "#663300",
+};
+
 export function DashaCard({
   activeMaha,
+  activeAntar,
   mahaRemainingDays,
   mahaProgress,
   planetGlyph,
@@ -37,6 +50,27 @@ export function DashaCard({
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Animated visual progress (0 → mahaProgress)
+  const [animatedProgress, setAnimatedProgress] = useState<number | null>(null);
+
+  // Antardasha orbit dot color
+  const antarDotColor =
+    PLANET_COLOR_2[activeAntar?.planetName?.toLowerCase().split("/")[0] ?? ""] ??
+    "rgba(255,255,255,0.25)";
+
+  useEffect(() => {
+    if (mahaProgress == null) {
+      setAnimatedProgress(null);
+      return;
+    }
+    // Start from 0 so CSS transitions are visible
+    setAnimatedProgress(0);
+    const id = window.requestAnimationFrame(() => {
+      setAnimatedProgress(mahaProgress);
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [mahaProgress]);
 
   async function fetchInsight() {
     setLoading(true);
@@ -81,6 +115,14 @@ export function DashaCard({
         @keyframes dashaPulse {
           0%,100% { opacity:0.5 } 50% { opacity:1 }
         }
+        @keyframes orbitSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes dashaGlyphPulse {
+          0%,100% { opacity: 0.72; transform: scale(1); }
+          50%     { opacity: 1;    transform: scale(1.1); }
+        }
       `}</style>
 
       {/* Flip wrapper — preserves exact GlassCard dimensions */}
@@ -93,28 +135,100 @@ export function DashaCard({
 
           {/* ── FRONT ────────────────────────────────────────────────── */}
           <div className="dasha-face" style={{ position: "absolute", inset: 0 }}>
-            {/* Planet glyph bg */}
-            {activeMaha && (
-              <div style={{ position: "absolute", top: 12, right: 16, opacity: 0.08, pointerEvents: "none", fontSize: 88, lineHeight: 1, fontFamily: "serif", color: planetColor, userSelect: "none", animation: "slowSpin 60s linear infinite", display: "inline-block" }}>
-                {planetGlyph}
-              </div>
-            )}
             <div style={{ position: "relative", zIndex: 1, height: "100%" }}>
-              {frontContent}
+
+              {/* ── Orbit Engine ──────────────────────────────────────── */}
               {activeMaha && (
+                <div style={{ position: "relative", height: 150, marginBottom: 8 }}>
+
+                  {/* Center glyph — pulsing (wrapper for translate, inner for scale) */}
+                  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 2 }}>
+                    <div style={{
+                      fontSize: 40, lineHeight: 1,
+                      fontFamily: "Cinzel, serif",
+                      color: planetColor,
+                      userSelect: "none",
+                      display: "inline-block",
+                      animation: "dashaGlyphPulse 3s ease-in-out infinite",
+                      filter: `drop-shadow(0 0 12px ${planetColor}99)`,
+                    }}>
+                      {planetGlyph}
+                    </div>
+                  </div>
+
+                  {/* Inner orbit — Antardasha — 80px diameter */}
+                  <div style={{
+                    position: "absolute",
+                    width: 80, height: 80,
+                    top: "50%", left: "50%",
+                    marginTop: -40, marginLeft: -40,
+                    borderRadius: "50%",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    animation: "orbitSpin 8s linear infinite",
+                  }}>
+                    <div style={{
+                      position: "absolute", bottom: -5, left: "50%",
+                      transform: "translateX(-50%)",
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: antarDotColor,
+                      boxShadow: `0 0 8px 3px ${antarDotColor}99`,
+                    }} />
+                  </div>
+
+                  {/* Outer orbit — Mahadasha — 130px diameter */}
+                  <div style={{
+                    position: "absolute",
+                    width: 130, height: 130,
+                    top: "50%", left: "50%",
+                    marginTop: -65, marginLeft: -65,
+                    borderRadius: "50%",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    animation: "orbitSpin 18s linear infinite reverse",
+                  }}>
+                    <div style={{
+                      position: "absolute", top: "50%", right: -6.5,
+                      transform: "translateY(-50%)",
+                      width: 13, height: 13, borderRadius: "50%",
+                      background: planetColor,
+                      boxShadow: `0 0 12px 4px ${planetColor}99`,
+                    }} />
+                  </div>
+
+                </div>
+              )}
+
+              {frontContent}
+              {activeMaha && mahaProgress != null && animatedProgress != null && (
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   {/* Mini SVG progress ring */}
-                  {mahaProgress != null && (() => {
+                  {(() => {
                     const r = 14, circ = 2 * Math.PI * r;
-                    const dash = (mahaProgress / 100) * circ;
+                    const dash = (animatedProgress / 100) * circ;
                     return (
                       <svg width={36} height={36} viewBox="0 0 36 36" style={{ flexShrink: 0 }}>
                         <circle cx={18} cy={18} r={r} fill="none" stroke="rgba(212,175,55,0.1)" strokeWidth={2} />
-                        <circle cx={18} cy={18} r={r} fill="none" stroke="rgba(212,175,55,0.55)" strokeWidth={2}
-                          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
-                          transform="rotate(-90 18 18)" />
-                        <text x={18} y={22} textAnchor="middle" fontSize={7}
-                          fill="rgba(212,175,55,0.7)" fontFamily="'DM Mono',monospace">{mahaProgress}%</text>
+                        <circle
+                          cx={18}
+                          cy={18}
+                          r={r}
+                          fill="none"
+                          stroke="rgba(212,175,55,0.55)"
+                          strokeWidth={2}
+                          strokeDasharray={`${dash} ${circ}`}
+                          strokeLinecap="round"
+                          transform="rotate(-90 18 18)"
+                          style={{ transition: "stroke-dasharray 0.6s ease" }}
+                        />
+                        <text
+                          x={18}
+                          y={22}
+                          textAnchor="middle"
+                          fontSize={7}
+                          fill="rgba(212,175,55,0.7)"
+                          fontFamily="'DM Mono',monospace"
+                        >
+                          {mahaProgress}%
+                        </text>
                       </svg>
                     );
                   })()}
@@ -149,20 +263,28 @@ export function DashaCard({
               </div>
 
               {/* Progress bar */}
-              {mahaProgress != null && (
+              {mahaProgress != null && animatedProgress != null && (
                 <div style={{ height: 2, background: "rgba(212,175,95,0.1)", borderRadius: 2, marginBottom: 16, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${mahaProgress}%`, background: "linear-gradient(90deg, rgba(212,175,95,0.5), rgba(212,175,95,0.85))", borderRadius: 2 }} />
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${animatedProgress}%`,
+                      background: "linear-gradient(90deg, rgba(212,175,95,0.5), rgba(212,175,95,0.85))",
+                      borderRadius: 2,
+                      transition: "width 0.6s ease",
+                    }}
+                  />
                 </div>
               )}
 
               {/* Insight text */}
               <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 {loading ? (
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: "italic", color: "var(--cream)", opacity: 0.45, lineHeight: 1.8, animation: "dashaPulse 1.8s ease-in-out infinite" }}>
+                  <p style={{ fontFamily: "Cinzel, serif", fontSize: 16, fontStyle: "italic", color: "var(--cream)", opacity: 0.45, lineHeight: 1.8, animation: "dashaPulse 1.8s ease-in-out infinite" }}>
                     Reading the stars…
                   </p>
                 ) : insight ? (
-                  <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: "italic", fontWeight: 300, color: "var(--cream)", lineHeight: 1.8 }}>
+                  <p style={{ fontFamily: "Cinzel, serif", fontSize: 16, fontStyle: "italic", fontWeight: 300, color: "var(--cream)", lineHeight: 1.8 }}>
                     {insight}
                   </p>
                 ) : apiError ? (
@@ -178,7 +300,7 @@ export function DashaCard({
                     </button>
                   </div>
                 ) : (
-                  <p style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--mist)", lineHeight: 1.65 }}>
+                  <p style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12, color: "var(--mist)", lineHeight: 1.65 }}>
                     No Dasha data yet. Complete your birth profile to receive your planetary insight.
                   </p>
                 )}

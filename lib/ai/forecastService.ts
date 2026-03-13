@@ -12,7 +12,7 @@ import type { HDChartData } from "@/types";
 
 let _gemini: GoogleGenAI | null = null;
 function gemini() {
-  if (!_gemini) _gemini = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+  if (!_gemini) _gemini = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY ?? "" });
   return _gemini;
 }
 

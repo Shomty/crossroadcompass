@@ -43,7 +43,7 @@ export function DashboardSidebar({ userName, tier }: DashboardSidebarProps) {
           </svg>
         </div>
         <div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 17, fontWeight: 500, letterSpacing: "0.01em", color: "var(--moon)", lineHeight: 1.2 }}>
+          <div style={{ fontFamily: "Cinzel, serif", fontSize: 17, fontWeight: 500, letterSpacing: "0.01em", color: "var(--moon)", lineHeight: 1.2 }}>
             Crossroads Compass
           </div>
           <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--faint)", marginTop: 1 }}>
@@ -66,7 +66,7 @@ export function DashboardSidebar({ userName, tier }: DashboardSidebarProps) {
                 gap: 11,
                 padding: "10px 12px",
                 borderRadius: 10,
-                fontFamily: "'Instrument Sans', sans-serif",
+                fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
                 fontSize: 13.5,
                 fontWeight: 400,
                 letterSpacing: "0.01em",
@@ -110,7 +110,7 @@ export function DashboardSidebar({ userName, tier }: DashboardSidebarProps) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: 14,
           color: "#fff",
           position: "relative",

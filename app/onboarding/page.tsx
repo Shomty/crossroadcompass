@@ -42,7 +42,7 @@ export default async function OnboardingPage() {
           </p>
           <h1
             style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "Cinzel, serif",
               fontSize: "clamp(2rem, 5vw, 2.8rem)",
               fontWeight: 300,
               color: "var(--cream)",

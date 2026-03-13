@@ -55,8 +55,18 @@ export async function POST(req: NextRequest) {
       name,
     });
 
+    const d1 = chart.rawResponse.chartD1;
+    const sunPlanet  = d1.planets.find(p => p.name === "sun");
+    const moonPlanet = d1.planets.find(p => p.name === "moon");
+
     return NextResponse.json({
-      chart,
+      chart: {
+        planets:      d1.planets,
+        ascendant:    d1.ascendant,
+        sunSign:      sunPlanet?.sign  ?? null,
+        moonSign:     moonPlanet?.sign ?? null,
+        currentDasha: null,
+      },
       meta: {
         name,
         dateOfBirth,

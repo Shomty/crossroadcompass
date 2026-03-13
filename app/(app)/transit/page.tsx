@@ -30,10 +30,10 @@ export default async function TodaysTransitPage() {
         <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 8 }}>
           ✦ Transit
         </p>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 300, color: "var(--cream)", lineHeight: 1.1, margin: "0 0 10px" }}>
+        <h1 style={{ fontFamily: "Cinzel, serif", fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 300, color: "var(--cream)", lineHeight: 1.1, margin: "0 0 10px" }}>
           Today&apos;s <em style={{ fontStyle: "italic", color: "var(--gold)" }}>Transit Chart</em>
         </h1>
-        <p style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 13.5, color: "var(--mist)", lineHeight: 1.7, maxWidth: 480 }}>
+        <p style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13.5, color: "var(--mist)", lineHeight: 1.7, maxWidth: 480 }}>
           Generate a Vedic birth chart for this exact moment using your current location.
         </p>
       </div>

@@ -37,7 +37,7 @@ export default async function AuthErrorPage({
     >
       <div
         style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: "2.5rem",
           color: "#c84a3a",
           marginBottom: "1.5rem",
@@ -49,7 +49,7 @@ export default async function AuthErrorPage({
 
       <h1
         style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: "clamp(1.6rem, 4vw, 2.2rem)",
           fontWeight: 300,
           color: "var(--cream)",

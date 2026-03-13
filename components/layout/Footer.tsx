@@ -18,7 +18,7 @@ export function Footer() {
         <Link
           href="/"
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "Cinzel, serif",
             fontSize: "1.1rem",
             fontWeight: 600,
             color: "var(--gold)",

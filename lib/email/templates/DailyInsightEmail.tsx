@@ -110,7 +110,7 @@ export default DailyInsightEmail;
 
 const body: React.CSSProperties = {
   backgroundColor: "#0d1220",
-  fontFamily: "'Instrument Sans', -apple-system, sans-serif",
+  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
   margin: 0,
   padding: 0,
 };

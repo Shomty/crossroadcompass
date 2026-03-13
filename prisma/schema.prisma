@@ -2,8 +2,7 @@
 // Personal data is subject to GDPR. Deletion cascades from User. See copilot-instructions section 17.
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -102,7 +101,7 @@ model BirthProfile {
   profileVersion Int @default(1)
 
   // Gender — used in HD chart context and personalised report language
-  gender  String?  // "male" | "female" | "other" | null (prefer not to say)
+  gender String? // "male" | "female" | "other" | null (prefer not to say)
 
   // Human Design chart — local library (sections 16.2, 18.1)
   // LICENSE PENDING: requires Swiss Ephemeris professional license before go-live
@@ -188,8 +187,6 @@ enum InsightType {
   DAILY
   WEEKLY
   MONTHLY
-  HD_TIP
-  INITIAL
 }
 
 model Insight {
@@ -207,7 +204,6 @@ model Insight {
   reviewedByConsultant Boolean   @default(false) // section 6.3 content review
   reviewedAt           DateTime?
   deliveredAt          DateTime?
-  accuracyRating       Int?      // 1-5, set via /api/insights/rate (email link or dashboard)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -36,7 +36,7 @@ export default async function ReportPage() {
             Human Design
           </div>
           <h1 style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "Cinzel, serif",
             fontSize: "clamp(22px, 3vw, 30px)",
             fontWeight: 400,
             letterSpacing: "0.01em",
@@ -56,7 +56,7 @@ export default async function ReportPage() {
               background: "transparent",
               border: "1px solid var(--border)",
               borderRadius: 10,
-              fontFamily: "'Instrument Sans', sans-serif",
+              fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
               fontSize: 12.5,
               fontWeight: 500,
               letterSpacing: "0.04em",

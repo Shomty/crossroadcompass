@@ -21,13 +21,13 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import Link from "next/link";
 import { Settings } from "lucide-react";
-import { TodaysGuidanceV2 } from "@/components/v2/TodaysGuidance";
 import { DashboardReport } from "@/components/report/DashboardReport";
 import { HumanDesignTypeCard } from "@/components/dashboard/HumanDesignTypeCard";
 import { ForecastCard } from "@/components/dashboard/ForecastCard";
 import { DashaCard } from "@/components/dashboard/DashaCard";
 import { TransitCard } from "@/components/dashboard/TransitCard";
-import { getOrCreateHDChart } from "@/lib/astro/chartService";
+import { CosmicGuidanceCard } from "@/components/dashboard/CosmicGuidanceCard";
+import { getOrCreateHDChart, getOrCreateVedicChart } from "@/lib/astro/chartService";
 import {
   getThisWeeksForecast,
   getThisMonthsForecast,
@@ -57,6 +57,27 @@ export default async function DashboardPage({
   const isAdmin = session.user?.email === "shomty@hotmail.com";
   const isPaid  = isAdmin || tier === "CORE" || tier === "VIP";
 
+  // ── Birth profile + chart generation (must run before dasha queries) ────────
+  const now = new Date();
+  const birthProfile = await db.birthProfile.findUnique({ where: { userId } });
+  let hdType:      string | null = null;
+  let hdStrategy:  string | null = null;
+  let hdAuthority: string | null = null;
+  let hdProfile:   string | null = null;
+  if (birthProfile) {
+    try {
+      const hdChart = await getOrCreateHDChart(userId, birthProfile);
+      hdType      = hdChart.type      ?? null;
+      hdStrategy  = hdChart.strategy  ?? null;
+      hdAuthority = hdChart.authority ?? null;
+      hdProfile   = hdChart.profile   ?? null;
+    } catch { /* render without HD chart — fail silently */ }
+    // Generate Vedic chart so dashas get populated into DB before we query them below
+    try {
+      await getOrCreateVedicChart(userId, birthProfile);
+    } catch { /* fail silently — dasha card shows empty if API unavailable */ }
+  }
+
   // ── Today's insight ─────────────────────────────────────────────────────────
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
@@ -73,8 +94,7 @@ export default async function DashboardPage({
   const weekLabel  = getWeekStart().toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const monthLabel = getMonthStart().toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-  // ── Active Dasha ────────────────────────────────────────────────────────────
-  const now = new Date();
+  // ── Active Dasha (queried after chart generation so rows exist) ─────────────
   const activeMaha = await db.dasha.findFirst({
     where: { userId, level: "MAHADASHA", startDate: { lte: now }, endDate: { gte: now } },
   });
@@ -94,22 +114,6 @@ export default async function DashboardPage({
     ? Math.max(0, Math.min(100, Math.round(((mahaTotalDays - mahaRemainingDays) / mahaTotalDays) * 100)))
     : null;
   const fmtDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-
-  // ── Human Design ────────────────────────────────────────────────────────────
-  const birthProfile = await db.birthProfile.findUnique({ where: { userId } });
-  let hdType:      string | null = null;
-  let hdStrategy:  string | null = null;
-  let hdAuthority: string | null = null;
-  let hdProfile:   string | null = null;
-  if (birthProfile) {
-    try {
-      const hdChart = await getOrCreateHDChart(userId, birthProfile);
-      hdType      = hdChart.type      ?? null;
-      hdStrategy  = hdChart.strategy  ?? null;
-      hdAuthority = hdChart.authority ?? null;
-      hdProfile   = hdChart.profile   ?? null;
-    } catch { /* render without — component fetches client-side */ }
-  }
 
   // ── Greeting ────────────────────────────────────────────────────────────────
   const hr        = now.getHours();
@@ -164,30 +168,17 @@ export default async function DashboardPage({
           </header>
 
           {/* ── ROW 1: Cosmic Guidance (8) + Current Period / Dasha (4) ─────── */}
-          <div className="dash-grid-12 dash-mb">
+          <div className="dash-grid-12 dash-mb dash-row-hero">
 
             {/* Cosmic Guidance — 8 cols */}
-            <div className="glass-card dash-col-8 dash-card-enter">
-              <div className="dash-card-header">
-                <div>
-                  <h2 className="dash-section-title">Cosmic Guidance</h2>
-                  <span className="dash-section-subtitle">Today&apos;s personal navigation</span>
-                </div>
-                <span className="dash-sparkle">✦</span>
-              </div>
-              <TodaysGuidanceV2
-                insight={dailyInsightRow ? {
-                  id:             dailyInsightRow.id,
-                  content:        dailyInsightRow.content as string,
-                  generatedAt:    dailyInsightRow.generatedAt,
-                  accuracyRating: dailyInsightRow.accuracyRating,
-                } : null}
-                isPaid={true}
-              />
-            </div>
+            <CosmicGuidanceCard initialInsight={dailyInsightRow ? {
+              id: dailyInsightRow.id,
+              content: dailyInsightRow.content as string,
+              accuracyRating: dailyInsightRow.accuracyRating,
+            } : null} />
 
             {/* Current Period (Dasha) — 4 cols */}
-            <div className="glass-card dash-col-4 dash-card-enter">
+            <div className="glass-card dash-col-4 animate-enter animate-enter-2">
               <h2 className="dash-section-title">Current Period</h2>
               <span className="dash-section-subtitle">☽ Life phase · Dasha</span>
               <DashaCard
@@ -205,13 +196,10 @@ export default async function DashboardPage({
                   <div>
                     {activeMaha ? (
                       <>
-                        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
-                          <PlanetOrb name={activeMaha.planetName} size={58} />
-                          <div>
-                            <div style={st.planet}>{cap(activeMaha.planetName)}</div>
-                            <div style={st.type}>Mahadasha</div>
-                            <div style={st.theme}>{getDashaTheme(cap(activeMaha.planetName))}</div>
-                          </div>
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={st.planet}>{cap(activeMaha.planetName)}</div>
+                          <div style={st.type}>Mahadasha</div>
+                          <div style={st.theme}>{getDashaTheme(cap(activeMaha.planetName))}</div>
                         </div>
 
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -230,7 +218,7 @@ export default async function DashboardPage({
                         {activeAntar && (
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, marginBottom: 12 }}>
                             <PlanetOrb name={activeAntar.planetName} size={20} />
-                            <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, color: "var(--accent-gold-cool, #D4AF37)" }}>
+                            <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12, color: "var(--accent-gold-cool, #D4AF37)" }}>
                               {cap(activeAntar.planetName.split("/")[1] ?? activeAntar.planetName)} Antardasha
                             </span>
                           </div>
@@ -238,7 +226,7 @@ export default async function DashboardPage({
 
                         <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginTop: activeAntar ? 0 : 14 }}>
                           {getDashaGuidance(cap(activeMaha.planetName)).map((item, i) => (
-                            <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "var(--text-secondary, rgba(255,255,255,0.6))", lineHeight: 1.55, fontFamily: "'Instrument Sans', sans-serif" }}>
+                            <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: "var(--text-secondary, rgba(255,255,255,0.6))", lineHeight: 1.55, fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" }}>
                               <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(var(--accent-indigo-rgb, 129,140,248), 0.5)", flexShrink: 0, marginTop: 7 }} />
                               {item}
                             </li>
@@ -262,11 +250,13 @@ export default async function DashboardPage({
             </div>
           </div>
 
+          <Divider glyph="☉" />
+
           {/* ── ROW 2: Human Design (4) + Today's Transits (8) ──────────────── */}
           <div className="dash-grid-12 dash-mb">
 
             {/* Human Design — 4 cols */}
-            <div className="glass-card dash-col-4 dash-card-enter">
+            <div className="glass-card dash-col-4 animate-enter animate-enter-3">
               <h2 className="dash-section-title">Human Design</h2>
               <span className="dash-section-subtitle">◉ Energy type · Strategy</span>
               <HumanDesignTypeCard
@@ -278,15 +268,17 @@ export default async function DashboardPage({
             </div>
 
             {/* Today's Transits — 8 cols */}
-            <div className="glass-card dash-col-8 dash-card-enter">
+            <div className="glass-card dash-col-8 animate-enter animate-enter-4">
               <h2 className="dash-section-title">Today&apos;s Transits</h2>
               <span className="dash-section-subtitle">☿ Planetary positions</span>
               <TransitCard />
             </div>
           </div>
 
+          <Divider glyph="☽" />
+
           {/* ── ROW 3: Life Forecast — full width ───────────────────────────── */}
-          <div className="glass-card dash-card-enter dash-mb">
+          <div className="glass-card animate-enter animate-enter-5 dash-mb">
             <h2 className="dash-section-title">Life Forecast</h2>
             <span className="dash-section-subtitle">♃ Weekly &amp; monthly outlook</span>
             <ForecastCard
@@ -298,8 +290,10 @@ export default async function DashboardPage({
             />
           </div>
 
+          <Divider glyph="♄" />
+
           {/* ── ROW 4: Natal Chart Report — full width ───────────────────────── */}
-          <div className="glass-card dash-card-enter">
+          <div className="glass-card animate-enter animate-enter-6">
             <h2 className="dash-section-title">Natal Chart Report</h2>
             <span className="dash-section-subtitle">◈ Full birth chart analysis</span>
             <DashboardReport />
@@ -409,12 +403,12 @@ const PLANET_COLOR: Record<string, string> = {
 
 const st = {
   planet: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "Cinzel, serif",
     fontSize: 38, fontWeight: 400, lineHeight: 0.95,
     color: "var(--text-primary, rgba(255,255,255,0.9))", letterSpacing: "-0.01em",
   } as React.CSSProperties,
   type: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "Cinzel, serif",
     fontSize: 18, fontWeight: 400, lineHeight: 1.1,
     color: "var(--text-secondary, rgba(255,255,255,0.6))", marginBottom: 4,
   } as React.CSSProperties,

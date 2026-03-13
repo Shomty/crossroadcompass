@@ -45,7 +45,7 @@ export function TopNavV2({ userName, tier }: Props) {
             <line x1="18" y1="12" x2="22" y2="12"/>
           </svg>
         </div>
-        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, fontWeight: 600, color: "var(--gold)", letterSpacing: "0.18em", textTransform: "uppercase", display: "none" }} className="v2-topnav-wordmark">
+        <span style={{ fontFamily: "Cinzel, serif", fontSize: 15, fontWeight: 600, color: "var(--gold)", letterSpacing: "0.18em", textTransform: "uppercase", display: "none" }} className="v2-topnav-wordmark">
           Crossroads<span style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "var(--amber)", verticalAlign: "middle", margin: "0 0.4em 1px" }} />Compass
         </span>
       </Link>
@@ -85,7 +85,7 @@ export function TopNavV2({ userName, tier }: Props) {
             width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
             background: "linear-gradient(135deg, var(--earth), var(--sky))",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "Cinzel, serif",
             fontSize: 13, color: "var(--gold)",
             position: "relative",
           }}>
@@ -98,7 +98,7 @@ export function TopNavV2({ userName, tier }: Props) {
             }} />
           </div>
           <div style={{ lineHeight: 1 }} className="v2-topnav-username">
-            <div style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 12, fontWeight: 500, color: "var(--cream)" }}>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12, fontWeight: 500, color: "var(--cream)" }}>
               {userName.split(" ")[0]}
             </div>
             <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--gold)", marginTop: 2 }}>

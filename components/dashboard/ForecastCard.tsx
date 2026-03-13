@@ -37,7 +37,7 @@ const eyebrow: React.CSSProperties = {
 };
 
 const headline: React.CSSProperties = {
-  fontFamily: "'Cormorant Garamond', serif",
+  fontFamily: "Cinzel, serif",
   fontSize: 22, fontWeight: 300, color: "var(--cream)",
   lineHeight: 1.3, margin: "8px 0 4px",
 };
@@ -58,7 +58,7 @@ const divider: React.CSSProperties = {
 };
 
 const overview: React.CSSProperties = {
-  fontFamily: "'Instrument Sans', sans-serif",
+  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
   fontSize: 13, color: "var(--mist)", lineHeight: 1.7, marginBottom: 16,
 };
 
@@ -69,7 +69,7 @@ const sectionTitle: React.CSSProperties = {
 };
 
 const sectionBody: React.CSSProperties = {
-  fontFamily: "'Instrument Sans', sans-serif",
+  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
   fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65, marginBottom: 14,
 };
 
@@ -78,7 +78,7 @@ const practiceBox: React.CSSProperties = {
   background: "rgba(200,135,58,0.05)",
   border: "1px solid rgba(200,135,58,0.2)",
   borderRadius: 2,
-  fontFamily: "'Instrument Sans', sans-serif",
+  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
   fontSize: 12.5, color: "var(--gold)", lineHeight: 1.6,
 };
 
@@ -87,7 +87,7 @@ const generateBtn: React.CSSProperties = {
   background: "linear-gradient(135deg, rgba(200,135,58,0.12), rgba(200,135,58,0.04))",
   border: "1px solid rgba(200,135,58,0.4)",
   borderRadius: 2, color: "var(--amber)",
-  fontFamily: "'Instrument Sans', sans-serif",
+  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
   fontSize: 12, cursor: "pointer", letterSpacing: "0.06em",
 };
 
@@ -208,7 +208,7 @@ export function ForecastCard({ initialWeekly, initialMonthly, isPaid, weekLabel,
             <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--amber)", letterSpacing: "0.12em", opacity: 0.8 }}>
               CORE & VIP MEMBERS
             </div>
-            <p style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: 13, color: "var(--mist)", textAlign: "center", maxWidth: 280, lineHeight: 1.5 }}>
+            <p style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--mist)", textAlign: "center", maxWidth: 280, lineHeight: 1.5 }}>
               Unlock weekly and monthly personalised forecasts
             </p>
             <a href="/subscribe" style={{

@@ -165,7 +165,7 @@ const pillLabel: React.CSSProperties = {
 };
 
 const pillValue: React.CSSProperties = {
-  fontFamily: "'Cormorant Garamond', serif",
+  fontFamily: "Cinzel, serif",
   fontSize: "1rem",
   fontWeight: 400,
 };

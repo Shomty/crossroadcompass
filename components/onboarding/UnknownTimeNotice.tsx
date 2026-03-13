@@ -18,7 +18,7 @@ export function UnknownTimeNotice() {
     >
       <span
         style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: "1rem",
           color: "var(--amber)",
           lineHeight: 1.5,
@@ -30,7 +30,7 @@ export function UnknownTimeNotice() {
       </span>
       <p
         style={{
-          fontFamily: "'Instrument Sans', sans-serif",
+          fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
           fontSize: "0.8rem",
           color: "var(--mist)",
           lineHeight: 1.65,

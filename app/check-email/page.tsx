@@ -21,7 +21,7 @@ export default function CheckEmailPage() {
     >
       <div
         style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: "3rem",
           color: "var(--amber)",
           marginBottom: "1.5rem",
@@ -34,7 +34,7 @@ export default function CheckEmailPage() {
 
       <h1
         style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: "clamp(1.6rem, 4vw, 2.2rem)",
           fontWeight: 300,
           color: "var(--cream)",

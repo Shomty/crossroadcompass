@@ -38,7 +38,7 @@ function AccordionItem({ section, index, isOpen, onToggle }: {
         </span>
         <span style={{
           flex: 1,
-          fontFamily: "'Instrument Sans', sans-serif",
+          fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
           fontSize: 13.5,
           fontWeight: 400,
           color: isOpen ? "var(--cream)" : "var(--mist)",
@@ -138,7 +138,7 @@ export function DashboardReport() {
         }}>
           <RefreshCw size={20} color="var(--gold)" style={{ animation: "spin 1s linear infinite" }} />
         </div>
-        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "var(--cream)", marginBottom: 8 }}>
+        <p style={{ fontFamily: "Cinzel, serif", fontSize: 20, color: "var(--cream)", marginBottom: 8 }}>
           Your Human Design Report
         </p>
         <p style={{ fontSize: 13, color: "var(--mist)", lineHeight: 1.6, maxWidth: 340, margin: "0 auto" }}>
@@ -161,7 +161,7 @@ export function DashboardReport() {
             background: "transparent",
             border: "1px solid var(--border-lit)",
             borderRadius: 10,
-            fontFamily: "'Instrument Sans', sans-serif",
+            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
             fontSize: 13,
             fontWeight: 500,
             letterSpacing: "0.04em",
@@ -217,7 +217,7 @@ export function DashboardReport() {
           </span>
         </div>
         <p style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "Cinzel, serif",
           fontSize: 15.5,
           fontWeight: 400,
           lineHeight: 1.75,

@@ -8,16 +8,15 @@
 
 import { z } from "zod";
 
-export const envSchema = z.object({
-  // Vedic Astrology API (external — section 16.1). Optional until API access is restored.
-  VEDIC_API_URL: z.string().url().optional().or(z.literal("").transform(() => undefined)),
-  VEDIC_API_KEY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
+// Coerce empty strings to undefined so optional fields in .env.local may be
+// left blank (VAR=) without triggering a validation error.
+const opt = (schema: z.ZodString) =>
+  z.preprocess((v) => (v === "" ? undefined : v), schema.optional());
 
-  // OpenAI — for HD report generation
-  OPENAI_API_KEY: z.string().min(1).optional(),
-
-  // Google Gemini — for HD report generation
-  GEMINI_API_KEY: z.string().min(1),
+const envSchema = z.object({
+  // Vedic Astrology API (external, paid — section 16.1)
+  VEDIC_API_URL: z.string().url(),
+  VEDIC_API_KEY: z.string().min(1),
 
   // Human Design ephemeris files (section 16.2)
   EPHE_PATH: z.string().default("./ephe"),
@@ -27,43 +26,36 @@ export const envSchema = z.object({
 
   // Stripe (AC-02) — optional until task #11 (real Stripe) is implemented
   // Mock payment service is used while these are absent.
-  STRIPE_SECRET_KEY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  STRIPE_WEBHOOK_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  // Price IDs from Stripe dashboard (Products → Prices)
-  STRIPE_PRICE_CORE_MONTHLY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  STRIPE_PRICE_VIP_QUARTERLY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
+  STRIPE_SECRET_KEY: opt(z.string().min(1)),
+  STRIPE_WEBHOOK_SECRET: opt(z.string().min(1)),
 
-  // Email via Resend — optional in dev (magic link URL printed to console)
-  RESEND_API_KEY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-
-  // ─── OAuth providers (all optional — only enabled when both ID + SECRET are set) ───
-  GOOGLE_CLIENT_ID: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  GOOGLE_CLIENT_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  GITHUB_ID: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  GITHUB_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  FACEBOOK_CLIENT_ID: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  FACEBOOK_CLIENT_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  APPLE_ID: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-  APPLE_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-
-  // ─── Cron ─────────────────────────────────────────────────────────────────
-  // Secret token Vercel sends with every scheduled cron invocation.
-  CRON_SECRET: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
-
-  // App public URL — used to generate dashboard links in emails
-  APP_URL: z.string().url().default("http://localhost:3000"),
+  // Email via Resend
+  RESEND_API_KEY: opt(z.string().min(1)),
 
   // Auth (NextAuth v5)
   AUTH_SECRET: z.string().min(1),
   NEXTAUTH_URL: z.string().url(),
 
-  // Supabase (storage for PDF reports) — optional; not needed for HD-only flow
-  SUPABASE_URL: z.string().url().optional().or(z.literal("").transform(() => undefined)),
-  SUPABASE_SERVICE_KEY: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
+  // Google OAuth — optional; when absent the Google button is hidden
+  GOOGLE_CLIENT_ID: opt(z.string().min(1)),
+  GOOGLE_CLIENT_SECRET: opt(z.string().min(1)),
 
-  // Upstash Redis (KV cache for chart data) — optional in dev; cache is skipped when absent
-  UPSTASH_REDIS_REST_URL: z.string().url().optional().or(z.literal("").transform(() => undefined)),
-  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional().or(z.literal("").transform(() => undefined)),
+  // Supabase (storage for PDF reports) — optional locally, required in prod
+  SUPABASE_URL: opt(z.string().url()),
+  SUPABASE_SERVICE_KEY: opt(z.string().min(1)),
+
+  // Upstash Redis (KV cache for chart data) — optional locally (KV degrades gracefully)
+  UPSTASH_REDIS_REST_URL: opt(z.string().url()),
+  UPSTASH_REDIS_REST_TOKEN: opt(z.string().min(1)),
+
+  // Cron authentication (set in Vercel → optional locally)
+  CRON_SECRET: opt(z.string().min(1)),
+
+  // Gemini AI — optional locally; AI features degrade gracefully when absent
+  GEMINI_API_KEY: opt(z.string().min(1)),
+
+  // App URL — defaults to NEXTAUTH_URL when absent
+  APP_URL: z.string().url().optional(),
 
   // App
   NODE_ENV: z
@@ -71,27 +63,8 @@ export const envSchema = z.object({
     .default("development"),
 });
 
-export type Env = z.infer<typeof envSchema>;
-
-/**
- * Parse and validate environment. Use in tests with a mock env object.
- * Throws if validation fails.
- */
-export function parseEnv(envSource: NodeJS.ProcessEnv): Env {
-  const parsed = envSchema.safeParse(envSource);
-  if (!parsed.success) {
-    console.error(
-      "❌  Missing or invalid environment variables:\n",
-      parsed.error.flatten().fieldErrors
-    );
-    throw new Error(
-      "Invalid environment configuration — check your .env.local file."
-    );
-  }
-  return parsed.data;
-}
-
 const parsed = envSchema.safeParse(process.env);
+
 if (!parsed.success) {
   console.error(
     "❌  Missing or invalid environment variables:\n",

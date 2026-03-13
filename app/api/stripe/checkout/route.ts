@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   }
 
   const stripe = getStripe();
-  const appUrl = env.APP_URL.replace(/\/$/, "");
+  const appUrl = (env.APP_URL ?? env.NEXTAUTH_URL).replace(/\/$/, "");
 
   // Re-use existing Stripe customer if present, otherwise Stripe creates one from email
   const sub = await db.subscription.findUnique({

@@ -1,30 +1,25 @@
 // STATUS: done | Tasks 3.3, 3.4, 3.5
 /**
  * lib/astro/chartService.ts
- * Orchestrator: KV cache-check → DB cache-check → calculate/fetch → store → return.
+ * Orchestrator: KV cache-check → calculate/fetch → store in KV → return.
  * All callers use the public functions below.
  * Nothing else calls the HD library or Vedic API directly.
  *
- * Cache hierarchy:
- *   1. KV (Upstash Redis) — fastest; no-op stub when not configured
- *   2. DB  (BirthProfile.chartDataHumanDesign / chartDataVedic) — persistent fallback
- *   3. Recalculate / re-fetch — last resort
- *
- *   HD chart    — KV + DB, invalidated when birth data changes (3.3)
- *   Vedic chart — KV + DB, invalidated when birth data changes (3.3)
+ * Caching:
+ *   HD chart    — KV, no TTL, invalidated when birth data changes (3.3)
+ *   Vedic chart — KV, no TTL, invalidated when birth data changes (3.3)
  *   Transits    — see transitService.ts (3.6)
  */
 
-import { Prisma } from "@prisma/client";
-import { db } from "@/lib/db";
 import type { BirthProfile } from "@prisma/client";
 import { calculateHDChart } from "@/lib/astro/hdCalculator";
 import { fetchVedicNatalChart } from "@/lib/astro/vedicApiClient";
 import { storeDashasFromChart } from "@/lib/astro/dashaService";
 import { kvGet, kvSet, kvDeleteMany } from "@/lib/kv/helpers";
 import { kvKeys, KV_TTL } from "@/lib/kv/keys";
+import { db } from "@/lib/db";
 import type { BirthInfo, HDChartData, VedicChartData } from "@/types";
-import type { VedicBirthChartRequest } from "@/lib/astro/types";
+import type { VedicChart } from "@/lib/astro/types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -47,11 +42,10 @@ function profileToBirthInfo(profile: BirthProfile): BirthInfo {
 // ─── Task 3.3 — Cache invalidation ───────────────────────────────────────
 
 /**
- * Delete all KV cache keys and null the DB chart columns for a user.
+ * Delete all KV cache keys for a user.
  * Call this whenever birth data changes — stale charts are a content
  * correctness bug. See copilot-instructions section 19.
- * Note: the PATCH /api/birth-profile handler already nulls chartDataHumanDesign
- * and chartDataVedic in DB via the transaction — this covers the KV side.
+ * Does NOT touch transit keys — those expire automatically (24h TTL).
  */
 export async function invalidateChartCache(userId: string): Promise<void> {
   await kvDeleteMany([
@@ -64,41 +58,21 @@ export async function invalidateChartCache(userId: string): Promise<void> {
 // ─── Task 3.4 — HD chart: get or calculate ───────────────────────────────
 
 /**
- * Returns the HD chart for a user.
- * Cache hierarchy: KV → BirthProfile.chartDataHumanDesign → recalculate.
- * Writes back to KV + DB on a cache miss so future calls skip recalculation.
+ * Returns the HD chart for a user, using KV cache when available.
+ * Calculates and caches on miss. birthProfile is passed in — this
+ * function does NOT query the DB itself.
  */
 export async function getOrCreateHDChart(
   userId: string,
   birthProfile: BirthProfile
 ): Promise<HDChartData> {
-  // 1. KV hit
   const cached = await kvGet<HDChartData>(kvKeys.hdChart(userId));
   if (cached !== null) return cached;
 
-  // 2. DB hit — chartDataHumanDesign set on previous calculation
-  if (birthProfile.chartDataHumanDesign) {
-    const dbChart = birthProfile.chartDataHumanDesign as unknown as HDChartData;
-    // Repopulate KV so the next call is fast
-    await kvSet(kvKeys.hdChart(userId), dbChart, KV_TTL.NATAL_CHART);
-    return dbChart;
-  }
-
-  // 3. Calculate fresh
   const birthInfo = profileToBirthInfo(birthProfile);
   const chart = calculateHDChart(birthInfo);
 
-  // Persist to KV + DB in parallel (fire-and-forget — don't block the caller)
-  void Promise.all([
-    kvSet(kvKeys.hdChart(userId), chart, KV_TTL.NATAL_CHART),
-    db.birthProfile.update({
-      where: { userId },
-      data: {
-        chartDataHumanDesign: chart as unknown as Prisma.InputJsonValue,
-        hdProfileVersion: birthProfile.profileVersion,
-      },
-    }),
-  ]).catch((err) => console.error("[chartService] HD persist failed:", err));
+  await kvSet(kvKeys.hdChart(userId), chart, KV_TTL.NATAL_CHART);
 
   return chart;
 }
@@ -106,59 +80,91 @@ export async function getOrCreateHDChart(
 // ─── Task 3.5 — Vedic natal chart: get or fetch ──────────────────────────
 
 /**
- * Returns the Vedic natal chart for a user.
- * Cache hierarchy: KV → BirthProfile.chartDataVedic → call external API.
- * Writes back to KV + DB on a cache miss to avoid repeat API charges.
+ * Returns the Vedic natal chart for a user, using KV cache when available.
+ * Fetches from the paid external API on cache miss.
+ * birthProfile is passed in — this function does NOT query the DB itself.
  */
 export async function getOrCreateVedicChart(
   userId: string,
   birthProfile: BirthProfile
 ): Promise<VedicChartData> {
-  // 1. KV hit
+  // ── Layer 1: KV hot cache ────────────────────────────────────────────────
   const cached = await kvGet<VedicChartData>(kvKeys.vedicChart(userId));
-  if (cached !== null) return cached;
 
-  // 2. DB hit — chartDataVedic set on previous API call
-  if (birthProfile.chartDataVedic) {
-    const dbChart = birthProfile.chartDataVedic as unknown as VedicChartData;
-    await kvSet(kvKeys.vedicChart(userId), dbChart, KV_TTL.NATAL_CHART);
-    return dbChart;
+  if (cached !== null) {
+    // Chart is cached — but dashas may not have been stored yet (e.g. if a previous
+    // fire-and-forget store raced or failed). Check and backfill if needed.
+    const dashaCount = await db.dasha.count({ where: { userId } });
+    if (dashaCount === 0) {
+      const rawResponse = (cached as unknown as VedicChart).rawResponse;
+      if (rawResponse) {
+        await storeDashasFromChart(userId, rawResponse);
+      }
+    }
+    return cached;
   }
 
-  // 3. Fetch from external Vedic API
+  // ── Layer 2: DB durable store ────────────────────────────────────────────
+  // Survives KV eviction; only re-fetched from the paid API when profileVersion changes.
+  const dbProfile = await db.birthProfile.findUnique({
+    where: { userId },
+    select: { chartDataVedic: true, vedicProfileVersion: true, profileVersion: true },
+  });
+
+  if (
+    dbProfile?.chartDataVedic != null &&
+    dbProfile.vedicProfileVersion === dbProfile.profileVersion
+  ) {
+    const chartData = dbProfile.chartDataVedic as unknown as VedicChartData;
+    await kvSet(kvKeys.vedicChart(userId), chartData, KV_TTL.NATAL_CHART);
+    const dashaCount = await db.dasha.count({ where: { userId } });
+    if (dashaCount === 0) {
+      const rawResponse = (chartData as unknown as VedicChart).rawResponse;
+      if (rawResponse) await storeDashasFromChart(userId, rawResponse);
+    }
+    return chartData;
+  }
+
+  // ── Layer 3: Vedic API (paid — only on true cache miss) ──────────────────
+  // Build payload matching VedicBirthChartRequest (types.ts)
   const d = new Date(birthProfile.birthDate);
-  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
+  const dateOfBirth = [
+    d.getUTCFullYear(),
+    String(d.getUTCMonth() + 1).padStart(2, "0"),
+    String(d.getUTCDate()).padStart(2, "0"),
+  ].join("-");
   const hour = birthProfile.birthTimeKnown ? (birthProfile.birthHour ?? 12) : 12;
   const minute = birthProfile.birthTimeKnown ? (birthProfile.birthMinute ?? 0) : 0;
-
-  const params: VedicBirthChartRequest = {
-    dateOfBirth: `${d.getUTCFullYear()}-${month}-${day}`,
-    timeOfBirth: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
-    location: `${birthProfile.birthCity}, ${birthProfile.birthCountry}`,
-    isTimeApproximate: !birthProfile.birthTimeKnown,
-    gender: (birthProfile.gender as "male" | "female" | "other") ?? "other",
-    name: birthProfile.birthName,
+  const timeOfBirth = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  const location = [birthProfile.birthCity, birthProfile.birthCountry].filter(Boolean).join(", ");
+  const genderMap: Record<string, "male" | "female" | "other"> = {
+    male: "male", female: "female", other: "other", prefer_not_to_say: "other",
   };
+  const gender: "male" | "female" | "other" = genderMap[birthProfile.gender ?? ""] ?? "other";
 
-  const chart = await fetchVedicNatalChart(params);
+  const chart = await fetchVedicNatalChart({
+    dateOfBirth,
+    timeOfBirth,
+    location,
+    isTimeApproximate: !birthProfile.birthTimeKnown,
+    gender,
+    name: birthProfile.birthName,
+  });
 
-  // Persist dashas to DB — embedded in chartD1, no separate API call needed
-  if (chart.rawResponse) {
-    await storeDashasFromChart(userId, chart.rawResponse);
-  }
+  // Await dasha storage — must complete before caller queries the dasha table
+  await storeDashasFromChart(userId, (chart as VedicChart).rawResponse);
 
-  // Persist chart to KV + DB in parallel
-  void Promise.all([
-    kvSet(kvKeys.vedicChart(userId), chart, KV_TTL.NATAL_CHART),
-    db.birthProfile.update({
-      where: { userId },
-      data: {
-        chartDataVedic: chart as unknown as Prisma.InputJsonValue,
-        vedicProfileVersion: birthProfile.profileVersion,
-      },
-    }),
-  ]).catch((err) => console.error("[chartService] Vedic persist failed:", err));
+  const chartData = chart as unknown as VedicChartData;
 
-  return chart as unknown as VedicChartData;
+  // Persist to DB — survives KV eviction; only re-fetched when profileVersion changes
+  await db.birthProfile.update({
+    where: { userId },
+    data: {
+      chartDataVedic: chartData as object,
+      vedicProfileVersion: birthProfile.profileVersion,
+    },
+  });
+
+  await kvSet(kvKeys.vedicChart(userId), chartData, KV_TTL.NATAL_CHART);
+  return chartData;
 }

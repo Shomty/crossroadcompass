@@ -275,7 +275,7 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <div>
             <p className="eyebrow" style={{ marginBottom: "0.5rem" }}>Step 1 of 2</p>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.3rem", fontWeight: 400, color: "var(--cream)", margin: 0 }}>
+            <h3 style={{ fontFamily: "Cinzel, serif", fontSize: "1.3rem", fontWeight: 400, color: "var(--cream)", margin: 0 }}>
               Personal details
             </h3>
           </div>
@@ -387,7 +387,7 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <div>
             <p className="eyebrow" style={{ marginBottom: "0.5rem" }}>Step 2 of 2</p>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.3rem", fontWeight: 400, color: "var(--cream)", margin: 0 }}>
+            <h3 style={{ fontFamily: "Cinzel, serif", fontSize: "1.3rem", fontWeight: 400, color: "var(--cream)", margin: 0 }}>
               Place of birth
             </h3>
           </div>
@@ -438,10 +438,10 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
                   onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(200,135,58,0.4)"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(200,135,58,0.05)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(200,135,58,0.15)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
                 >
-                  <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: "0.85rem", color: "var(--cream)", fontWeight: 500 }}>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: "0.85rem", color: "var(--cream)", fontWeight: 500 }}>
                     {place.displayName.split(",")[0]}
                   </span>
-                  <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: "0.8rem", color: "var(--mist)" }}>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: "0.8rem", color: "var(--mist)" }}>
                     {" — "}{place.displayName.split(",").slice(1, 3).join(",")}
                   </span>
                   <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.58rem", letterSpacing: "0.08em", color: "var(--amber)", marginLeft: "0.5rem", opacity: 0.7 }}>
@@ -461,7 +461,7 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div>
-                <span style={{ fontFamily: "'Instrument Sans', sans-serif", fontSize: "0.85rem", color: "var(--cream)", fontWeight: 500 }}>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: "0.85rem", color: "var(--cream)", fontWeight: 500 }}>
                   ✓ {form.selectedPlace.displayName.split(",").slice(0, 2).join(",")}
                 </span>
                 <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.58rem", letterSpacing: "0.08em", color: "var(--amber)", marginLeft: "0.5rem", opacity: 0.7 }}>

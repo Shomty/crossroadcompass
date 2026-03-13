@@ -27,7 +27,7 @@ export async function POST() {
     return NextResponse.json({ error: "No active Stripe subscription found." }, { status: 404 });
   }
 
-  const appUrl = env.APP_URL.replace(/\/$/, "");
+  const appUrl = (env.APP_URL ?? env.NEXTAUTH_URL).replace(/\/$/, "");
   const portalSession = await getStripe().billingPortal.sessions.create({
     customer: sub.stripeCustomerId,
     return_url: `${appUrl}/dashboard`,
