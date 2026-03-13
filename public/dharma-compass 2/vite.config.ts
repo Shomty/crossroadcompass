@@ -1,15 +1,19 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig, loadEnv} from 'vite';
+import {defineConfig} from 'vite';
 
 export default defineConfig(({mode}) => {
-  const env = loadEnv(mode, '.', '');
+  // SECURITY: Do NOT add secret API keys to the `define` block.
+  // Vite `define` inlines values into the client JS bundle, making them
+  // readable by anyone who inspects the page source or network requests.
+  // All Gemini / external API calls must go through a server-side proxy route.
+  const _mode = mode; // retained to avoid unused-variable lint error
+  void _mode;
   return {
     plugins: [react(), tailwindcss()],
-    define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-    },
+    // `define` block intentionally empty — no secrets in the client bundle.
+    define: {},
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
