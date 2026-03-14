@@ -25,13 +25,6 @@ export default async function V2Layout({ children }: { children: React.ReactNode
 
   return (
     <div className="v2" style={{ minHeight: "100vh" }}>
-      {/* Layered backgrounds */}
-      <div className="v2-bg" />
-      <div className="v2-nebula v2-nebula-1" />
-      <div className="v2-nebula v2-nebula-2" />
-      <div className="v2-nebula v2-nebula-3" />
-      <div className="v2-grain" />
-
       <div style={{ position: "relative", zIndex: 2, display: "flex", minHeight: "100vh" }}>
         <SidebarV2 userName={userName} tier={tier} />
 

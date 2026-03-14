@@ -125,6 +125,12 @@ model BirthProfile {
   // DECISION NEEDED: confirm typed columns once API response shape is confirmed with Milosh
   chartDataVedic Json?
 
+  // Observation location — used for transit/planet position fetch
+  // Null = fall back to birth location
+  observationLatitude  Float?
+  observationLongitude Float?
+  observationCity      String? // human-readable label e.g. "Belgrade, Serbia"
+
   // Onboarding intake (OB-05)
   intakeLifeSituation String?
   intakePrimaryFocus  String?
@@ -187,6 +193,8 @@ enum InsightType {
   DAILY
   WEEKLY
   MONTHLY
+  INITIAL // foundation report insight (report/generate)
+  DASHA   // persisted dasha card back-face insight; periodDate = mahadasha startDate
 }
 
 model Insight {

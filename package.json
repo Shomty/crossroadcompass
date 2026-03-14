@@ -7,22 +7,19 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "download-ephe": "bash scripts/download-ephe.sh"
+    "download-ephe": "bash scripts/download-ephe.sh",
+    "security:scan-secrets": "bash scripts/scan-secrets.sh",
+    "security:scan-tracked": "git --no-pager grep -nE 'AIza[0-9A-Za-z_-]{20,}|GOCSPX-[0-9A-Za-z_-]{10,}|sk_(live|test)_[0-9A-Za-z]{10,}|AKIA[0-9A-Z]{16}|xox[baprs]-[0-9A-Za-z-]{10,}|-----BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY-----' -- . ':(exclude).env' ':(exclude).env.local' || true"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
-    "@google/genai": "^1.45.0",
-    "@google/generative-ai": "^0.24.1",
-    "@prisma/adapter-better-sqlite3": "^7.5.0",
-    "@prisma/client": "^7.4.2",
+    "@google/generative-ai": "^0.24.0",
     "@react-email/components": "^1.0.9",
+    "@prisma/client": "^7.4.2",
     "@supabase/supabase-js": "^2.98.0",
     "@upstash/redis": "^1.36.3",
-    "better-sqlite3": "^12.6.2",
-    "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
-    "ogl": "^1.0.11",
     "openhumandesign-library": "github:nikolamilenkovic/openhumandesign-library",
     "prisma": "^7.4.2",
     "puppeteer": "^24.37.5",
@@ -34,18 +31,14 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
+    "@types/tz-lookup": "^6.1.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/tz-lookup": "^6.1.2",
-    "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
-    "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.0"
+    "typescript": "^5.9.3"
   }
 }

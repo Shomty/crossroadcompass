@@ -81,7 +81,11 @@ export default function LoginPage() {
       </Link>
 
       <div className="card" style={{ width: "100%", maxWidth: 420, padding: "2.5rem" }}>
-        <LoginForm enabledProviders={enabledProviders} missingSecret={isDev ? missingSecret : []} />
+        <LoginForm
+          enabledProviders={enabledProviders}
+          missingSecret={isDev ? missingSecret : []}
+          isDev={isDev}
+        />
       </div>
     </div>
   );

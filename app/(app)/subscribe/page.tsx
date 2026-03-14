@@ -27,7 +27,7 @@ export default async function SubscribePage() {
     !!(process.env.STRIPE_PRICE_VIP_QUARTERLY);
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--bg, #0a0e1a)", padding: "calc(64px + 32px) 20px 60px" }}>
+    <main style={{ minHeight: "100vh", padding: "calc(64px + 32px) 20px 60px" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
 
         {/* Header */}

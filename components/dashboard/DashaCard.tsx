@@ -48,6 +48,7 @@ export function DashaCard({
   const [flipped, setFlipped] = useState(false);
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [fetched, setFetched] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -72,11 +73,16 @@ export function DashaCard({
     return () => window.cancelAnimationFrame(id);
   }, [mahaProgress]);
 
-  async function fetchInsight() {
-    setLoading(true);
+  async function fetchInsight(force = false) {
+    if (force) {
+      setRegenerating(true);
+    } else {
+      setLoading(true);
+    }
     setApiError(null);
     try {
-      const res = await fetch("/api/insights/dasha", { method: "POST" });
+      const url = force ? "/api/insights/dasha?force=true" : "/api/insights/dasha";
+      const res = await fetch(url, { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
         console.error("[DashaCard] API error", res.status, data);
@@ -90,6 +96,7 @@ export function DashaCard({
     } finally {
       setFetched(true);
       setLoading(false);
+      setRegenerating(false);
     }
   }
 
@@ -139,7 +146,7 @@ export function DashaCard({
 
               {/* ── Orbit Engine ──────────────────────────────────────── */}
               {activeMaha && (
-                <div style={{ position: "relative", height: 150, marginBottom: 8 }}>
+                <div className="dasha-orbit-zone">
 
                   {/* Center glyph — pulsing (wrapper for translate, inner for scale) */}
                   <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 2 }}>
@@ -223,7 +230,7 @@ export function DashaCard({
                           x={18}
                           y={22}
                           textAnchor="middle"
-                          fontSize={7}
+                          fontSize={12}
                           fill="rgba(212,175,55,0.7)"
                           fontFamily="'DM Mono',monospace"
                         >
@@ -233,10 +240,10 @@ export function DashaCard({
                     );
                   })()}
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <span className="tap-insight-pill" style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.12em", color: "var(--amber)", textTransform: "uppercase", padding: "3px 10px", borderRadius: 20, border: "1px solid rgba(200,135,58,0.25)", background: "rgba(200,135,58,0.04)" }}>
+                    <span className="tap-insight-pill" style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.12em", color: "var(--amber)", textTransform: "uppercase", padding: "3px 10px", borderRadius: 20, border: "1px solid rgba(200,135,58,0.25)", background: "rgba(200,135,58,0.04)" }}>
                       tap for insight
                     </span>
-                    <span style={{ fontSize: 9, color: "var(--amber)", opacity: 0.6 }}>↺</span>
+                    <span style={{ fontSize: "var(--type-label)", color: "var(--amber)", opacity: 0.6 }}>↺</span>
                   </div>
                 </div>
               )}
@@ -252,14 +259,39 @@ export function DashaCard({
             <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column" }}>
               {/* Header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.7 }}>
+                <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.7 }}>
                   {mahaName} · Insight
                 </p>
-                {mahaProgress != null && (
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "var(--mist)", letterSpacing: "0.06em" }}>
-                    {mahaProgress}% complete
-                  </span>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {mahaProgress != null && (
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", color: "var(--mist)", letterSpacing: "0.06em" }}>
+                      {mahaProgress}% complete
+                    </span>
+                  )}
+                  {/* Regenerate button — only shown when insight is loaded */}
+                  {insight && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); fetchInsight(true); }}
+                      disabled={regenerating}
+                      title="Regenerate insight"
+                      style={{
+                        background: "none",
+                        border: "1px solid rgba(212,175,55,0.2)",
+                        borderRadius: 6,
+                        color: regenerating ? "rgba(212,175,55,0.3)" : "rgba(212,175,55,0.55)",
+                        cursor: regenerating ? "default" : "pointer",
+                        padding: "2px 6px",
+                        fontSize: 12,
+                        lineHeight: 1,
+                        transition: "color 0.2s, border-color 0.2s",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {regenerating ? "…" : "↺"}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Progress bar */}
@@ -289,12 +321,12 @@ export function DashaCard({
                   </p>
                 ) : apiError ? (
                   <div>
-                    <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--amber)", opacity: 0.7, lineHeight: 1.65, marginBottom: 10 }}>
+                    <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", color: "var(--amber)", opacity: 0.7, lineHeight: 1.65, marginBottom: 10 }}>
                       Could not load insight. Please try again.
                     </p>
                     <button
                       onClick={(e) => { e.stopPropagation(); setFetched(false); fetchInsight(); }}
-                      style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--gold)", background: "none", border: "1px solid rgba(212,175,95,0.3)", borderRadius: 4, padding: "4px 10px", cursor: "pointer" }}
+                      style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--gold)", background: "none", border: "1px solid rgba(212,175,95,0.3)", borderRadius: 4, padding: "4px 10px", cursor: "pointer" }}
                     >
                       Retry
                     </button>
@@ -309,10 +341,10 @@ export function DashaCard({
               {/* Days remaining */}
               {mahaRemainingDays != null && (
                 <div style={{ marginTop: 14, borderTop: "1px solid rgba(212,175,95,0.1)", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "var(--mist)", letterSpacing: "0.06em" }}>
+                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", color: "var(--mist)", letterSpacing: "0.06em" }}>
                     {mahaRemainingDays.toLocaleString()} days remaining
                   </span>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.12em", color: "var(--amber)", opacity: 0.4, textTransform: "uppercase" }}>
+                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.12em", color: "var(--amber)", opacity: 0.4, textTransform: "uppercase" }}>
                     tap to flip ↺
                   </span>
                 </div>

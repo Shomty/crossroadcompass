@@ -54,7 +54,7 @@ function StarRating({ insightId, initial }: { insightId: string; initial: number
   const display = submitted ? rating : (hover || rating);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 20 }}>
-      <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 8.5, letterSpacing: "0.2em", textTransform: "uppercase" as const, color: "var(--mist)" }}>
+      <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.2em", textTransform: "uppercase" as const, color: "var(--mist)" }}>
         Accuracy
       </span>
       <div style={{ display: "flex", gap: 3 }}>
@@ -76,7 +76,7 @@ function StarRating({ insightId, initial }: { insightId: string; initial: number
         ))}
       </div>
       {submitted && (
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 8.5, color: "var(--amber)", letterSpacing: "0.1em" }}>Saved</span>
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", color: "var(--amber)", letterSpacing: "0.1em" }}>Saved</span>
       )}
     </div>
   );
@@ -123,7 +123,7 @@ export function CosmicGuidanceCard({ initialInsight }: Props) {
   }, [initialInsight]);
 
   return (
-    <div className="glass-card dash-col-8 animate-enter animate-enter-1">
+    <div className="glass-card glass-card-hero dash-col-8 animate-enter animate-enter-1">
       <div className="dash-card-header">
         <div>
           <h2 className="dash-section-title">Cosmic Guidance</h2>
@@ -134,7 +134,7 @@ export function CosmicGuidanceCard({ initialInsight }: Props) {
             border: "1px solid rgba(201,168,76,0.25)",
             borderRadius: 2, padding: "3px 10px",
             fontFamily: "'DM Mono', monospace",
-            fontSize: 8.5, letterSpacing: "0.16em",
+            fontSize: "var(--type-label)", letterSpacing: "0.16em",
             textTransform: "uppercase" as const,
             color: "var(--amber)",
           }}>{state.parsed.energyTheme}</span>
@@ -152,11 +152,8 @@ export function CosmicGuidanceCard({ initialInsight }: Props) {
       ) : state ? (
         <>
           {state.parsed.insight && (
-            <p style={{
-              fontFamily: "Cinzel, serif",
-              fontSize: "clamp(16px, 1.8vw, 22px)",
-              fontWeight: 400, fontStyle: "italic",
-              lineHeight: 1.65, color: "var(--cream)",
+            <p className="oracle-body" style={{
+              color: "var(--cream)",
               marginBottom: 22, letterSpacing: "0.01em",
             }}>
               &ldquo;{state.parsed.insight}&rdquo;
@@ -172,7 +169,7 @@ export function CosmicGuidanceCard({ initialInsight }: Props) {
               background: "rgba(201,168,76,0.04)",
               borderRadius: "0 6px 6px 0",
             }}>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "var(--amber)", display: "block", marginBottom: 5 }}>
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "var(--amber)", display: "block", marginBottom: 5 }}>
                 Today&apos;s Focus
               </span>
               <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--cream)", lineHeight: 1.6 }}>

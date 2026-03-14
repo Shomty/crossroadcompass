@@ -2,21 +2,21 @@
 /**
  * components/app/SidebarNav.tsx
  * Left sidebar navigation — replaces top nav for authenticated app shell.
- * Desktop: fixed 256px left sidebar.
+ * Desktop: fixed 256px left sidebar, collapsible to 64px icon rail.
  * Mobile: fixed 64px top header bar + CSS slide-in drawer (no framer-motion).
  */
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LogOut, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { LogOut, Menu, X, Compass, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const NAV_ITEMS = [
-  { href: "/dashboard",        label: "Dashboard" },
-  { href: "/report",           label: "My Chart"  },
-  { href: "/transit",          label: "Transits"  },
-  { href: "/settings/profile", label: "Settings"  },
+  { href: "/dashboard",        label: "Dashboard", Icon: Compass },
+  { href: "/report",           label: "My Chart",  Icon: Moon },
+  { href: "/transit",          label: "Transits",  Icon: Globe },
+  { href: "/settings/profile", label: "Settings",  Icon: SlidersHorizontal },
 ];
 
 interface Props {
@@ -38,6 +38,7 @@ const CompassIcon = () => (
 export function SidebarNav({ userName, tier }: Props) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isCompact, setIsCompact] = useState(false);
 
   const initials = userName
     .split(" ")
@@ -46,18 +47,34 @@ export function SidebarNav({ userName, tier }: Props) {
     .toUpperCase()
     .slice(0, 2) || "U";
 
-  const Logo = ({ onClick }: { onClick?: () => void }) => (
+  // Restore compact state from localStorage after hydration
+  useEffect(() => {
+    const stored = localStorage.getItem("sidebar_compact") === "true";
+    setIsCompact(stored);
+    document.body.setAttribute("data-sidebar", stored ? "compact" : "expanded");
+  }, []);
+
+  function toggleCompact() {
+    const next = !isCompact;
+    setIsCompact(next);
+    localStorage.setItem("sidebar_compact", String(next));
+    document.body.setAttribute("data-sidebar", next ? "compact" : "expanded");
+  }
+
+  const Logo = ({ onClick, compact }: { onClick?: () => void; compact?: boolean }) => (
     <Link href="/dashboard" className="app-sidebar-logo" onClick={onClick}>
       <div className="app-sidebar-logo-icon">
         <CompassIcon />
       </div>
-      <span className="app-sidebar-wordmark">CROSSROADS</span>
+      {!compact && (
+        <span className="app-sidebar-wordmark">CROSSROADS</span>
+      )}
     </Link>
   );
 
-  const NavLinks = ({ onItemClick }: { onItemClick?: () => void }) => (
+  const NavLinks = ({ onItemClick, compact }: { onItemClick?: () => void; compact?: boolean }) => (
     <nav className="app-sidebar-nav">
-      {NAV_ITEMS.map(({ href, label }) => {
+      {NAV_ITEMS.map(({ href, label, Icon }) => {
         const active =
           pathname === href ||
           (href !== "/dashboard" && pathname.startsWith(href));
@@ -65,40 +82,59 @@ export function SidebarNav({ userName, tier }: Props) {
           <Link
             key={href}
             href={href}
-            className={`app-sidebar-item${active ? " active" : ""}`}
+            className={`app-sidebar-item${active ? " active" : ""}${compact ? " compact" : ""}`}
             onClick={onItemClick}
+            title={compact ? label : undefined}
           >
-            {label}
+            <span className="app-sidebar-item-icon">
+              <Icon size={18} strokeWidth={1.5} />
+            </span>
+            {!compact && (
+              <span className="app-sidebar-item-label">{label}</span>
+            )}
           </Link>
         );
       })}
     </nav>
   );
 
-  const UserBadge = () => (
-    <div className="app-sidebar-user">
+  const UserBadge = ({ compact }: { compact?: boolean }) => (
+    <div className={`app-sidebar-user${compact ? " compact" : ""}`}>
       <div className="app-sidebar-avatar">{initials}</div>
-      <div className="app-sidebar-user-info">
-        <span className="app-sidebar-user-name">{userName.split(" ")[0]}</span>
-        <span className="app-sidebar-user-tier">{tier}</span>
-      </div>
-      <button
-        className="app-sidebar-signout"
-        onClick={() => signOut({ callbackUrl: "/login" })}
-        title="Sign out"
-      >
-        <LogOut size={15} />
-      </button>
+      {!compact && (
+        <>
+          <div className="app-sidebar-user-info">
+            <span className="app-sidebar-user-name">{userName.split(" ")[0]}</span>
+            <span className="app-sidebar-user-tier">{tier}</span>
+          </div>
+          <button
+            className="app-sidebar-signout"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            title="Sign out"
+          >
+            <LogOut size={15} />
+          </button>
+        </>
+      )}
     </div>
   );
 
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="app-sidebar">
-        <Logo />
-        <NavLinks />
-        <UserBadge />
+      <aside className={`app-sidebar${isCompact ? " compact" : ""}`}>
+        <Logo compact={isCompact} />
+        <NavLinks compact={isCompact} />
+        <div className="app-sidebar-footer">
+          <UserBadge compact={isCompact} />
+          <button
+            className="app-sidebar-collapse-btn"
+            onClick={toggleCompact}
+            title={isCompact ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCompact ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          </button>
+        </div>
       </aside>
 
       {/* Mobile top header bar */}
@@ -120,7 +156,7 @@ export function SidebarNav({ userName, tier }: Props) {
         aria-hidden="true"
       />
 
-      {/* Mobile slide-in drawer */}
+      {/* Mobile slide-in drawer — always full width, no compact */}
       <div className={`app-sidebar-drawer${drawerOpen ? " open" : ""}`}>
         <div className="app-sidebar-drawer-top">
           <Logo onClick={() => setDrawerOpen(false)} />

@@ -22,10 +22,15 @@ function pad2(n: number) {
 /**
  * Returns today's transit chart for the user, using KV cache when available.
  * "Today" is resolved in the user's timezone from their birth profile.
+ *
+ * @param locationOverride - Optional "City, Country" string. When provided
+ *   (from the user's saved observation location), the Vedic API geocodes
+ *   using this position instead of birth location.
  */
 export async function getTodayTransitChart(
   userId: string,
-  profile: BirthProfile
+  profile: BirthProfile,
+  locationOverride?: string
 ): Promise<VedicChart | null> {
   // Date key in user's timezone: YYYY-MM-DD
   const today = new Intl.DateTimeFormat("en-CA", {
@@ -39,8 +44,9 @@ export async function getTodayTransitChart(
   const cached = await kvGet<VedicChart>(cacheKey);
   if (cached !== null) return cached;
 
-  // Resolve city/country from birth profile
-  const location = [profile.birthCity, profile.birthCountry].filter(Boolean).join(", ");
+  // Use observation location if provided, otherwise fall back to birth location
+  const location = locationOverride
+    ?? [profile.birthCity, profile.birthCountry].filter(Boolean).join(", ");
 
   // Build current time for the transit call
   const now = new Date();

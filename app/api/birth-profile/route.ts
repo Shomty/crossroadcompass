@@ -73,6 +73,7 @@ export async function GET() {
       latitude: true,
       longitude: true,
       timezone: true,
+      observationCity: true,
     },
   });
 

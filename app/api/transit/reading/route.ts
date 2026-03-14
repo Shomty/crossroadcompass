@@ -8,28 +8,35 @@
  *   3. Generates and caches a Gemini AI reading based on Parasara Hora
  *
  * Cached in KV — Gemini is called at most once per user per day.
+ * Pass ?force=true to bypass cache and regenerate immediately.
+ * Uses observationCity from BirthProfile (if set) as the sky position location.
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOrCreateVedicChart } from "@/lib/astro/chartService";
 import { getTodayTransitChart } from "@/lib/astro/transitChartService";
 import { generateTransitReading, getCachedTransitReading } from "@/lib/ai/transitReadingService";
+import { kvDelete } from "@/lib/kv/helpers";
+import { kvKeys } from "@/lib/kv/keys";
 import type { VedicChart } from "@/lib/astro/types";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const userId = session.user.id;
+  const force = new URL(req.url).searchParams.get("force") === "true";
 
-  // Check for a cached reading first (avoid all downstream calls)
-  const cached = await getCachedTransitReading(userId);
-  if (cached) {
-    return NextResponse.json({ reading: cached, source: "cache" });
+  // Check for a cached reading first (skip on force)
+  if (!force) {
+    const cached = await getCachedTransitReading(userId);
+    if (cached) {
+      return NextResponse.json({ reading: cached, source: "cache" });
+    }
   }
 
   // Load birth profile
@@ -41,6 +48,15 @@ export async function GET() {
       { error: "No birth profile found. Complete onboarding first." },
       { status: 404 }
     );
+  }
+
+  // On force: bust the KV transit cache so getTodayTransitChart re-fetches from API
+  if (force) {
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: profile.timezone,
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    await kvDelete(kvKeys.transit(userId, today));
   }
 
   // Load natal chart
@@ -55,8 +71,9 @@ export async function GET() {
     );
   }
 
-  // Fetch today's transit chart (KV-cached per day)
-  const transitChart = await getTodayTransitChart(userId, profile);
+  // Fetch today's transit chart — use observation location if set
+  const locationOverride = profile.observationCity ?? undefined;
+  const transitChart = await getTodayTransitChart(userId, profile, locationOverride);
   if (!transitChart) {
     console.error("[transit/reading] Transit chart unavailable for userId:", userId);
     return NextResponse.json(
@@ -75,7 +92,10 @@ export async function GET() {
 
   // Generate AI reading
   const userName = session.user.name ?? session.user.email?.split("@")[0] ?? "the native";
-  const location = [profile.birthCity, profile.birthCountry].filter(Boolean).join(", ") || "Unknown location";
+  const location = profile.observationCity
+    ?? [profile.birthCity, profile.birthCountry].filter(Boolean).join(", ")
+    ?? "Unknown location";
+
   try {
     const reading = await generateTransitReading(
       userId,

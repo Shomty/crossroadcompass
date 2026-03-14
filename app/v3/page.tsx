@@ -115,7 +115,7 @@ export default function HoraOS() {
         </svg>
         <div style={{color, fontSize:"12px", fontFamily:"'Courier New',monospace",
           letterSpacing:"4px", fontWeight:"bold", marginTop:"-6px"}}>{label}</div>
-        <div style={{color:"rgba(255,255,255,0.25)", fontSize:"8px",
+        <div style={{color:"rgba(255,255,255,0.25)", fontSize:"var(--type-label)",
           fontFamily:"'Courier New',monospace", letterSpacing:"1.5px", marginTop:"3px"}}>{subtitle}</div>
       </div>
     );
@@ -123,7 +123,7 @@ export default function HoraOS() {
 
   return (
     <div style={{
-      width:"100%", minHeight:"100vh", background:"#0C0E1A",
+      width:"100%", minHeight:"100vh",
       display:"flex", fontFamily:"'Courier New',monospace", color:"white",
       position:"relative", overflow:"hidden",
     }}>
@@ -132,18 +132,6 @@ export default function HoraOS() {
         @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
         @keyframes goldPulse{0%,100%{box-shadow:0 0 6px rgba(255,184,0,.3)}50%{box-shadow:0 0 18px rgba(255,184,0,.7)}}
       `}</style>
-
-      {/* Stars */}
-      {Array.from({length:60},(_,i)=>(
-        <div key={i} style={{
-          position:"absolute", borderRadius:"50%",
-          width: i%9===0?"2px":"1px", height: i%9===0?"2px":"1px",
-          background: i%13===0?"rgba(255,184,0,.9)":"rgba(255,255,255,.35)",
-          left:`${(i*137.5)%100}%`, top:`${(i*97.3)%100}%`,
-          animation:`twinkle ${2+(i%4)}s ease-in-out infinite`,
-          animationDelay:`${(i*.25)%3}s`, zIndex:0,
-        }}/>
-      ))}
 
       {/* Sidebar */}
       <div style={{
@@ -187,7 +175,7 @@ export default function HoraOS() {
           width:"28px", height:"28px", borderRadius:"50%",
           background:"linear-gradient(135deg,#FFB800,#D35400)",
           display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:"9px", fontWeight:"bold", color:"#0C0E1A",
+          fontSize:"var(--type-label)", fontWeight:"bold", color:"#0C0E1A",
         }}>MK</div>
       </div>
 
@@ -200,8 +188,8 @@ export default function HoraOS() {
           display:"flex", alignItems:"center", padding:"0 16px", gap:"12px",
           background:"rgba(12,14,26,.85)", backdropFilter:"blur(10px)", flexShrink:0,
         }}>
-          <span style={{color:"rgba(255,184,0,.7)", fontSize:"11px", letterSpacing:"3px", fontWeight:"bold"}}>HORA</span>
-          <span style={{color:"rgba(255,255,255,.15)", fontSize:"9px", letterSpacing:"2px"}}>// VEDIC INTELLIGENCE</span>
+          <span style={{color:"rgba(255,184,0,.7)", fontSize:"var(--type-mono)", letterSpacing:"3px", fontWeight:"bold"}}>HORA</span>
+          <span style={{color:"rgba(255,255,255,.15)", fontSize:"var(--type-label)", letterSpacing:"2px"}}>// VEDIC INTELLIGENCE</span>
           <div style={{flex:1}}/>
           <div style={{
             flex:1, maxWidth:"420px", height:"24px",
@@ -220,7 +208,7 @@ export default function HoraOS() {
                 background: d.active?`${d.c}55`:`${d.c}14`,
                 border: d.active?`1px solid ${d.c}70`:"none",
                 display:"flex", alignItems:"center", justifyContent:"center",
-                fontSize:"6px", color: d.active?d.c:`${d.c}55`,
+                fontSize:"var(--type-label)", color: d.active?d.c:`${d.c}55`,
                 fontWeight: d.active?"bold":"normal",
               }}>{d.w>9?d.p:""}</div>
             ))}
@@ -230,12 +218,12 @@ export default function HoraOS() {
             <div style={{color:"#FFB800", fontSize:"12px", letterSpacing:"1.5px"}}>
               {time.toLocaleTimeString("en-US",{hour12:false})}
             </div>
-            <div style={{color:"rgba(255,255,255,.2)", fontSize:"7px", letterSpacing:"1px"}}>
+            <div style={{color:"rgba(255,255,255,.2)", fontSize:"var(--type-label)", letterSpacing:"1px"}}>
               {time.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}
             </div>
           </div>
           <div style={{
-            padding:"3px 10px", borderRadius:"20px", fontSize:"8px",
+            padding:"3px 10px", borderRadius:"20px", fontSize:"var(--type-label)",
             background:"rgba(46,204,113,.1)", border:"1px solid rgba(46,204,113,.3)",
             color:"#2ECC71", letterSpacing:"2px",
             animation:"pulse 2s ease-in-out infinite",
@@ -251,7 +239,7 @@ export default function HoraOS() {
             padding:"14px 10px", display:"flex", flexDirection:"column",
             gap:"8px", overflowY:"auto", flexShrink:0,
           }}>
-            <div style={{fontSize:"7px", letterSpacing:"3px", color:"rgba(255,184,0,.5)",
+            <div style={{fontSize:"var(--type-label)", letterSpacing:"3px", color:"rgba(255,184,0,.5)",
               borderBottom:"1px solid rgba(255,184,0,.1)", paddingBottom:"7px"}}>
               PLANETARY POSITIONS
             </div>
@@ -266,12 +254,12 @@ export default function HoraOS() {
                   width:"22px", height:"22px", borderRadius:"50%",
                   background:"rgba(255,184,0,.08)", border:"1px solid rgba(255,184,0,.2)",
                   display:"flex", alignItems:"center", justifyContent:"center",
-                  fontSize:"8px", color:"#FFB800", fontWeight:"bold", flexShrink:0,
+                  fontSize:"var(--type-label)", color:"#FFB800", fontWeight:"bold", flexShrink:0,
                 }}>{p.name}</div>
                 <div style={{flex:1}}>
                   <div style={{display:"flex", justifyContent:"space-between", marginBottom:"3px"}}>
-                    <span style={{fontSize:"8px", color:"rgba(255,255,255,.65)"}}>{p.deg} {p.sign}</span>
-                    <span style={{fontSize:"7px", color:"rgba(255,184,0,.45)"}}>H{p.house}</span>
+                    <span style={{fontSize:"var(--type-label)", color:"rgba(255,255,255,.65)"}}>{p.deg} {p.sign}</span>
+                    <span style={{fontSize:"var(--type-label)", color:"rgba(255,184,0,.45)"}}>H{p.house}</span>
                   </div>
                   <div style={{height:"2px", background:"rgba(255,255,255,.05)", borderRadius:"2px"}}>
                     <div style={{
@@ -289,17 +277,17 @@ export default function HoraOS() {
               background:"linear-gradient(135deg,rgba(211,84,0,.1),rgba(255,184,0,.05))",
               borderRadius:"9px", border:"1px solid rgba(211,84,0,.3)",
             }}>
-              <div style={{fontSize:"7px", letterSpacing:"2px", color:"rgba(255,184,0,.5)", marginBottom:"7px"}}>
+              <div style={{fontSize:"var(--type-label)", letterSpacing:"2px", color:"rgba(255,184,0,.5)", marginBottom:"7px"}}>
                 ACTIVE DASHA
               </div>
               <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
                 <div>
                   <div style={{color:"#D35400", fontSize:"16px", fontWeight:"bold"}}>Ma</div>
-                  <div style={{color:"rgba(255,255,255,.25)", fontSize:"7px"}}>MARS MAHADASHA</div>
+                  <div style={{color:"rgba(255,255,255,.25)", fontSize:"var(--type-label)"}}>MARS MAHADASHA</div>
                 </div>
                 <div style={{textAlign:"right"}}>
-                  <div style={{color:"#FFB800", fontSize:"10px"}}>2yr 4mo</div>
-                  <div style={{color:"rgba(255,255,255,.18)", fontSize:"7px"}}>remaining</div>
+                  <div style={{color:"#FFB800", fontSize:"var(--type-label)"}}>2yr 4mo</div>
+                  <div style={{color:"rgba(255,255,255,.18)", fontSize:"var(--type-label)"}}>remaining</div>
                 </div>
               </div>
               <div style={{marginTop:"7px", height:"2px", background:"rgba(255,255,255,.05)", borderRadius:"2px"}}>
@@ -330,13 +318,13 @@ export default function HoraOS() {
                 display:"flex", justifyContent:"space-between",
                 alignItems:"center", marginBottom:"12px",
               }}>
-                <div style={{color:"#FFB800", fontSize:"10px", letterSpacing:"2px"}}>
+                <div style={{color:"#FFB800", fontSize:"var(--type-label)", letterSpacing:"2px"}}>
                   {activeChart} // {activeChart==="D1"?"RASHI NATAL":activeChart==="D9"?"NAVAMSHA SOUL":"DASHAMSHA CAREER"}
                 </div>
                 <div style={{display:"flex", gap:"5px"}}>
                   {["HOUSES","ASPECTS","YOGAS"].map(t=>(
                     <div key={t} style={{
-                      padding:"3px 8px", borderRadius:"20px", fontSize:"7px",
+                      padding:"3px 8px", borderRadius:"20px", fontSize:"var(--type-label)",
                       letterSpacing:"1px", cursor:"pointer",
                       background:"rgba(255,184,0,.05)", border:"1px solid rgba(255,184,0,.13)",
                       color:"rgba(255,184,0,.5)",
@@ -367,13 +355,13 @@ export default function HoraOS() {
                   }}>
                     <div style={{
                       position:"absolute", top:"4px", right:"6px",
-                      fontSize:"7px", color:"rgba(255,255,255,.13)",
+                      fontSize:"var(--type-label)", color:"rgba(255,255,255,.13)",
                     }}>{hd.h}</div>
-                    <div style={{fontSize:"8px", color:"rgba(255,184,0,.38)", marginBottom:"4px"}}>{hd.sign}</div>
+                    <div style={{fontSize:"var(--type-label)", color:"rgba(255,184,0,.38)", marginBottom:"4px"}}>{hd.sign}</div>
                     <div style={{display:"flex", flexWrap:"wrap", gap:"2px"}}>
                       {hd.ps.map(pl=>(
                         <span key={pl} style={{
-                          padding:"1px 4px", borderRadius:"3px", fontSize:"7px",
+                          padding:"1px 4px", borderRadius:"3px", fontSize:"var(--type-label)",
                           background:"rgba(255,184,0,.14)", color:"#FFB800",
                           border:"1px solid rgba(255,184,0,.22)",
                         }}>{pl}</span>
@@ -391,7 +379,7 @@ export default function HoraOS() {
             padding:"14px 10px", display:"flex", flexDirection:"column",
             gap:"9px", flexShrink:0, overflowY:"auto",
           }}>
-            <div style={{fontSize:"7px", letterSpacing:"3px", color:"rgba(255,184,0,.5)",
+            <div style={{fontSize:"var(--type-label)", letterSpacing:"3px", color:"rgba(255,184,0,.5)",
               borderBottom:"1px solid rgba(255,184,0,.1)", paddingBottom:"7px"}}>
               ACTIVE YOGAS
             </div>
@@ -402,8 +390,8 @@ export default function HoraOS() {
                 border:`1px solid ${y.color}22`,
               }}>
                 <div style={{display:"flex", justifyContent:"space-between", marginBottom:"3px"}}>
-                  <div style={{fontSize:"9px", color:"rgba(255,255,255,.7)", fontWeight:"bold"}}>{y.name}</div>
-                  <div style={{fontSize:"9px", color:y.color}}>{y.power}</div>
+                  <div style={{fontSize:"var(--type-label)", color:"rgba(255,255,255,.7)", fontWeight:"bold"}}>{y.name}</div>
+                  <div style={{fontSize:"var(--type-label)", color:y.color}}>{y.power}</div>
                 </div>
                 <div style={{height:"2px", background:"rgba(255,255,255,.05)", borderRadius:"2px"}}>
                   <div style={{
@@ -415,7 +403,7 @@ export default function HoraOS() {
               </div>
             ))}
 
-            <div style={{fontSize:"7px", letterSpacing:"3px", color:"rgba(255,184,0,.5)",
+            <div style={{fontSize:"var(--type-label)", letterSpacing:"3px", color:"rgba(255,184,0,.5)",
               borderBottom:"1px solid rgba(255,184,0,.1)", paddingBottom:"7px", marginTop:"6px"}}>
               TRANSITS TODAY
             </div>
@@ -430,11 +418,11 @@ export default function HoraOS() {
                 border:"1px solid rgba(255,255,255,.04)",
               }}>
                 <div style={{display:"flex", justifyContent:"space-between", marginBottom:"2px"}}>
-                  <div style={{fontSize:"8px", color:"rgba(255,255,255,.55)"}}>{tr.ev}</div>
-                  <div style={{fontSize:"7px", color:"#FFB800"}}>{tr.t}</div>
+                  <div style={{fontSize:"var(--type-label)", color:"rgba(255,255,255,.55)"}}>{tr.ev}</div>
+                  <div style={{fontSize:"var(--type-label)", color:"#FFB800"}}>{tr.t}</div>
                 </div>
                 <div style={{
-                  fontSize:"6px", letterSpacing:"1.5px",
+                  fontSize:"var(--type-label)", letterSpacing:"1.5px",
                   color: tr.type==="FAVORABLE"?"#2ECC71":tr.type==="TENSION"?"#D35400":"#4A9EBF",
                 }}>{tr.type}</div>
               </div>

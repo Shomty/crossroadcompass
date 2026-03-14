@@ -99,9 +99,11 @@ interface Props {
   enabledProviders: SocialProviderId[];
   /** Dev-only: providers that have CLIENT_ID set but are missing the SECRET */
   missingSecret?: SocialProviderId[];
+  /** Server-computed environment flag; avoids process.env usage in client bundle */
+  isDev?: boolean;
 }
 
-export function LoginForm({ enabledProviders, missingSecret = [] }: Props) {
+export function LoginForm({ enabledProviders, missingSecret = [], isDev = false }: Props) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -194,7 +196,7 @@ export function LoginForm({ enabledProviders, missingSecret = [] }: Props) {
       </form>
 
       {/* Dev-only bypass */}
-      {process.env.NODE_ENV === "development" && (
+      {isDev && (
         <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(200,135,58,0.15)" }}>
           <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.55rem", letterSpacing: "0.12em", color: "var(--amber)", opacity: 0.7, marginBottom: "0.75rem", textTransform: "uppercase" }}>
             ◈ Dev shortcut

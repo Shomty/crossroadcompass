@@ -134,7 +134,7 @@ export function HumanDesignTypeCard({ hdType, hdStrategy, hdAuthority, hdProfile
   if (loading) {
     return (
       <div style={{ padding: "12px 0", opacity: 0.45 }}>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--amber)", letterSpacing: "0.12em" }}>
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", color: "var(--amber)", letterSpacing: "0.12em" }}>
           Reading chart…
         </span>
       </div>
@@ -179,9 +179,9 @@ export function HumanDesignTypeCard({ hdType, hdStrategy, hdAuthority, hdProfile
         {/* Flip hint */}
         <div className="hd-flip-hint" style={{
           marginTop: 18, display: "flex", alignItems: "center", gap: 5,
-          fontFamily: "'DM Mono', monospace", fontSize: 9,
+          fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)",
           letterSpacing: "0.14em", textTransform: "uppercase",
-          color: "var(--amber)", opacity: 0.3, transition: "opacity 0.2s",
+          color: "var(--amber)", opacity: 0.58, transition: "opacity 0.2s",
         }}>
           <span>{face === "front" ? "↻" : "↺"}</span>
           {face === "front" ? "Tap for details" : "Tap to go back"}
@@ -209,7 +209,7 @@ function Front({ type }: { type: HDTypeData }) {
       <div style={{ position: "relative", zIndex: 1 }}>
         {/* Eyebrow */}
         <div style={{
-          fontFamily: "'DM Mono', monospace", fontSize: 9,
+          fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)",
           letterSpacing: "0.22em", textTransform: "uppercase",
           color: "var(--amber)", opacity: 0.7, marginBottom: 12,
         }}>Your Human Design</div>
@@ -229,7 +229,7 @@ function Front({ type }: { type: HDTypeData }) {
 
         {/* Aura */}
         <div style={{
-          fontFamily: "'DM Mono', monospace", fontSize: 9,
+          fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)",
           color: "var(--mist)", letterSpacing: "0.1em",
           textTransform: "uppercase", marginBottom: 16, opacity: 0.55,
         }}>{type.aura}</div>
@@ -242,7 +242,7 @@ function Front({ type }: { type: HDTypeData }) {
           display: "inline-block",
           border: "1px solid rgba(200,135,58,0.35)",
           borderRadius: 2, padding: "3px 12px",
-          fontFamily: "'DM Mono', monospace", fontSize: 9,
+          fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)",
           letterSpacing: "0.18em", color: "var(--amber)",
           marginBottom: 14,
         }}>{type.purpose}</div>
@@ -250,7 +250,7 @@ function Front({ type }: { type: HDTypeData }) {
         {/* Strategy row */}
         <div style={{ marginBottom: 14 }}>
           <div style={{
-            fontFamily: "'DM Mono', monospace", fontSize: 9,
+            fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)",
             letterSpacing: "0.14em", textTransform: "uppercase",
             color: "var(--amber)", opacity: 0.6, marginBottom: 4,
           }}>Strategy</div>
@@ -283,7 +283,7 @@ function Back({ type, authority, profile, strategyText }: {
     <div>
       {/* Eyebrow */}
       <div style={{
-        fontFamily: "'DM Mono', monospace", fontSize: 9,
+        fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)",
         letterSpacing: "0.22em", textTransform: "uppercase",
         color: "var(--amber)", opacity: 0.7, marginBottom: 12,
       }}>Profile Details — {type.name}</div>
@@ -293,13 +293,13 @@ function Back({ type, authority, profile, strategyText }: {
         <div style={{ display: "flex", gap: 28, marginBottom: 14 }}>
           {authority && (
             <div>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 3 }}>Authority</div>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 3 }}>Authority</div>
               <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--cream)" }}>{authority}</div>
             </div>
           )}
           {profile && (
             <div>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 3 }}>Profile</div>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 3 }}>Profile</div>
               <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--cream)" }}>{profile}</div>
             </div>
           )}
@@ -311,14 +311,14 @@ function Back({ type, authority, profile, strategyText }: {
 
       {/* Strategy */}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 4 }}>Strategy</div>
-        <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65 }}>{strategyText}</div>
+        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 4 }}>Strategy</div>
+        <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: "var(--type-body)", color: "var(--mist)", lineHeight: 1.65 }}>{strategyText}</div>
       </div>
 
       {/* Key insight */}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 4 }}>Key Insight</div>
-        <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65 }}>{type.key}</div>
+        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", opacity: 0.6, marginBottom: 4 }}>Key Insight</div>
+        <div style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: "var(--type-body)", color: "var(--mist)", lineHeight: 1.65 }}>{type.key}</div>
       </div>
 
       {/* Description */}

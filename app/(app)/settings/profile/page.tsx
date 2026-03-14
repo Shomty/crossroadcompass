@@ -19,6 +19,14 @@ export default function ProfileSettingsPage() {
   const [saved, setSaved] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
+  // Planetary positions / observation location state
+  const [observationCity, setObservationCity] = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
+  const [refreshingTransits, setRefreshingTransits] = useState(false);
+  const [transitRefreshed, setTransitRefreshed] = useState(false);
+  const [transitError, setTransitError] = useState<string | null>(null);
+
   useEffect(() => { loadProfile(); }, []);
 
   async function loadProfile() {
@@ -43,6 +51,7 @@ export default function ProfileSettingsPage() {
         timezone: p.timezone ?? "",
         cityLabel: [p.birthCity, p.birthCountry].filter(Boolean).join(", "),
       });
+      setObservationCity(p.observationCity ?? null);
     } catch {
       setFetchError("Could not load your profile. Please refresh.");
     } finally {
@@ -54,6 +63,64 @@ export default function ProfileSettingsPage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 4000);
     loadProfile();
+  }
+
+  async function detectLocation() {
+    setLocating(true);
+    setLocError(null);
+    if (!navigator.geolocation) {
+      setLocError("Geolocation is not supported by your browser.");
+      setLocating(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch("/api/transit/location", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error ?? "Failed to save location");
+          setObservationCity(data.city);
+        } catch (e) {
+          setLocError(e instanceof Error ? e.message : "Could not save location.");
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        if (err.code === 1) setLocError("Location access denied. Please allow location in your browser.");
+        else setLocError("Could not detect location. Please try again.");
+      },
+      { timeout: 10000 }
+    );
+  }
+
+  async function clearObservationLocation() {
+    await fetch("/api/transit/location", { method: "DELETE" });
+    setObservationCity(null);
+  }
+
+  async function refreshTransits() {
+    setRefreshingTransits(true);
+    setTransitError(null);
+    setTransitRefreshed(false);
+    try {
+      const res = await fetch("/api/transit/reading?force=true");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to refresh");
+      }
+      setTransitRefreshed(true);
+      setTimeout(() => setTransitRefreshed(false), 4000);
+    } catch (e) {
+      setTransitError(e instanceof Error ? e.message : "Refresh failed.");
+    } finally {
+      setRefreshingTransits(false);
+    }
   }
 
   return (
@@ -119,6 +186,81 @@ export default function ProfileSettingsPage() {
           >
             ↓ Download chart JSON
           </a>
+        </div>
+      )}
+
+      {/* Planetary Positions */}
+      {!loading && profile && (
+        <div style={{ marginTop: "1.5rem", padding: "1.25rem 1.5rem", borderRadius: 10, border: "1px solid rgba(212,175,95,0.15)", background: "rgba(212,175,95,0.04)" }}>
+          <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--gold)", opacity: 0.7, margin: "0 0 0.35rem" }}>
+            Planetary Positions
+          </p>
+          <p style={{ fontSize: "0.8rem", color: "var(--mist)", lineHeight: 1.6, margin: "0 0 0.75rem" }}>
+            Used to calculate today&apos;s transit sky view. Defaults to your birth location.
+          </p>
+
+          {/* Current observation location */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "0.9rem", fontSize: "0.8rem", color: "var(--mist)" }}>
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--gold)", opacity: 0.5 }}>
+              Current:
+            </span>
+            <span>{observationCity ?? profile.cityLabel ?? "Birth location"}</span>
+            {observationCity && (
+              <button
+                onClick={clearObservationLocation}
+                title="Clear — revert to birth location"
+                style={{ background: "none", border: "none", color: "rgba(212,175,95,0.4)", cursor: "pointer", padding: "0 2px", fontSize: 13, lineHeight: 1 }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {locError && (
+            <p style={{ fontSize: "0.75rem", color: "#e07060", marginBottom: "0.75rem" }}>{locError}</p>
+          )}
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 10 }}>
+            <button
+              onClick={detectLocation}
+              disabled={locating}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.1em",
+                textTransform: "uppercase" as const,
+                color: locating ? "rgba(212,175,95,0.4)" : "var(--gold)",
+                border: "1px solid rgba(212,175,95,0.3)", borderRadius: 6,
+                padding: "0.4rem 0.9rem", background: "none", cursor: locating ? "default" : "pointer",
+              }}
+            >
+              {locating ? "Detecting…" : "◎ Detect my location"}
+            </button>
+
+            <button
+              onClick={refreshTransits}
+              disabled={refreshingTransits}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.1em",
+                textTransform: "uppercase" as const,
+                color: refreshingTransits ? "rgba(212,175,95,0.4)" : "var(--gold)",
+                border: "1px solid rgba(212,175,95,0.3)", borderRadius: 6,
+                padding: "0.4rem 0.9rem", background: "none", cursor: refreshingTransits ? "default" : "pointer",
+              }}
+            >
+              {refreshingTransits ? "Refreshing…" : "↺ Refresh transits"}
+            </button>
+          </div>
+
+          {transitRefreshed && (
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.12em", color: "var(--gold)", textTransform: "uppercase" as const, marginTop: "0.75rem" }}>
+              ✓ Transit data refreshed
+            </p>
+          )}
+          {transitError && (
+            <p style={{ fontSize: "0.75rem", color: "#e07060", marginTop: "0.75rem" }}>{transitError}</p>
+          )}
         </div>
       )}
     </div>

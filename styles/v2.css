@@ -45,7 +45,7 @@
 /* ── Base overrides inside .v2 ─────────────────────────────────────────────── */
 .v2 body,
 .v2 {
-  background: radial-gradient(ellipse at top center, #1a1a2e 0%, #0d0d1a 70%);
+  background: transparent;
   font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   color: var(--cream);
   -webkit-font-smoothing: antialiased;
@@ -254,7 +254,7 @@
   align-items: center;
   gap: 12px;
   color: rgba(201, 168, 76, 0.25);
-  font-size: 10px;
+  font-size: var(--type-label);
   letter-spacing: 0.3em;
 }
 .v2-ornament::before,
@@ -268,7 +268,7 @@
 /* ── V2 Eyebrow ─────────────────────────────────────────────────────────────── */
 .v2-eyebrow {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: var(--type-label);
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--v2-amber);

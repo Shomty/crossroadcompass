@@ -178,7 +178,7 @@ export default async function DashboardPage({
             } : null} />
 
             {/* Current Period (Dasha) — 4 cols */}
-            <div className="glass-card dash-col-4 animate-enter animate-enter-2">
+            <div className="glass-card glass-card-dasha dash-col-4 animate-enter animate-enter-2">
               <h2 className="dash-section-title">Current Period</h2>
               <span className="dash-section-subtitle">☽ Life phase · Dasha</span>
               <DashaCard
@@ -331,7 +331,7 @@ function PlanetOrb({ name, size }: { name: string; size: number }) {
       display: "flex", alignItems: "center", justifyContent: "center",
     }}>
       <span style={{
-        fontSize: size * 0.48, color, lineHeight: 1,
+        fontSize: Math.max(12, size * 0.48), color, lineHeight: 1,
         fontFamily: "serif", userSelect: "none",
         filter: `drop-shadow(0 0 ${size * 0.1}px ${color}80)`,
       }}>
@@ -414,17 +414,17 @@ const st = {
   } as React.CSSProperties,
   theme: {
     fontFamily: "'DM Mono', monospace",
-    fontSize: 9, letterSpacing: "0.14em",
+    fontSize: "var(--type-label)", letterSpacing: "0.14em",
     textTransform: "uppercase" as const,
     color: "var(--accent-gold-cool, #D4AF37)", opacity: 0.8,
   } as React.CSSProperties,
   mono: {
     fontFamily: "'DM Mono', monospace",
-    fontSize: 9, letterSpacing: "0.1em", color: "var(--text-muted, rgba(255,255,255,0.4))",
+    fontSize: "var(--type-label)", letterSpacing: "0.1em", color: "var(--text-muted, rgba(255,255,255,0.4))",
   } as React.CSSProperties,
   days: {
     fontFamily: "'DM Mono', monospace",
-    fontSize: 9, letterSpacing: "0.08em",
+    fontSize: "var(--type-label)", letterSpacing: "0.08em",
     color: "var(--accent-gold-cool, #D4AF37)", whiteSpace: "nowrap" as const,
   } as React.CSSProperties,
   emptyLink: {

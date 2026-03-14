@@ -212,7 +212,7 @@ export function DashboardReport() {
           pointerEvents: "none",
         }} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "var(--gold)" }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "var(--gold)" }}>
             Your Human Design
           </span>
         </div>
@@ -231,7 +231,7 @@ export function DashboardReport() {
           paddingTop: 14,
           borderTop: "1px solid var(--border)",
         }}>
-          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9.5, letterSpacing: "0.08em", color: "var(--mist)" }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.08em", color: "var(--mist)" }}>
             Generated {genDate}
           </span>
           <button
@@ -240,7 +240,7 @@ export function DashboardReport() {
             style={{
               display: "flex", alignItems: "center", gap: 5,
               background: "none", border: "none",
-              fontFamily: "'DM Mono', monospace", fontSize: 9.5,
+              fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)",
               letterSpacing: "0.1em", textTransform: "uppercase" as const,
               color: generating ? "var(--mist)" : "var(--mist)",
               cursor: generating ? "not-allowed" : "pointer",

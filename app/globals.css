@@ -1,5 +1,5 @@
 /* ─── Google Fonts ─────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=DM+Mono:wght@300;400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap');
 
 @import "tailwindcss";
 
@@ -53,13 +53,42 @@
   --grad-1-y: 0%;
   --grad-2-x: 100%;
   --grad-2-y: 0%;
+
+  /* ── v4 Digital Grimoire tokens ─────────────────────────────────────────── */
+  --deep-space:   #050505;
+  --violet:       #7C3AED;   /* Cosmic Violet — global so any component may use it */
+  --gold-solar:   #D4AF37;   /* Solar Gold */
+  --lavender:     #EDE9FF;
+
+  /* ── Type Scale ─────────────────────────────────────────────────────────────
+     All sizes use clamp() for fluid scaling. Minimum: 12px (0.75rem).
+     Oracle copy minimum: 16px (1rem).
+  ─────────────────────────────────────────────────────────────────────────── */
+  --type-display: clamp(2.5rem, 5vw, 4rem);
+  --type-h1:      clamp(1.8rem, 3.5vw, 2.75rem);
+  --type-h2:      clamp(1.4rem, 2.5vw, 1.875rem);
+  --type-h3:      clamp(1.1rem, 2vw, 1.375rem);
+  --type-oracle:  clamp(1rem, 1.8vw, 1.2rem);
+  --type-body:    clamp(0.9rem, 1.5vw, 1rem);
+  --type-small:   0.875rem;   /* 14px — UI minimum */
+  --type-mono:    0.8125rem;  /* 13px — JetBrains Mono data */
+  --type-label:   0.75rem;    /* 12px — absolute minimum for any user-visible text */
+
+  /* ── Line Heights ────────────────────────────────────────────────────────── */
+  --lh-display: 1.0;
+  --lh-heading: 1.2;
+  --lh-oracle:  1.8;
+  --lh-body:    1.65;
+  --lh-ui:      1.4;
+  --lh-data:    1.35;
 }
 
 /* ─── Tailwind v4 theme overrides ──────────────────────────────────────── */
 @theme inline {
-  --font-serif: Cinzel, serif;
-  --font-mono:  'DM Mono', monospace;
-  --font-sans:  'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif:   Cinzel, serif;
+  --font-oracle:  'Lora', Georgia, serif;
+  --font-mono:    'JetBrains Mono', 'DM Mono', monospace;
+  --font-sans:    'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 
   /* Accent color tokens — driven by TimeColorProvider at runtime */
   --color-accent-indigo: var(--accent-indigo, #818CF8);
@@ -77,11 +106,11 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background-color: var(--bg-color, #0F0F17);
+  background-color: var(--deep-space, #050505);
   background-image:
-    radial-gradient(circle at var(--grad-1-x, 0%) var(--grad-1-y, 0%), var(--grad-1-color, rgba(129,140,248,0.18)) 0%, transparent 60%),
-    radial-gradient(circle at var(--grad-2-x, 100%) var(--grad-2-y, 0%), var(--grad-2-color, rgba(212,175,55,0.12)) 0%, transparent 60%),
-    radial-gradient(circle at 50% 100%, var(--grad-3-color, rgba(129,140,248,0.08)) 0%, transparent 50%);
+    radial-gradient(ellipse 120% 60% at 50% -10%, rgba(124,58,237,0.20) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(212,175,55,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(129,140,248,0.12) 0%, transparent 55%);
   background-attachment: fixed;
   color: rgba(255, 255, 255, 0.9);
   font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
@@ -169,10 +198,10 @@ a { color: inherit; text-decoration: none; }
   border-color: rgba(255, 255, 255, 0.20);
 }
 
-/* Mono-data: small uppercase label — 10px, widest tracking, 60% opacity */
+/* Mono-data: small uppercase label — min 12px, widest tracking, 60% opacity */
 .mono-data {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   opacity: 0.6;
@@ -183,6 +212,18 @@ a { color: inherit; text-decoration: none; }
   font-family: Cinzel, serif;
   font-style: italic;
 }
+
+/* ─── Semantic Typography System ────────────────────────────────────────── */
+/* Four roles: Ceremonial (Cinzel) · Oracle (Lora) · Functional (Plus Jakarta Sans) · Precision (JetBrains Mono) */
+
+.oracle-display  { font-family: Cinzel, serif; font-size: var(--type-display); line-height: var(--lh-display); letter-spacing: 0.04em; font-weight: 400; }
+.oracle-heading  { font-family: Cinzel, serif; font-size: var(--type-h1); line-height: var(--lh-heading); letter-spacing: 0.02em; font-weight: 400; }
+.oracle-title    { font-family: 'Playfair Display', Georgia, serif; font-size: var(--type-h2); line-height: var(--lh-heading); font-weight: 500; }
+.oracle-subtitle { font-family: 'Playfair Display', Georgia, serif; font-size: var(--type-h3); line-height: var(--lh-heading); font-style: italic; font-weight: 400; }
+.oracle-body     { font-family: 'Lora', Georgia, serif; font-size: var(--type-oracle); line-height: var(--lh-oracle); font-style: italic; font-weight: 400; color: rgba(255,255,255,0.88); }
+.ui-body         { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: var(--type-body); line-height: var(--lh-body); font-weight: 400; }
+.ui-label        { font-family: 'DM Mono', monospace; font-size: var(--type-label); line-height: var(--lh-ui); letter-spacing: 0.18em; text-transform: uppercase; font-weight: 400; }
+.data-value      { font-family: 'JetBrains Mono', monospace; font-size: var(--type-mono); line-height: var(--lh-data); letter-spacing: 0.04em; font-weight: 400; }
 
 /* ─── Buttons ──────────────────────────────────────────────────────────── */
 .btn-primary {
@@ -274,7 +315,7 @@ input.error, select.error, textarea.error { border-color: #c84a3a; }
 
 label {
   font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
+  font-size: var(--type-label);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--amber);
@@ -306,7 +347,7 @@ label {
 /* ─── Eyebrow labels ───────────────────────────────────────────────────── */
 .eyebrow {
   font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
+  font-size: var(--type-label);
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--amber);
@@ -574,7 +615,7 @@ label {
   border: 1px solid var(--border);
   border-radius: 100px;
   font-family: 'DM Mono', monospace;
-  font-size: 9.5px;
+  font-size: var(--type-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
@@ -597,7 +638,7 @@ label {
   background: var(--gold);
   border-radius: 100px;
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: var(--type-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--void);
@@ -667,3 +708,267 @@ label {
     justify-content: flex-end;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   v4 — Digital Grimoire Design System
+   Aesthetic: Ancient wisdom × NASA-grade precision.
+   These classes are scoped to /v4 components and do not affect v1–v3.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── v4 Glass card ─────────────────────────────────────────────────────── */
+.v4-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top-edge inner shimmer */
+.v4-glass::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 15%, rgba(255,255,255,0.08) 50%, transparent 85%);
+  pointer-events: none;
+}
+
+/* Gold left-border anchor (Profile Strip) */
+.v4-gold-edge {
+  border-left: 4px solid var(--gold-solar, #D4AF37) !important;
+  border-radius: 0 14px 14px 0 !important;
+}
+
+/* Violet oracle glow background (Dharma Synthesis card) */
+.v4-violet-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(124, 58, 237, 0.20) 0%, transparent 65%), rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ─── v4 Typography utilities ───────────────────────────────────────────── */
+.v4-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.v4-mono {
+  font-family: var(--font-mono);
+  font-size: var(--type-mono);
+  letter-spacing: 0.05em;
+}
+
+/* Large oracle title */
+.v4-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 500;
+  line-height: 1.15;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Precision data value — degrees, coordinates, dates */
+.v4-data {
+  font-family: var(--font-mono);
+  font-size: var(--type-mono);
+  letter-spacing: 0.06em;
+  color: var(--gold-solar, #D4AF37);
+}
+
+/* Section eyebrow label */
+.v4-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* ─── v4 Badge (pill) ───────────────────────────────────────────────────── */
+.v4-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: rgba(124, 58, 237, 0.10);
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lavender, #EDE9FF);
+}
+
+/* ─── v4 Transit quality badges ─────────────────────────────────────────── */
+.v4-quality-favorable   { background: rgba(40, 180, 100, 0.10); border: 1px solid rgba(40, 180, 100, 0.25); color: #6EE7A0; }
+.v4-quality-neutral     { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255,255,255,0.55); }
+.v4-quality-challenging { background: rgba(220, 80, 60, 0.10); border: 1px solid rgba(220, 80, 60, 0.25); color: #F87171; }
+
+/* ─── v4 Progress bar ───────────────────────────────────────────────────── */
+.v4-progress-track {
+  height: 3px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.v4-progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--gold-solar, #D4AF37), var(--violet, #7C3AED));
+  transition: width 0.6s ease;
+}
+
+/* ─── v4 LIVE pulse dot ─────────────────────────────────────────────────── */
+.v4-live-dot {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ADE80;
+  flex-shrink: 0;
+}
+
+.v4-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.4);
+  animation: v4-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ─── v4 Keyframes ──────────────────────────────────────────────────────── */
+
+/* Perpetual orbit animations — always linear, never ease */
+@keyframes v4-orbit-cw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes v4-orbit-ccw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+/* LIVE status ping */
+@keyframes v4-ping {
+  0%  { transform: scale(1); opacity: 0.8; }
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Glyph pulse on orbit rings */
+@keyframes v4-glyph-pulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50%       { opacity: 1;    transform: scale(1.07); }
+}
+
+/* Constellation star twinkle */
+@keyframes v4-constellation {
+  0%, 100% { opacity: 0.12; }
+  50%       { opacity: 0.45; }
+}
+
+/* ─── v4 Page shell ─────────────────────────────────────────────────────── */
+.v4-page {
+  background-color: var(--deep-space, #050505);
+  min-height: 100vh;
+  position: relative;
+}
+
+.v4-inner {
+  position: relative;
+  z-index: 2;
+}
+
+.v4-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2.25rem 2rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .v4-wrap { padding: calc(64px + 2rem) 1.25rem 4rem; }
+}
+@media (max-width: 600px) {
+  .v4-wrap { padding: calc(64px + 1.25rem) 1rem 3rem; gap: 1.25rem; }
+}
+
+/* Section divider */
+.v4-divider {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  opacity: 0.38;
+  margin: 0.25rem 0;
+}
+.v4-divider::before,
+.v4-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(212,175,55,0.4), transparent);
+}
+.v4-divider-glyph {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
+  color: var(--gold-solar, #D4AF37);
+}
+
+/* Two-column body row (dasha + transit) */
+.v4-row-2col {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .v4-row-2col { grid-template-columns: 1fr; }
+}
+
+/* Orbit ring wrapper — keeps the counter-rotating ring properly centred */
+.v4-orbit-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.v4-orbit-ring {
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── v4 Table rows ─────────────────────────────────────────────────────── */
+.v4-table-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 60px 36px 90px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.15s;
+  border-radius: 4px;
+}
+
+.v4-table-row:last-child { border-bottom: none; }
+
+.v4-table-row:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.v4-table-header {
+  display: grid;
+  grid-template-columns: 28px 1fr 60px 36px 90px;
+  gap: 10px;
+  padding: 0 4px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 4px;
+}
+

@@ -6,9 +6,9 @@ interface Star {
   x: number;
   y: number;
   r: number;
-  opacity: number;
+  a: number;
   speed: number;
-  phase: number;
+  twinkleOffset: number;
 }
 
 export function StarfieldCanvas() {
@@ -20,20 +20,34 @@ export function StarfieldCanvas() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const stars: Star[] = Array.from({ length: 220 }, () => ({
-      x: Math.random(),
-      y: Math.random(),
-      r: Math.random() * 1.2 + 0.2,
-      opacity: Math.random() * 0.6 + 0.1,
-      speed: Math.random() * 0.0004 + 0.0001,
-      phase: Math.random() * Math.PI * 2,
-    }));
+    let width = 0;
+    let height = 0;
+    let stars: Star[] = [];
+
+    function createStars(w: number, h: number): Star[] {
+      return Array.from({ length: 200 }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.4 + 0.2,
+        a: Math.random() * 0.7 + 0.2,
+        speed: Math.random() * 0.0012 + 0.0002,
+        twinkleOffset: Math.random() * Math.PI * 2,
+      }));
+    }
 
     function resize() {
       if (!canvas) return;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      stars = createStars(width, height);
     }
+
     resize();
     window.addEventListener("resize", resize);
 
@@ -41,12 +55,12 @@ export function StarfieldCanvas() {
 
     function draw(t: number) {
       if (!canvas || !ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, width, height);
       for (const s of stars) {
-        const flicker = s.opacity + Math.sin(t * s.speed * 1000 + s.phase) * 0.12;
+        const alpha = s.a * (0.5 + 0.5 * Math.sin(t * s.speed + s.twinkleOffset));
         ctx.beginPath();
-        ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(232,224,208,${Math.max(0, flicker)})`;
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200,190,255,${alpha})`;
         ctx.fill();
       }
       animId = requestAnimationFrame(draw);

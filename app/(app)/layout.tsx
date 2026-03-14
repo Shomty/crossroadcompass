@@ -10,7 +10,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { SidebarNav } from "@/components/app/SidebarNav";
 import { TimeColorProvider } from "@/components/app/TimeColorProvider";
-import { AuroraCanvas } from "@/components/AuroraCanvas";
 import "@/styles/v2.css";
 import "@/styles/dashboard.css";
 
@@ -27,15 +26,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const userName = session.user?.name ?? session.user?.email?.split("@")[0] ?? "You";
 
   return (
-    /* FRONTEND.md §12: cosmos background + aurora canvas overlay */
-    <div style={{ minHeight: "100vh", background: "#0d0d0d" }}>
+    <div style={{ minHeight: "100vh" }}>
       <TimeColorProvider />
-      <AuroraCanvas
-        colorStops={["#0d0d0d", "#B19EEF", "#5227FF"]}
-        blend={0.5}
-        amplitude={1.0}
-        speed={0.3}
-      />
       <div style={{ position: "relative", zIndex: 2, display: "flex", minHeight: "100vh" }}>
         <SidebarNav userName={userName} tier={tier} />
         <main className="app-main-content" style={{ flex: 1, minWidth: 0 }}>

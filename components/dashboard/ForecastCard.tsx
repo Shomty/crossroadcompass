@@ -9,6 +9,7 @@
 import { useState, useEffect } from "react";
 
 interface ForecastSection { title: string; body: string; }
+type ForecastVariant = "default" | "v4";
 
 interface WeeklyForecast {
   headline: string; theme: string; overview: string;
@@ -26,89 +27,160 @@ interface Props {
   isPaid: boolean;
   weekLabel: string;   // e.g. "Week of Mar 3"
   monthLabel: string;  // e.g. "March 2026"
+  variant?: ForecastVariant;
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const eyebrow: React.CSSProperties = {
-  fontFamily: "'DM Mono', monospace", fontSize: 9,
-  letterSpacing: "0.3em", textTransform: "uppercase",
-  color: "var(--amber)",
-};
+function getStyles(variant: ForecastVariant) {
+  const isV4 = variant === "v4";
+  const accent = isV4 ? "var(--gold-solar, #D4AF37)" : "var(--amber)";
+  const accentSoft = isV4 ? "rgba(212,175,55,0.12)" : "rgba(200,135,58,0.12)";
+  const accentBorder = isV4 ? "rgba(212,175,55,0.24)" : "rgba(200,135,58,0.2)";
+  const accentBorderStrong = isV4 ? "rgba(212,175,55,0.4)" : "rgba(200,135,58,0.4)";
+  const textPrimary = isV4 ? "rgba(255,255,255,0.92)" : "var(--cream)";
+  const textSecondary = isV4 ? "rgba(255,255,255,0.62)" : "var(--mist)";
+  const monoFont = isV4 ? "'JetBrains Mono', 'Courier New', monospace" : "'DM Mono', monospace";
+  const serifFont = isV4 ? "'Playfair Display', Georgia, serif" : "Cinzel, serif";
 
-const headline: React.CSSProperties = {
-  fontFamily: "Cinzel, serif",
-  fontSize: 22, fontWeight: 300, color: "var(--cream)",
-  lineHeight: 1.3, margin: "8px 0 4px",
-};
-
-const themePill: React.CSSProperties = {
-  display: "inline-block",
-  border: "1px solid rgba(200,135,58,0.35)",
-  borderRadius: 2, padding: "2px 10px",
-  fontFamily: "'DM Mono', monospace", fontSize: 9,
-  letterSpacing: "0.16em", color: "var(--amber)",
-  marginBottom: 14,
-};
-
-const divider: React.CSSProperties = {
-  height: 1,
-  background: "linear-gradient(to right, rgba(200,135,58,0.3), transparent)",
-  margin: "14px 0",
-};
-
-const overview: React.CSSProperties = {
-  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-  fontSize: 13, color: "var(--mist)", lineHeight: 1.7, marginBottom: 16,
-};
-
-const sectionTitle: React.CSSProperties = {
-  fontFamily: "'DM Mono', monospace", fontSize: 9,
-  letterSpacing: "0.3em", textTransform: "uppercase",
-  color: "var(--amber)", marginBottom: 4,
-};
-
-const sectionBody: React.CSSProperties = {
-  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-  fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65, marginBottom: 14,
-};
-
-const practiceBox: React.CSSProperties = {
-  marginTop: 4, padding: "10px 14px",
-  background: "rgba(200,135,58,0.05)",
-  border: "1px solid rgba(200,135,58,0.2)",
-  borderRadius: 2,
-  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-  fontSize: 12.5, color: "var(--gold)", lineHeight: 1.6,
-};
-
-const generateBtn: React.CSSProperties = {
-  marginTop: 14, padding: "9px 20px",
-  background: "linear-gradient(135deg, rgba(200,135,58,0.12), rgba(200,135,58,0.04))",
-  border: "1px solid rgba(200,135,58,0.4)",
-  borderRadius: 2, color: "var(--amber)",
-  fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-  fontSize: 12, cursor: "pointer", letterSpacing: "0.06em",
-};
-
-const tabBtn = (active: boolean): React.CSSProperties => ({
-  padding: "4px 14px",
-  background: active ? "rgba(200,135,58,0.12)" : "transparent",
-  border: `1px solid ${active ? "rgba(200,135,58,0.4)" : "rgba(200,135,58,0.15)"}`,
-  borderRadius: 2, color: active ? "var(--amber)" : "var(--mist)",
-  fontFamily: "'DM Mono', monospace", fontSize: 9,
-  letterSpacing: "0.14em", textTransform: "uppercase",
-  cursor: "pointer", transition: "all 0.2s",
-});
+  return {
+    eyebrow: {
+      fontFamily: monoFont,
+      fontSize: "var(--type-label)",
+      letterSpacing: "0.3em",
+      textTransform: "uppercase",
+      color: accent,
+    } satisfies React.CSSProperties,
+    headline: {
+      fontFamily: serifFont,
+      fontSize: "var(--type-h2)",
+      fontWeight: isV4 ? 500 : 300,
+      color: textPrimary,
+      lineHeight: 1.3,
+      margin: "8px 0 4px",
+    } satisfies React.CSSProperties,
+    themePill: {
+      display: "inline-block",
+      border: `1px solid ${accentBorderStrong}`,
+      borderRadius: isV4 ? 999 : 2,
+      padding: isV4 ? "4px 10px" : "2px 10px",
+      fontFamily: monoFont,
+      fontSize: "var(--type-label)",
+      letterSpacing: "0.16em",
+      color: accent,
+      background: isV4 ? "rgba(124,58,237,0.1)" : "transparent",
+      marginBottom: 14,
+      textTransform: "uppercase",
+    } satisfies React.CSSProperties,
+    divider: {
+      height: 1,
+      background: isV4
+        ? "linear-gradient(to right, rgba(212,175,55,0.35), rgba(124,58,237,0.14), transparent)"
+        : "linear-gradient(to right, rgba(200,135,58,0.3), transparent)",
+      margin: "14px 0",
+    } satisfies React.CSSProperties,
+    overview: {
+      fontFamily: "'Lora', Georgia, serif",
+      fontStyle: "italic",
+      fontSize: "var(--type-oracle)",
+      color: textSecondary,
+      lineHeight: 1.8,
+      marginBottom: 16,
+    } satisfies React.CSSProperties,
+    sectionTitle: {
+      fontFamily: monoFont,
+      fontSize: "var(--type-label)",
+      letterSpacing: "0.3em",
+      textTransform: "uppercase",
+      color: accent,
+      marginBottom: 4,
+    } satisfies React.CSSProperties,
+    sectionBody: {
+      fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      fontSize: "var(--type-body)",
+      color: textSecondary,
+      lineHeight: 1.65,
+      marginBottom: 14,
+    } satisfies React.CSSProperties,
+    practiceBox: {
+      marginTop: 4,
+      padding: "10px 14px",
+      background: isV4 ? "rgba(212,175,55,0.08)" : "rgba(200,135,58,0.05)",
+      border: `1px solid ${accentBorder}`,
+      borderRadius: isV4 ? 10 : 2,
+      fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      fontSize: "var(--type-body)",
+      color: isV4 ? "var(--lavender, #EDE9FF)" : "var(--gold)",
+      lineHeight: 1.6,
+    } satisfies React.CSSProperties,
+    generateBtn: {
+      marginTop: 14,
+      padding: "9px 20px",
+      background: isV4
+        ? "linear-gradient(135deg, rgba(212,175,55,0.16), rgba(124,58,237,0.08))"
+        : "linear-gradient(135deg, rgba(200,135,58,0.12), rgba(200,135,58,0.04))",
+      border: `1px solid ${accentBorderStrong}`,
+      borderRadius: isV4 ? 999 : 2,
+      color: accent,
+      fontFamily: isV4 ? monoFont : "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      fontSize: 12,
+      cursor: "pointer",
+      letterSpacing: isV4 ? "0.12em" : "0.06em",
+      textTransform: isV4 ? "uppercase" : undefined,
+    } satisfies React.CSSProperties,
+    tabBtn: (active: boolean): React.CSSProperties => ({
+      padding: isV4 ? "4px 12px" : "4px 14px",
+      background: active ? accentSoft : "transparent",
+      border: `1px solid ${active ? accentBorderStrong : accentBorder}`,
+      borderRadius: isV4 ? 999 : 2,
+      color: active ? accent : textSecondary,
+      fontFamily: monoFont,
+      fontSize: "var(--type-label)",
+      letterSpacing: "0.14em",
+      textTransform: "uppercase",
+      cursor: "pointer",
+      transition: "all 0.2s",
+    }),
+    upgradeEyebrow: {
+      fontFamily: monoFont,
+      fontSize: "var(--type-label)",
+      color: accent,
+      letterSpacing: "0.12em",
+      opacity: 0.8,
+      textTransform: "uppercase",
+    } satisfies React.CSSProperties,
+    upgradeText: {
+      fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+      fontSize: "var(--type-body)",
+      color: textSecondary,
+      textAlign: "center",
+      maxWidth: 280,
+      lineHeight: 1.5,
+    } satisfies React.CSSProperties,
+    upgradeLink: {
+      padding: "8px 20px",
+      border: `1px solid ${accentBorderStrong}`,
+      borderRadius: isV4 ? 999 : 2,
+      color: accent,
+      fontFamily: monoFont,
+      fontSize: "var(--type-label)",
+      letterSpacing: "0.14em",
+      textDecoration: "none",
+      background: accentSoft,
+      textTransform: "uppercase",
+    } satisfies React.CSSProperties,
+  };
+}
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ForecastCard({ initialWeekly, initialMonthly, isPaid, weekLabel, monthLabel }: Props) {
+export function ForecastCard({ initialWeekly, initialMonthly, isPaid, weekLabel, monthLabel, variant = "default" }: Props) {
   const [tab, setTab] = useState<"weekly" | "monthly">("weekly");
   const [weekly, setWeekly] = useState<WeeklyForecast | null>(initialWeekly);
   const [monthly, setMonthly] = useState<MonthlyForecast | null>(initialMonthly);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const styles = getStyles(variant);
 
   // Auto-generate weekly forecast on first load if missing
   useEffect(() => {
@@ -162,24 +234,24 @@ export function ForecastCard({ initialWeekly, initialMonthly, isPaid, weekLabel,
       {/* Header row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
         <div>
-          <div style={eyebrow}>Forecast · {label}</div>
+          <div style={styles.eyebrow}>Forecast · {label}</div>
         </div>
         {/* Tab toggle */}
         <div style={{ display: "flex", gap: 6 }}>
-          <button style={tabBtn(tab === "weekly")} onClick={() => setTab("weekly")}>Weekly</button>
-          <button style={tabBtn(tab === "monthly")} onClick={() => setTab("monthly")}>Monthly</button>
+          <button style={styles.tabBtn(tab === "weekly")} onClick={() => setTab("weekly")}>Weekly</button>
+          <button style={styles.tabBtn(tab === "monthly")} onClick={() => setTab("monthly")}>Monthly</button>
         </div>
       </div>
 
       {isPaid ? (
         current ? (
-          <ForecastContent forecast={current} type={tab} />
+          <ForecastContent forecast={current} type={tab} variant={variant} />
         ) : (
           <div>
-            <p style={{ ...overview, opacity: 0.45, fontStyle: "italic", marginBottom: 0 }}>
+            <p style={{ ...styles.overview, opacity: 0.45, fontStyle: "italic", marginBottom: 0 }}>
               Your {tab} forecast is ready to generate…
             </p>
-            <button onClick={generate} disabled={loading} style={generateBtn}>
+            <button onClick={generate} disabled={loading} style={styles.generateBtn}>
               {loading ? "Generating…" : `✦ Generate ${tab === "weekly" ? "Weekly" : "Monthly"} Forecast`}
             </button>
             {error && <p style={{ marginTop: 8, fontSize: 12, color: "rgba(220,80,80,0.8)" }}>{error}</p>}
@@ -205,20 +277,13 @@ export function ForecastCard({ initialWeekly, initialMonthly, isPaid, weekLabel,
             display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 10,
           }}>
-            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "var(--amber)", letterSpacing: "0.12em", opacity: 0.8 }}>
+            <div style={styles.upgradeEyebrow}>
               CORE & VIP MEMBERS
             </div>
-            <p style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, color: "var(--mist)", textAlign: "center", maxWidth: 280, lineHeight: 1.5 }}>
+            <p style={styles.upgradeText}>
               Unlock weekly and monthly personalised forecasts
             </p>
-            <a href="/subscribe" style={{
-              padding: "8px 20px",
-              border: "1px solid rgba(200,135,58,0.5)",
-              borderRadius: 2, color: "var(--amber)",
-              fontFamily: "'DM Mono', monospace", fontSize: 10,
-              letterSpacing: "0.14em", textDecoration: "none",
-              background: "rgba(200,135,58,0.08)",
-            }}>Upgrade to Core →</a>
+            <a href="/subscribe" style={styles.upgradeLink}>Upgrade to Core →</a>
           </div>
         </div>
       )}
@@ -228,29 +293,30 @@ export function ForecastCard({ initialWeekly, initialMonthly, isPaid, weekLabel,
 
 // ─── Forecast content renderer ────────────────────────────────────────────────
 
-function ForecastContent({ forecast, type }: { forecast: WeeklyForecast | MonthlyForecast; type: "weekly" | "monthly" }) {
+function ForecastContent({ forecast, type, variant }: { forecast: WeeklyForecast | MonthlyForecast; type: "weekly" | "monthly"; variant: ForecastVariant }) {
   const practiceLabel = type === "weekly" ? "Weekly Practice" : "Monthly Intention";
   const practiceText = type === "weekly"
     ? (forecast as WeeklyForecast).practice
     : (forecast as MonthlyForecast).intention;
+  const styles = getStyles(variant);
 
   return (
     <div>
-      <h3 style={headline}>{forecast.headline}</h3>
-      <span style={themePill}>{forecast.theme}</span>
-      <p style={overview}>{forecast.overview}</p>
-      <div style={divider} />
+      <h3 style={styles.headline}>{forecast.headline}</h3>
+      <span style={styles.themePill}>{forecast.theme}</span>
+      <p style={styles.overview}>{forecast.overview}</p>
+      <div style={styles.divider} />
       {forecast.sections.map((s, i) => (
         <div key={i}>
-          <div style={sectionTitle}>{s.title}</div>
-          <div style={sectionBody}>{s.body}</div>
+          <div style={styles.sectionTitle}>{s.title}</div>
+          <div style={styles.sectionBody}>{s.body}</div>
         </div>
       ))}
-      <div style={divider} />
-      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 6 }}>
+      <div style={styles.divider} />
+      <div style={{ ...styles.sectionTitle, marginBottom: 6 }}>
         {practiceLabel}
       </div>
-      <div style={practiceBox}>{practiceText}</div>
+      <div style={styles.practiceBox}>{practiceText}</div>
     </div>
   );
 }
