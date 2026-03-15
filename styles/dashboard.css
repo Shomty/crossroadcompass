@@ -482,8 +482,8 @@ body[data-sidebar="compact"] .app-main-content {
 }
 
 @media (max-width: 1024px) {
-  .app-main-content { padding-left: 0; }
-  body[data-sidebar="compact"] .app-main-content { padding-left: 0; }
+  .app-main-content { padding-left: 0; padding-top: 64px; }
+  body[data-sidebar="compact"] .app-main-content { padding-left: 0; padding-top: 64px; }
 }
 
 /* Desktop sidebar */
@@ -769,6 +769,7 @@ body[data-sidebar="compact"] .app-main-content {
   background: rgba(0, 0, 0, 0.5);
   z-index: 110;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.3s ease;
 }
 
@@ -778,6 +779,7 @@ body[data-sidebar="compact"] .app-main-content {
 
 .app-sidebar-overlay.visible {
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* Mobile slide-in drawer */

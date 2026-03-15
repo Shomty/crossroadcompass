@@ -261,16 +261,16 @@ export function ForecastCard({ initialWeekly, initialMonthly, isPaid, weekLabel,
         // Free tier — blurred preview + upgrade CTA
         <div style={{ position: "relative" }}>
           <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none", opacity: 0.5 }}>
-            <h3 style={headline}>A week of deeper integration awaits you</h3>
-            <div style={themePill}>Clarity & Momentum</div>
-            <p style={overview}>
+            <h3 style={styles.headline}>A week of deeper integration awaits you</h3>
+            <div style={styles.themePill}>Clarity & Momentum</div>
+            <p style={styles.overview}>
               This week carries a distinct energy of consolidation. Your defined centres are amplified
               by the current dasha themes, creating moments of unusual clarity in decision-making.
             </p>
-            <div style={sectionTitle}>Energy & Body</div>
-            <div style={sectionBody}>Your sacral energy peaks mid-week. Honour rest on the bookends.</div>
-            <div style={sectionTitle}>Relationships & Aura</div>
-            <div style={sectionBody}>Your aura is particularly receptive to new connections this week.</div>
+            <div style={styles.sectionTitle}>Energy & Body</div>
+            <div style={styles.sectionBody}>Your sacral energy peaks mid-week. Honour rest on the bookends.</div>
+            <div style={styles.sectionTitle}>Relationships & Aura</div>
+            <div style={styles.sectionBody}>Your aura is particularly receptive to new connections this week.</div>
           </div>
           <div style={{
             position: "absolute", inset: 0,
