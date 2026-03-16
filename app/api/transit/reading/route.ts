@@ -35,7 +35,10 @@ export async function GET(req: NextRequest) {
   if (!force) {
     const cached = await getCachedTransitReading(userId);
     if (cached) {
-      return NextResponse.json({ reading: cached, source: "cache" });
+      return NextResponse.json(
+        { reading: cached, source: "cache" },
+        { headers: { "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400" } }
+      );
     }
   }
 
@@ -105,7 +108,10 @@ export async function GET(req: NextRequest) {
       userName,
       location
     );
-    return NextResponse.json({ reading, source: "generated" });
+    return NextResponse.json(
+      { reading, source: "generated" },
+      { headers: { "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400" } }
+    );
   } catch (err) {
     console.error("[transit/reading] Gemini error:", err instanceof Error ? err.message : err);
     return NextResponse.json(
