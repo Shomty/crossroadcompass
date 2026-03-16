@@ -4,6 +4,9 @@
  * Today's Vedic Transit Reading — auto-fetches on mount.
  * Displays Gemini AI reading based on Parasara Hora analysis of
  * natal Rasi chart vs today's planetary positions (Gochara).
+ *
+ * Caching: /api/transit/reading uses 24h KV cache — Gemini is called
+ * at most once per user per day. Refresh button forces re-generation.
  */
 
 import { useState, useEffect } from "react";
@@ -26,29 +29,48 @@ const QUALITY_LABEL: Record<string, string> = {
   challenging: "Challenging",
 };
 
+function formatGeneratedAt(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    if (isToday) return `today at ${time}`;
+    return `${d.toLocaleDateString("en-US", { day: "numeric", month: "short" })} at ${time}`;
+  } catch {
+    return iso;
+  }
+}
+
 export function TransitCard() {
   const [reading, setReading] = useState<TransitReading | null>(null);
+  const [source, setSource] = useState<"cache" | "generated" | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => { fetchReading(); }, []);
 
-  async function fetchReading() {
-    setLoading(true);
+  async function fetchReading(force = false) {
+    if (force) setRefreshing(true);
+    else setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/transit/reading");
+      const url = force ? "/api/transit/reading?force=true" : "/api/transit/reading";
+      const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Could not load transit reading.");
       } else {
         setReading(data.reading);
+        setSource(data.source ?? null);
       }
     } catch {
       setError("Network error. Please refresh.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
@@ -80,7 +102,7 @@ export function TransitCard() {
         <p style={{ ...sans, fontSize: 13, color: "rgba(220,100,80,0.85)", marginBottom: 12, lineHeight: 1.6 }}>
           {error ?? "Transit reading unavailable."}
         </p>
-        <button onClick={fetchReading} style={{ ...sans, fontSize: "var(--type-small)", color: "var(--amber)", background: "none", border: "1px solid rgba(200,135,58,0.22)", borderRadius: 2, padding: "5px 14px", cursor: "pointer", letterSpacing: "0.06em" }}>
+        <button onClick={() => fetchReading()} style={{ ...sans, fontSize: "var(--type-small)", color: "var(--amber)", background: "none", border: "1px solid rgba(200,135,58,0.22)", borderRadius: 2, padding: "5px 14px", cursor: "pointer", letterSpacing: "0.06em" }}>
           Try Again
         </button>
       </div>
@@ -101,12 +123,6 @@ export function TransitCard() {
           <h3 style={{ ...serif, fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 300, color: "var(--cream)", lineHeight: 1.15, margin: 0 }}>
             {reading.headline}
           </h3>
-          {/* Location tag */}
-          {reading.location && (
-            <p style={{ ...mono, fontSize: "var(--type-label)", color: "var(--mist)", marginTop: 5, letterSpacing: "0.1em" }}>
-              ◎ {reading.location}
-            </p>
-          )}
         </div>
         <span style={{ ...mono, fontSize: "var(--type-label)", color: "var(--mist)", letterSpacing: "0.08em", marginTop: 4, flexShrink: 0 }}>{today}</span>
       </div>
@@ -235,16 +251,35 @@ export function TransitCard() {
         </>
       )}
 
-      {/* Footer */}
-      <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
+      {/* Footer — location · generated timestamp · refresh */}
+      <div style={{ marginTop: 20, paddingTop: 14, borderTop: "1px solid rgba(200,135,58,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {reading.location && (
+            <span style={{ ...mono, fontSize: "var(--type-label)", color: "var(--mist)", letterSpacing: "0.06em" }}>
+              ◎ {reading.location}
+            </span>
+          )}
+          {reading.generatedAt && (
+            <span style={{ ...mono, fontSize: "var(--type-label)", color: "var(--mist)", letterSpacing: "0.06em", opacity: 0.65 }}>
+              ✦ {source === "cache" ? "Cached" : "Generated"} {formatGeneratedAt(reading.generatedAt)}
+            </span>
+          )}
+        </div>
         <button
-          onClick={fetchReading}
-          style={{ ...mono, fontSize: "var(--type-label)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mist)", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
+          onClick={() => fetchReading(true)}
+          disabled={refreshing}
+          style={{
+            ...mono, fontSize: "var(--type-label)", letterSpacing: "0.1em", textTransform: "uppercase",
+            color: refreshing ? "var(--mist)" : "var(--amber)",
+            background: "none",
+            border: `1px solid ${refreshing ? "rgba(200,135,58,0.1)" : "rgba(200,135,58,0.22)"}`,
+            borderRadius: 2, cursor: refreshing ? "default" : "pointer",
+            padding: "5px 14px", transition: "all 0.2s",
+          }}
         >
-          ↺ Refresh
+          {refreshing ? "Refreshing…" : "↺ Refresh"}
         </button>
       </div>
     </div>
   );
 }
-

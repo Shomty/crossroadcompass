@@ -14,18 +14,13 @@ import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import type { VedicChart, VedicPlanet } from "@/lib/astro/types";
 import { kvGet, kvSet } from "@/lib/kv/helpers";
-import { KV_TTL } from "@/lib/kv/keys";
+import { kvKeys, KV_TTL } from "@/lib/kv/keys";
 
 let _gemini: GoogleGenAI | null = null;
 function gemini() {
   if (!env.GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not set");
   if (!_gemini) _gemini = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
   return _gemini;
-}
-
-/** KV key for a user's cached transit reading (one per day) */
-function transitReadingKey(userId: string, date: string) {
-  return `transit-reading:${userId}:${date}`;
 }
 
 export interface TransitPlanetLine {
@@ -134,7 +129,7 @@ export async function generateTransitReading(
     year: "numeric", month: "2-digit", day: "2-digit",
   }).format(new Date());
 
-  const cacheKey = transitReadingKey(userId, today);
+  const cacheKey = kvKeys.transitReading(userId, today);
   const cached = await kvGet<TransitReading>(cacheKey);
   if (cached) return cached;
 
@@ -175,5 +170,5 @@ export async function getCachedTransitReading(
   const today = new Intl.DateTimeFormat("en-CA", {
     year: "numeric", month: "2-digit", day: "2-digit",
   }).format(new Date());
-  return kvGet<TransitReading>(transitReadingKey(userId, today));
+  return kvGet<TransitReading>(kvKeys.transitReading(userId, today));
 }

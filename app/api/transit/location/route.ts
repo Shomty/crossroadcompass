@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     data: { observationLatitude: latitude, observationLongitude: longitude, observationCity: city },
   });
 
-  // Bust today's transit KV cache so next reading uses new location
+  // Bust today's transit chart cache AND reading cache so next request uses new location
   const profile = await db.birthProfile.findUnique({ where: { userId }, select: { timezone: true } });
   if (profile) {
     const today = new Intl.DateTimeFormat("en-CA", {
@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
       year: "numeric", month: "2-digit", day: "2-digit",
     }).format(new Date());
     await kvDelete(kvKeys.transit(userId, today));
+    await kvDelete(kvKeys.transitReading(userId, today));
   }
 
   return NextResponse.json({ city });
@@ -99,10 +100,19 @@ export async function DELETE(req: NextRequest) {
 
   const userId = session.user.id;
 
-  await db.birthProfile.update({
+  const cleared = await db.birthProfile.update({
     where: { userId },
     data: { observationLatitude: null, observationLongitude: null, observationCity: null },
+    select: { timezone: true },
   });
+
+  // Bust both caches so next reading reverts to birth location
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: cleared.timezone,
+    year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  await kvDelete(kvKeys.transit(userId, today));
+  await kvDelete(kvKeys.transitReading(userId, today));
 
   return NextResponse.json({ ok: true });
 }

@@ -10,9 +10,11 @@ export const kvKeys = {
   hdChart:    (userId: string) => `chart:hd:${userId}`,
   dashas:     (userId: string) => `chart:dashas:${userId}`,
   /** date must be YYYY-MM-DD */
-  transit:    (userId: string, date: string) => `transit:${userId}:${date}`,
+  transit:        (userId: string, date: string) => `transit:${userId}:${date}`,
   /** Prefix for scanning all transit keys for a user */
-  transitPrefix: (userId: string) => `transit:${userId}:`,
+  transitPrefix:  (userId: string) => `transit:${userId}:`,
+  /** Gemini AI reading cache (one per user per day) — date must be YYYY-MM-DD */
+  transitReading: (userId: string, date: string) => `transit-reading:${userId}:${date}`,
 } as const;
 
 export const KV_TTL = {

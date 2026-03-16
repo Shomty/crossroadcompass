@@ -3,12 +3,29 @@
  * components/transit/TodaysTransitForm.tsx
  * Today's Transit Chart — full client-side flow:
  * geolocation → city search fallback → submit → chart result
+ *
+ * Location persistence:
+ *  - Saved to localStorage (cc:transit:location) with 7-day expiry after each resolve
+ *  - Synced to DB via POST /api/transit/location (background, non-blocking)
+ *  - On mount: restored from savedCity prop (DB) or localStorage, then auto-submits
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
+const LOCATION_STORAGE_KEY = "cc:transit:location";
+const LOCATION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+interface StoredLocation {
+  displayName: string;
+  lat: number;
+  lon: number;
+  savedAt: number;
+}
+
 interface Props {
   userName: string;
+  /** Pre-populated from DB (BirthProfile.observationCity). Skips localStorage check when present. */
+  savedCity?: string;
 }
 
 interface CityResult {
@@ -38,9 +55,37 @@ function formatTime(d: Date) {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
 }
 
-export function TodaysTransitForm({ userName }: Props) {
+function saveLocationToStorage(loc: { displayName: string; lat: number; lon: number }) {
+  try {
+    const stored: StoredLocation = { ...loc, savedAt: Date.now() };
+    localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(stored));
+  } catch {
+    // localStorage may be unavailable (private mode, etc.)
+  }
+}
+
+function clearLocationFromStorage() {
+  try {
+    localStorage.removeItem(LOCATION_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/** Fire-and-forget: syncs lat/lon to BirthProfile in DB, busts KV cache */
+function syncLocationToDB(coords: { lat: number; lon: number }) {
+  fetch("/api/transit/location", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ latitude: coords.lat, longitude: coords.lon }),
+  }).catch(() => {
+    // non-critical — DB sync is best-effort
+  });
+}
+
+export function TodaysTransitForm({ userName, savedCity }: Props) {
   const [location, setLocation] = useState<string | null>(null);
-  const [locationSource, setLocationSource] = useState<"geo" | "manual" | null>(null);
+  const [locationSource, setLocationSource] = useState<"geo" | "manual" | "saved" | null>(null);
   const [geoState, setGeoState] = useState<"idle" | "requesting" | "granted" | "denied" | "error">("idle");
   const [geoError, setGeoError] = useState<string | null>(null);
 
@@ -63,6 +108,59 @@ export function TodaysTransitForm({ userName }: Props) {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  /** Core submit — accepts location string directly to avoid stale closure issues */
+  const submitWithLocation = useCallback(async (loc: string) => {
+    setSubmitting(true);
+    setSubmitError(null);
+    setResult(null);
+    try {
+      const res = await fetch("/api/transit/today", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ location: loc }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSubmitError(data.error ?? "Chart generation failed. Please try again.");
+      } else {
+        setResult(data as TransitResult);
+      }
+    } catch {
+      setSubmitError("Network error. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
+
+  // Restore saved location on mount and auto-submit
+  useEffect(() => {
+    // 1. DB-persisted location passed as server prop (highest priority)
+    if (savedCity) {
+      setLocation(savedCity);
+      setLocationSource("saved");
+      submitWithLocation(savedCity);
+      return;
+    }
+
+    // 2. Client-side localStorage (7-day expiry)
+    try {
+      const raw = localStorage.getItem(LOCATION_STORAGE_KEY);
+      if (raw) {
+        const stored: StoredLocation = JSON.parse(raw);
+        if (Date.now() - stored.savedAt < LOCATION_MAX_AGE_MS) {
+          setLocation(stored.displayName);
+          setLocationSource("saved");
+          submitWithLocation(stored.displayName);
+        } else {
+          localStorage.removeItem(LOCATION_STORAGE_KEY);
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-only — savedCity is stable from SSR
 
   // City search debounce
   const searchCities = useCallback(async (q: string) => {
@@ -98,6 +196,9 @@ export function TodaysTransitForm({ userName }: Props) {
     setShowCitySearch(false);
     setCityQuery("");
     setCityResults([]);
+    // Persist to localStorage and sync to DB
+    saveLocationToStorage({ displayName: city.displayName, lat: city.lat, lon: city.lon });
+    syncLocationToDB({ lat: city.lat, lon: city.lon });
   }
 
   async function requestGeolocation() {
@@ -128,6 +229,9 @@ export function TodaysTransitForm({ userName }: Props) {
             setLocation(data.displayName);
             setLocationSource("geo");
             setGeoState("granted");
+            // Persist to localStorage and sync to DB
+            saveLocationToStorage({ displayName: data.displayName, lat: latitude, lon: longitude });
+            syncLocationToDB({ lat: latitude, lon: longitude });
           } else {
             throw new Error("No city returned");
           }
@@ -158,30 +262,13 @@ export function TodaysTransitForm({ userName }: Props) {
     setShowCitySearch(true);
     setCityQuery("");
     setCityResults([]);
+    setResult(null);
+    clearLocationFromStorage();
   }
 
   async function handleSubmit() {
     if (!location) return;
-    setSubmitting(true);
-    setSubmitError(null);
-    setResult(null);
-    try {
-      const res = await fetch("/api/transit/today", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ location }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setSubmitError(data.error ?? "Chart generation failed. Please try again.");
-      } else {
-        setResult(data as TransitResult);
-      }
-    } catch {
-      setSubmitError("Network error. Please check your connection and try again.");
-    } finally {
-      setSubmitting(false);
-    }
+    submitWithLocation(location);
   }
 
   // ── Render ──────────────────────────────────────────────────────────────
@@ -245,7 +332,7 @@ export function TodaysTransitForm({ userName }: Props) {
           <div>
             <p style={{ ...sans, fontSize: 12.5, color: "var(--mist)", lineHeight: 1.65, marginBottom: 14 }}>
               To generate your transit chart, we need your current location.
-              Your location is only used for this chart and is not stored.
+              Your location is saved for future visits — you can change it at any time.
             </p>
             <button
               onClick={requestGeolocation}

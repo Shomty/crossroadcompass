@@ -2,10 +2,14 @@
  * app/(app)/transit/page.tsx
  * Today's Transit Chart page.
  * Auth-guarded server component — shell provided by (app)/layout.tsx.
+ *
+ * Loads observationCity from BirthProfile so TodaysTransitForm can
+ * auto-populate and auto-submit without a browser geolocation prompt.
  */
 
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { TodaysTransitForm } from "@/components/transit/TodaysTransitForm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
@@ -14,7 +18,15 @@ export default async function TodaysTransitPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const userId = session.user.id;
   const userName = session.user?.name ?? session.user?.email?.split("@")[0] ?? "Traveler";
+
+  // Load saved observation city (null-safe — first visit will have no profile)
+  const profile = await db.birthProfile.findUnique({
+    where: { userId },
+    select: { observationCity: true },
+  });
+  const savedCity = profile?.observationCity ?? undefined;
 
   return (
     <div className="v2-content">
@@ -39,7 +51,7 @@ export default async function TodaysTransitPage() {
       </div>
 
       {/* ── Form ───────────────────────────────────────────────── */}
-      <TodaysTransitForm userName={userName} />
+      <TodaysTransitForm userName={userName} savedCity={savedCity} />
 
     </div>
   );
