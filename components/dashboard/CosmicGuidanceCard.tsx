@@ -126,6 +126,10 @@ export function CosmicGuidanceCard({ initialInsight }: Props) {
     <div className="glass-card glass-card-hero dash-col-8 animate-enter animate-enter-1">
       <div className="dash-card-header">
         <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+            <div className="dash-live-dot" />
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "var(--type-label)", letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#4ADE80", opacity: 0.85 }}>Daily Message</span>
+          </div>
           <h2 className="dash-section-title">Cosmic Guidance</h2>
           <span className="dash-section-subtitle">Today&apos;s personal navigation</span>
         </div>

@@ -50,12 +50,12 @@ export function DashboardNav({ tier }: DashboardNavProps) {
       {/* Logo */}
       <Link href="/dashboard" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
         <Image
-          src="/crossroads-compass-logo-2.svg"
+          src="/logo-icon.png"
           alt="Crossroads Compass"
-          width={180}
-          height={56}
+          width={36}
+          height={36}
           priority
-          style={{ height: 32, width: "auto" }}
+          style={{ height: 36, width: 36, objectFit: "contain", borderRadius: "50%", boxShadow: "0 0 0 1px rgba(212,175,55,0.30), 0 0 12px rgba(212,175,55,0.15)" }}
         />
       </Link>
 

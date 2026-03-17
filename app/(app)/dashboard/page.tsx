@@ -22,7 +22,7 @@ import { db } from "@/lib/db";
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import { DashboardReport } from "@/components/report/DashboardReport";
-import { HumanDesignTypeCard } from "@/components/dashboard/HumanDesignTypeCard";
+import { HDProfileStrip } from "@/components/dashboard/HDProfileStrip";
 import { ForecastCard } from "@/components/dashboard/ForecastCard";
 import { DashaCard } from "@/components/dashboard/DashaCard";
 import { TransitCard } from "@/components/dashboard/TransitCard";
@@ -34,6 +34,8 @@ import {
   getWeekStart,
   getMonthStart,
 } from "@/lib/ai/forecastService";
+import { getLifeReading } from "@/lib/ai/lifeReadingService";
+import { LifeReadingsRow } from "@/components/dashboard/LifeReadingsRow";
 
 export default async function DashboardPage({
   searchParams,
@@ -56,6 +58,7 @@ export default async function DashboardPage({
   const tier    = subscription?.tier ?? "FREE";
   const isAdmin = session.user?.email === "shomty@hotmail.com";
   const isPaid  = isAdmin || tier === "CORE" || tier === "VIP";
+  const isVip   = isAdmin || tier === "VIP";
 
   // ── Birth profile + chart generation (must run before dasha queries) ────────
   const now = new Date();
@@ -87,9 +90,12 @@ export default async function DashboardPage({
   });
 
   // ── Forecasts ───────────────────────────────────────────────────────────────
-  const [weeklyForecast, monthlyForecast] = await Promise.all([
+  const [weeklyForecast, monthlyForecast, careerReading, loveReading, healthReading] = await Promise.all([
     getThisWeeksForecast(userId),
     getThisMonthsForecast(userId),
+    isVip ? getLifeReading(userId, "career") : Promise.resolve(null),
+    isVip ? getLifeReading(userId, "love")   : Promise.resolve(null),
+    isVip ? getLifeReading(userId, "health") : Promise.resolve(null),
   ]);
   const weekLabel  = getWeekStart().toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const monthLabel = getMonthStart().toLocaleDateString("en-US", { month: "long", year: "numeric" });
@@ -166,6 +172,17 @@ export default async function DashboardPage({
               </Link>
             </div>
           </header>
+
+          {/* ── HD PROFILE STRIP ─────────────────────────────────────────────── */}
+          <div className="dash-mb-sm">
+            <HDProfileStrip
+              name={userName}
+              hdType={hdType}
+              hdStrategy={hdStrategy}
+              hdAuthority={hdAuthority}
+              hdProfile={hdProfile}
+            />
+          </div>
 
           {/* ── ROW 1: Cosmic Guidance (8) + Current Period / Dasha (4) ─────── */}
           <div className="dash-grid-12 dash-mb dash-row-hero">
@@ -252,33 +269,17 @@ export default async function DashboardPage({
 
           <Divider glyph="☉" />
 
-          {/* ── ROW 2: Human Design (4) + Today's Transits (8) ──────────────── */}
-          <div className="dash-grid-12 dash-mb">
-
-            {/* Human Design — 4 cols */}
-            <div className="glass-card dash-col-4 animate-enter animate-enter-3">
-              <h2 className="dash-section-title">Human Design</h2>
-              <span className="dash-section-subtitle">◉ Energy type · Strategy</span>
-              <HumanDesignTypeCard
-                hdType={hdType}
-                hdStrategy={hdStrategy}
-                hdAuthority={hdAuthority}
-                hdProfile={hdProfile}
-              />
-            </div>
-
-            {/* Today's Transits — 8 cols */}
-            <div className="glass-card dash-col-8 animate-enter animate-enter-4">
-              <h2 className="dash-section-title">Today&apos;s Transits</h2>
-              <span className="dash-section-subtitle">☿ Planetary positions</span>
-              <TransitCard />
-            </div>
+          {/* ── ROW 2: Today's Transits — full width ─────────────────────── */}
+          <div className="glass-card dash-mb animate-enter animate-enter-3">
+            <h2 className="dash-section-title">Today&apos;s Transits</h2>
+            <span className="dash-section-subtitle">☿ Planetary positions</span>
+            <TransitCard />
           </div>
 
           <Divider glyph="☽" />
 
           {/* ── ROW 3: Life Forecast — full width ───────────────────────────── */}
-          <div className="glass-card animate-enter animate-enter-5 dash-mb">
+          <div className="glass-card animate-enter animate-enter-4 dash-mb">
             <h2 className="dash-section-title">Life Forecast</h2>
             <span className="dash-section-subtitle">♃ Weekly &amp; monthly outlook</span>
             <ForecastCard
@@ -290,9 +291,21 @@ export default async function DashboardPage({
             />
           </div>
 
+          <Divider glyph="✦" />
+
+          {/* ── ROW 4: Career · Love · Health Readings — VIP ────────────────── */}
+          <div className="animate-enter animate-enter-5 dash-mb">
+            <LifeReadingsRow
+              isVip={isVip}
+              initialCareer={careerReading}
+              initialLove={loveReading}
+              initialHealth={healthReading}
+            />
+          </div>
+
           <Divider glyph="♄" />
 
-          {/* ── ROW 4: Natal Chart Report — full width ───────────────────────── */}
+          {/* ── ROW 5: Natal Chart Report — full width ───────────────────────── */}
           <div className="glass-card animate-enter animate-enter-6">
             <h2 className="dash-section-title">Natal Chart Report</h2>
             <span className="dash-section-subtitle">◈ Full birth chart analysis</span>

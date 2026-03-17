@@ -6,7 +6,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { LayoutGrid, FileText, User, LogOut } from "lucide-react";
 
 const NAV = [
@@ -49,7 +48,7 @@ export function BottomNavV2() {
           );
         })}
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => { window.location.href = "/api/auth/logout"; }}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
             padding: "6px 16px", background: "none", border: "none",

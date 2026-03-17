@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { LayoutGrid, FileText, Star, Headphones, User, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -44,7 +43,7 @@ export function DashboardBottomNav() {
 
         {/* Logout */}
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => { window.location.href = "/api/auth/logout"; }}
           style={{
             display: "flex",
             flexDirection: "column",

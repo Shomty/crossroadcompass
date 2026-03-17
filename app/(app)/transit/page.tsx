@@ -29,7 +29,7 @@ export default async function TodaysTransitPage() {
   const savedCity = profile?.observationCity ?? undefined;
 
   return (
-    <div className="v2-content">
+    <div className="v4-wrap">
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <div style={{ marginBottom: 36 }}>

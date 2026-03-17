@@ -27,8 +27,7 @@ export default async function SubscribePage() {
     !!(process.env.STRIPE_PRICE_VIP_QUARTERLY);
 
   return (
-    <main style={{ minHeight: "100vh", padding: "calc(64px + 32px) 20px 60px" }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+    <div className="v4-wrap">
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -103,8 +102,7 @@ export default async function SubscribePage() {
           </Link>
         </div>
 
-      </div>
-    </main>
+    </div>
   );
 }
 

@@ -22,9 +22,10 @@
  * - Cards:       Always use <V4GlassCard>. Never use .dash-card or raw divs.
  * - Colors:      Use CSS vars from globals.css (--gold-solar, --moon, --muted, etc.)
  *                Never hardcode hex values in components.
- * - Typography:  Playfair Display → headings/titles
+ * - Typography:  Cinzel → headings/titles
+ *                Lora → oracle/narrative passages (italic)
  *                Plus Jakarta Sans → body / long labels
- *                JetBrains Mono → data, eyebrows, dates, coordinates
+ *                DM Mono → data, eyebrows, dates, coordinates
  * - Layout:      The app shell (app/(app)/layout.tsx) provides the sidebar and
  *                navigation. Do NOT add your own nav, header, or fixed elements.
  * - Anti-patterns: No .dash-card, no .dash-grid, no hardcoded colors,
@@ -74,7 +75,7 @@ export default async function TemplatePage() {
         <V4GlassCard goldEdge style={{ padding: "22px 24px" }}>
           {/* TODO: primary content */}
           <p style={{
-            fontFamily: "'JetBrains Mono','Courier New',monospace",
+            fontFamily: "'DM Mono',monospace",
             fontSize: 9,
             letterSpacing: "0.24em",
             textTransform: "uppercase",
@@ -84,7 +85,7 @@ export default async function TemplatePage() {
             Primary Section
           </p>
           <h2 style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
+            fontFamily: "Cinzel, serif",
             fontSize: 18,
             fontWeight: 400,
             color: "rgba(255,255,255,0.9)",

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { LayoutGrid, FileText, Star, Headphones, User, Settings, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -24,32 +24,19 @@ export function DashboardSidebar({ userName, tier }: DashboardSidebarProps) {
   return (
     <aside className="dashboard-sidebar">
       {/* Logo */}
-      <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "0 8px", marginBottom: 36 }}>
-        <div style={{
-          width: 36, height: 36,
-          border: "1px solid var(--border-lit)",
-          borderRadius: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: "var(--gold-glow)",
-          flexShrink: 0,
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeDasharray="2 3"/>
-            <line x1="12" y1="2" x2="12" y2="6"/>
-            <line x1="12" y1="18" x2="12" y2="22"/>
-            <line x1="2" y1="12" x2="6" y2="12"/>
-            <line x1="18" y1="12" x2="22" y2="12"/>
-          </svg>
-        </div>
-        <div>
-          <div style={{ fontFamily: "Cinzel, serif", fontSize: 17, fontWeight: 500, letterSpacing: "0.01em", color: "var(--moon)", lineHeight: 1.2 }}>
-            Crossroads Compass
-          </div>
-          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--faint)", marginTop: 1 }}>
-            Personal Navigation
-          </div>
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 4px", marginBottom: 36 }}>
+        <Image
+          src="/logo-icon.png"
+          alt="Crossroads Compass"
+          width={40}
+          height={40}
+          priority
+          style={{ objectFit: "contain", borderRadius: "50%", boxShadow: "0 0 0 1px rgba(212,175,55,0.30), 0 0 14px rgba(212,175,55,0.15)", flexShrink: 0 }}
+        />
+        <span style={{ fontFamily: "Cinzel, serif", fontSize: 12, fontWeight: 600, letterSpacing: "0.20em", textTransform: "uppercase" as const, color: "#e8b96a", lineHeight: 1.35 }}>
+          <span style={{ display: "block" }}>CROSSROADS</span>
+          <span style={{ display: "block" }}>COMPASS</span>
+        </span>
       </div>
 
       {/* Nav */}
@@ -142,7 +129,7 @@ export function DashboardSidebar({ userName, tier }: DashboardSidebarProps) {
         <button
           title="Sign out"
           style={{ background: "none", border: "none", color: "var(--faint)", cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0 }}
-          onClick={(e) => { e.stopPropagation(); signOut({ callbackUrl: "/login" }); }}
+          onClick={(e) => { e.stopPropagation(); window.location.href = "/api/auth/logout"; }}
         >
           <LogOut size={15} />
         </button>

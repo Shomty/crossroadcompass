@@ -83,7 +83,7 @@ export function TransitCard() {
     return (
       <div style={{ padding: "8px 0" }}>
         <p style={{ ...mono, fontSize: "var(--type-label)", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 10 }}>
-          ✦ Today&apos;s Transits
+          Today&apos;s Transits
         </p>
         <p style={{ ...serif, fontSize: 16, fontStyle: "italic", color: "var(--mist)", animation: "dashaPulse 1.8s ease-in-out infinite" }}>
           Reading the sky…
@@ -97,7 +97,7 @@ export function TransitCard() {
     return (
       <div style={{ padding: "8px 0" }}>
         <p style={{ ...mono, fontSize: "var(--type-label)", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 10 }}>
-          ✦ Today&apos;s Transits
+          Today&apos;s Transits
         </p>
         <p style={{ ...sans, fontSize: 13, color: "rgba(220,100,80,0.85)", marginBottom: 12, lineHeight: 1.6 }}>
           {error ?? "Transit reading unavailable."}
@@ -117,9 +117,10 @@ export function TransitCard() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
         <div>
-          <p style={{ ...mono, fontSize: "var(--type-label)", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 6 }}>
-            ✦ Today&apos;s Transits
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <div className="dash-live-dot" />
+            <span style={{ ...mono, fontSize: "var(--type-label)", letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "#4ADE80", opacity: 0.85 }}>Live</span>
+          </div>
           <h3 style={{ ...serif, fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 300, color: "var(--cream)", lineHeight: 1.15, margin: 0 }}>
             {reading.headline}
           </h3>

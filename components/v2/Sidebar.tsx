@@ -6,7 +6,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { LayoutGrid, FileText, User, Settings, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -119,7 +118,7 @@ export function SidebarV2({ userName, tier }: Props) {
         <button
           title="Sign out"
           style={{ background: "none", border: "none", color: "var(--v2-faint)", cursor: "pointer", padding: 4, borderRadius: 6, flexShrink: 0 }}
-          onClick={e => { e.stopPropagation(); signOut({ callbackUrl: "/login" }); }}
+          onClick={e => { e.stopPropagation(); window.location.href = "/api/auth/logout"; }}
         >
           <LogOut size={14} />
         </button>

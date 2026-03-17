@@ -5,8 +5,8 @@
  */
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { LayoutGrid, FileText, User, Settings, LogOut } from "lucide-react";
 
 /* FRONTEND.md §12 — dashboard nav links: Dashboard, My Chart, Consultations, Account */
@@ -30,24 +30,14 @@ export function TopNavV2({ userName, tier }: Props) {
     <header className="v2-topnav">
       {/* Logo */}
       <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 3,
-          border: "1px solid rgba(200, 135, 58, 0.22)",
-          background: "rgba(200, 135, 58, 0.05)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.4">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeDasharray="2 3"/>
-            <line x1="12" y1="2" x2="12" y2="6"/>
-            <line x1="12" y1="18" x2="12" y2="22"/>
-            <line x1="2"  y1="12" x2="6"  y2="12"/>
-            <line x1="18" y1="12" x2="22" y2="12"/>
-          </svg>
-        </div>
-        <span style={{ fontFamily: "Cinzel, serif", fontSize: 15, fontWeight: 600, color: "var(--gold)", letterSpacing: "0.18em", textTransform: "uppercase", display: "none" }} className="v2-topnav-wordmark">
-          Crossroads<span style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "var(--amber)", verticalAlign: "middle", margin: "0 0.4em 1px" }} />Compass
-        </span>
+        <Image
+          src="/logo-icon.png"
+          alt="Crossroads Compass"
+          width={34}
+          height={34}
+          priority
+          style={{ objectFit: "contain", borderRadius: "50%", boxShadow: "0 0 0 1px rgba(212,175,55,0.30), 0 0 12px rgba(212,175,55,0.14)" }}
+        />
       </Link>
 
       {/* Nav links */}
@@ -110,7 +100,7 @@ export function TopNavV2({ userName, tier }: Props) {
         <button
           title="Sign out"
           style={{ background: "none", border: "1px solid rgba(200, 135, 58, 0.12)", color: "var(--mist)", cursor: "pointer", padding: "7px 8px", borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", transition: "border-color 0.2s, color 0.2s" }}
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => { window.location.href = "/api/auth/logout"; }}
         >
           <LogOut size={15} />
         </button>

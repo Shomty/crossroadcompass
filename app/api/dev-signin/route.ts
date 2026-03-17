@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
+import { encode } from "next-auth/jwt";
 import { db } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
@@ -25,19 +25,20 @@ export async function GET(req: NextRequest) {
     await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
   }
 
-  // Delete old sessions and create a fresh 90-day one
-  await db.session.deleteMany({ where: { userId: user.id } });
-  const sessionToken = crypto.randomBytes(32).toString("hex");
-  const expires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  const maxAge = 90 * 24 * 60 * 60; // 90 days in seconds
+  const expires = new Date(Date.now() + maxAge * 1000);
 
-  await db.session.create({
-    data: { sessionToken, userId: user.id, expires },
+  // Encode a JWT that NextAuth's JWT strategy will accept
+  const token = await encode({
+    token: { sub: user.id, id: user.id, email: user.email, name: user.name ?? email },
+    secret: process.env.AUTH_SECRET!,
+    salt: "authjs.session-token",
+    maxAge,
   });
 
-  // Set the session cookie and redirect to onboarding/report
-  // NextAuth v5 uses "authjs.session-token" (no __Secure- prefix on http://localhost)
+  // Set the JWT session cookie and redirect
   const response = NextResponse.redirect(new URL("/", req.url));
-  response.cookies.set("authjs.session-token", sessionToken, {
+  response.cookies.set("authjs.session-token", token, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",

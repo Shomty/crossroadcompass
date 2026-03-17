@@ -120,6 +120,7 @@ model BirthProfile {
   hdUndefinedCenters String? // JSON-encoded string[]
   hdActiveChannels   String? // JSON-encoded Channel[]
   hdActiveGates      String? // JSON-encoded number[]
+  hdInsights         String? // JSON-encoded Record<"type"|"strategy"|"authority"|"profile", {headline,body,practicalTip}>
 
   // Vedic natal chart — external API (sections 16.1, 18.2)
   // DECISION NEEDED: confirm typed columns once API response shape is confirmed with Milosh
@@ -193,8 +194,11 @@ enum InsightType {
   DAILY
   WEEKLY
   MONTHLY
-  INITIAL // foundation report insight (report/generate)
-  DASHA   // persisted dasha card back-face insight; periodDate = mahadasha startDate
+  INITIAL  // foundation report insight (report/generate)
+  DASHA    // persisted dasha card back-face insight; periodDate = mahadasha startDate
+  CAREER   // VIP life reading — career/vocation (D1 + D10 + HD); periodDate = epoch
+  LOVE     // VIP life reading — relationships/love (D1 + D9 + HD); periodDate = epoch
+  HEALTH   // VIP life reading — vitality/wellbeing (HD); periodDate = epoch
 }
 
 model Insight {

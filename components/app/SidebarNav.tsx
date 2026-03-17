@@ -7,8 +7,8 @@
  */
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { LogOut, Menu, X, Compass, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -24,16 +24,6 @@ interface Props {
   tier: string;
 }
 
-const CompassIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.4">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeDasharray="2 3" />
-    <line x1="12" y1="2" x2="12" y2="6" />
-    <line x1="12" y1="18" x2="12" y2="22" />
-    <line x1="2"  y1="12" x2="6"  y2="12" />
-    <line x1="18" y1="12" x2="22" y2="12" />
-  </svg>
-);
 
 export function SidebarNav({ userName, tier }: Props) {
   const pathname = usePathname();
@@ -62,12 +52,28 @@ export function SidebarNav({ userName, tier }: Props) {
   }
 
   const Logo = ({ onClick, compact }: { onClick?: () => void; compact?: boolean }) => (
-    <Link href="/dashboard" className="app-sidebar-logo" onClick={onClick}>
-      <div className="app-sidebar-logo-icon">
-        <CompassIcon />
-      </div>
+    <Link href="/dashboard" className={`app-sidebar-logo${compact ? " compact" : ""}`} onClick={onClick}>
+      {/* Glyph — always visible */}
+      <span className="logo-glyph-ring">
+        <Image
+          src="/logo-icon.png"
+          alt="Crossroads Compass"
+          width={36}
+          height={36}
+          priority
+          style={{ display: "block", width: 36, height: 36, objectFit: "contain" }}
+        />
+      </span>
+
+      {/* Wordmark — fades out when compact */}
       {!compact && (
-        <span className="app-sidebar-wordmark">CROSSROADS</span>
+        <span className="logo-wordmark" aria-label="Crossroads Compass">
+          <span className="logo-wordmark-primary">
+            <span>CROSSROADS</span>
+            <span>COMPASS</span>
+          </span>
+          <span className="logo-wordmark-sub">VEDIC · HUMAN DESIGN</span>
+        </span>
       )}
     </Link>
   );
@@ -109,7 +115,7 @@ export function SidebarNav({ userName, tier }: Props) {
           </div>
           <button
             className="app-sidebar-signout"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => { window.location.href = "/api/auth/logout"; }}
             title="Sign out"
           >
             <LogOut size={15} />

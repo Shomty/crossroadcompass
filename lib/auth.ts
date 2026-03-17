@@ -13,13 +13,20 @@ import { db } from "@/lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
+  trustHost: true,
   providers: [
-    // Google OAuth
+    // Google OAuth — endpoints provided directly to skip runtime OIDC discovery fetch
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [Google({
           clientId: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          authorization: "https://accounts.google.com/o/oauth2/v2/auth?prompt=select_account&scope=openid+email+profile",
+          token: "https://oauth2.googleapis.com/token",
+          userinfo: "https://openid.googleapis.com/userinfo",
+          // issuer omitted — prevents JWKS/OIDC validation fetch at callback which was causing hangs
+          checks: ["pkce", "state"],
+          allowDangerousEmailAccountLinking: true,
         })]
       : []),
     // Magic-link email auth via Resend
@@ -33,9 +40,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/auth-error",
   },
   callbacks: {
-    session({ session, user }) {
-      // Attach DB user id to the session so API routes can use it
-      session.user.id = user.id;
+    jwt({ token, user }) {
+      // Attach DB user id to token on initial sign-in
+      if (user) token.id = user.id;
+      return token;
+    },
+    session({ session, token }) {
+      // Expose user id from JWT token to session consumers
+      session.user.id = token.id as string;
       return session;
     },
   },

@@ -49,12 +49,12 @@ export function Nav({ variant = "marketing" }: NavProps) {
       {/* Logo */}
       <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
         <Image
-          src="/crossroads-compass-logo-2.svg"
+          src="/logo.png"
           alt="Crossroads Compass"
-          width={200}
-          height={62}
+          width={88}
+          height={88}
           priority
-          style={{ height: 42, width: "auto" }}
+          style={{ height: 88, width: 88, objectFit: "contain" }}
         />
       </Link>
 

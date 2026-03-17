@@ -43,27 +43,29 @@ All v4 containers must follow this baseline unless a component spec explicitly o
 
 ## Typography Triad
 
-### Serif
-Use for wisdom, titles, planetary periods, and interpretive statements.
-Preferred:
-- Playfair Display
-- Cinzel for legacy compatibility only where already established
+### Serif (headings, titles, planetary names, glyphs)
+Use for wisdom, titles, planetary periods, and section headings.
+Required:
+- **Cinzel** — primary serif for all headings and titles
 
-### Sans
+### Oracle (narrative, guidance, italic passages)
+Use for interpretive, meditative, or guidance text.
+Required:
+- **Lora** — italic narrative, oracle cards, summary passages
+
+### Sans (body copy, long labels)
 Use for utility text, body copy, labels longer than one line, and explanatory paragraphs.
-Preferred:
-- Plus Jakarta Sans
+Required:
+- **Plus Jakarta Sans**
 
-### Monospace
+### Monospace (data, eyebrows, coordinates, metadata)
 Use for all technical data surfaces.
 Required for:
-- Degrees
-- Coordinates
-- Dates when presented as precision metadata
+- Degrees, coordinates, dates when presented as precision metadata
 - Table numeric values
-- Eyebrow labels on technical panels
-Preferred:
-- JetBrains Mono
+- Eyebrow labels, pill badges, tabs
+Required:
+- **DM Mono**
 
 ## Motion Rules
 
@@ -125,12 +127,12 @@ Current rollout target:
 
 ## Component Notes
 
-### Forecast Surfaces in v4
-Legacy forecast UI may be reused, but when rendered in v4 it must adopt:
+### Forecast Surfaces
+Forecast UI uses the standard design system everywhere:
 - Solar Gold / Cosmic Violet / Lavender palette
-- Playfair Display for major headings
-- JetBrains Mono for tabs, pills, labels, and metadata
-- Glass-card framing via v4 primitives
+- Cinzel for major headings
+- DM Mono for tabs, pills, labels, and metadata
+- Glass-card framing via `V4GlassCard`
 
 ### Planet Metadata
 Planet glyph and color mappings must be centralized in one shared module to avoid drift across cards and pages.
@@ -156,8 +158,8 @@ Then edit `page.tsx`: replace the three TODO props and add your data-fetching lo
 import { PageLayout } from "@/components/layout/PageLayout";
 
 <PageLayout
-  eyebrow="Section Name"   // JetBrains Mono, Solar Gold, all-caps
-  title="Page Title"       // Playfair Display serif
+  eyebrow="Section Name"   // DM Mono, Solar Gold, all-caps
+  title="Page Title"       // Cinzel serif
   subtitle="Description"   // Plus Jakarta Sans, muted
 >
   {/* sections */}

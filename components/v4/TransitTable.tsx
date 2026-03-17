@@ -80,7 +80,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
         <div>
           <p className="v4-eyebrow" style={{ marginBottom: 4 }}>Planetary Positions</p>
           <h2 style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
+            fontFamily: "Cinzel, serif",
             fontSize: 18, fontWeight: 500,
             color: "rgba(255,255,255,0.9)",
           }}>
@@ -92,7 +92,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div className="v4-live-dot" />
           <span style={{
-            fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: "var(--type-label)", letterSpacing: "0.2em",
             textTransform: "uppercase",
             color: "#4ADE80", opacity: 0.85,
@@ -115,7 +115,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
       {error && (
         <div style={{ padding: "20px 0", textAlign: "center" }}>
           <p style={{
-            fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: "var(--type-mono)", color: "#F87171", marginBottom: 12,
           }}>
             {error}
@@ -123,7 +123,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
           <button
             onClick={fetchReading}
             style={{
-              fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+              fontFamily: "'DM Mono', monospace",
               fontSize: "var(--type-label)", letterSpacing: "0.12em",
               color: "var(--gold-solar, #D4AF37)",
               background: "none",
@@ -141,7 +141,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
           {/* AI overview narrative */}
           {reading.overview && (
             <p style={{
-              fontFamily: "'Playfair Display', Georgia, serif",
+              fontFamily: "Lora, Georgia, serif",
               fontStyle: "italic",
               fontSize: 13, lineHeight: 1.65,
               color: "rgba(255,255,255,0.55)",
@@ -179,7 +179,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
 
                 {/* Planet name + transit sign */}
                 <span style={{
-                  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                  fontFamily: "'DM Mono', monospace",
                   fontSize: "var(--type-mono)", color: "rgba(255,255,255,0.80)",
                   letterSpacing: "0.04em",
                 }}>
@@ -198,7 +198,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
 
                 {/* House from Moon */}
                 <span style={{
-                  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                  fontFamily: "'DM Mono', monospace",
                   fontSize: "var(--type-label)", color: "rgba(255,255,255,0.35)",
                   textAlign: "center",
                 }}>
@@ -225,7 +225,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
                     {glyph}
                   </span>
                   <span style={{
-                    fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    fontFamily: "'DM Mono', monospace",
                     fontSize: "var(--type-mono)", color: "rgba(255,255,255,0.80)",
                   }}>
                     {p.name}
@@ -237,7 +237,7 @@ export function TransitTable({ initialReading }: TransitTableProps = {}) {
                   </span>
                   <span className="v4-data">{p.degreeFmt ?? "—"}</span>
                   <span style={{
-                    fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                    fontFamily: "'DM Mono', monospace",
                     fontSize: "var(--type-label)", color: "rgba(255,255,255,0.35)", textAlign: "center",
                   }}>
                     {p.house != null ? `H${p.house}` : "—"}

@@ -153,14 +153,14 @@ export default async function V4Page() {
             style={{ paddingBottom: 4 }}
           >
             <p style={{
-              fontFamily: "'JetBrains Mono','Courier New',monospace",
+              fontFamily: "'DM Mono',monospace",
               fontSize: 9, letterSpacing: "0.28em", textTransform: "uppercase",
               color: "rgba(255,255,255,0.3)", marginBottom: 6,
             }}>
               Personal Navigation
             </p>
             <h1 style={{
-              fontFamily: "'Playfair Display', Georgia, serif",
+              fontFamily: "Cinzel, serif",
               fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 400,
               color: "rgba(255,255,255,0.92)", lineHeight: 1.1, marginBottom: 6,
             }}>
@@ -170,7 +170,7 @@ export default async function V4Page() {
               </em>
             </h1>
             <p style={{
-              fontFamily: "'JetBrains Mono','Courier New',monospace",
+              fontFamily: "'DM Mono',monospace",
               fontSize: 10, letterSpacing: "0.08em",
               color: "rgba(255,255,255,0.30)",
             }}>
@@ -236,14 +236,14 @@ export default async function V4Page() {
           <div className="animate-enter animate-enter-5">
             <V4GlassCard style={{ padding: "22px 24px" }}>
               <p style={{
-                fontFamily: "'JetBrains Mono','Courier New',monospace",
+                fontFamily: "'DM Mono',monospace",
                 fontSize: 9, letterSpacing: "0.24em", textTransform: "uppercase",
                 color: "rgba(255,255,255,0.35)", marginBottom: 4,
               }}>
                 Life Forecast
               </p>
               <h2 style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
+                fontFamily: "Cinzel, serif",
                 fontSize: 18, fontWeight: 500,
                 color: "rgba(255,255,255,0.9)", marginBottom: 18,
               }}>

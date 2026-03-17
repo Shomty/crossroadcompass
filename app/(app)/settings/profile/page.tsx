@@ -124,7 +124,7 @@ export default function ProfileSettingsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 580, margin: "0 auto", padding: "calc(64px + 2rem) 1.5rem 6rem" }}>
+    <div className="v4-wrap">
       {/* Header */}
       <div style={{ marginBottom: "2.5rem" }}>
         <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--gold)", opacity: 0.7, marginBottom: "0.5rem" }}>

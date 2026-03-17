@@ -40,8 +40,8 @@ function getStyles(variant: ForecastVariant) {
   const accentBorderStrong = isV4 ? "rgba(212,175,55,0.4)" : "rgba(200,135,58,0.4)";
   const textPrimary = isV4 ? "rgba(255,255,255,0.92)" : "var(--cream)";
   const textSecondary = isV4 ? "rgba(255,255,255,0.62)" : "var(--mist)";
-  const monoFont = isV4 ? "'JetBrains Mono', 'Courier New', monospace" : "'DM Mono', monospace";
-  const serifFont = isV4 ? "'Playfair Display', Georgia, serif" : "Cinzel, serif";
+  const monoFont = "'DM Mono', monospace";
+  const serifFont = "Cinzel, serif";
 
   return {
     eyebrow: {
