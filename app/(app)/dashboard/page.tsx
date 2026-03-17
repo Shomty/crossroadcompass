@@ -36,6 +36,7 @@ import {
 } from "@/lib/ai/forecastService";
 import { getLifeReading } from "@/lib/ai/lifeReadingService";
 import { LifeReadingsRow } from "@/components/dashboard/LifeReadingsRow";
+import { JyotishCard } from "@/components/dashboard/JyotishCard";
 
 export default async function DashboardPage({
   searchParams,
@@ -90,12 +91,13 @@ export default async function DashboardPage({
   });
 
   // ── Forecasts ───────────────────────────────────────────────────────────────
-  const [weeklyForecast, monthlyForecast, careerReading, loveReading, healthReading] = await Promise.all([
+  const [weeklyForecast, monthlyForecast, careerReading, loveReading, healthReading, jyotishReading] = await Promise.all([
     getThisWeeksForecast(userId),
     getThisMonthsForecast(userId),
-    isVip ? getLifeReading(userId, "career") : Promise.resolve(null),
-    isVip ? getLifeReading(userId, "love")   : Promise.resolve(null),
-    isVip ? getLifeReading(userId, "health") : Promise.resolve(null),
+    isVip ? getLifeReading(userId, "career")   : Promise.resolve(null),
+    isVip ? getLifeReading(userId, "love")     : Promise.resolve(null),
+    isVip ? getLifeReading(userId, "health")   : Promise.resolve(null),
+    isVip ? getLifeReading(userId, "jyotish")  : Promise.resolve(null),
   ]);
   const weekLabel  = getWeekStart().toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const monthLabel = getMonthStart().toLocaleDateString("en-US", { month: "long", year: "numeric" });
@@ -278,7 +280,14 @@ export default async function DashboardPage({
 
           <Divider glyph="☽" />
 
-          {/* ── ROW 3: Life Forecast — full width ───────────────────────────── */}
+          {/* ── ROW 3: Jyotish Reading — full width ─────────────────────────── */}
+          <div className="dash-mb">
+            <JyotishCard isVip={isVip} initialReading={jyotishReading} />
+          </div>
+
+          <Divider glyph="◎" />
+
+          {/* ── ROW 4: Life Forecast — full width ───────────────────────────── */}
           <div className="glass-card animate-enter animate-enter-4 dash-mb">
             <h2 className="dash-section-title">Life Forecast</h2>
             <span className="dash-section-subtitle">♃ Weekly &amp; monthly outlook</span>
@@ -293,7 +302,7 @@ export default async function DashboardPage({
 
           <Divider glyph="✦" />
 
-          {/* ── ROW 4: Career · Love · Health Readings — VIP ────────────────── */}
+          {/* ── ROW 5: Career · Love · Health Readings — VIP ────────────────── */}
           <div className="animate-enter animate-enter-5 dash-mb">
             <LifeReadingsRow
               isVip={isVip}
