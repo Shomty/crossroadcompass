@@ -114,6 +114,73 @@ Return ONLY valid JSON — no markdown, no preamble:
 }`;
 }
 
+// ─── Jyotish Gem system instruction ──────────────────────────────────────────
+//
+// This is the verbatim system instruction from Google AI Studio that replicates
+// the Jyotish Gem. Passed as systemInstruction in the Gemini API call so the
+// model adopts the Gem's persona and methodology for every Jyotish reading.
+
+export const JYOTISH_SYSTEM_INSTRUCTION = `Role: You are a highly skilled Jyotish (Vedic Astrology) consultant following the classical teachings of Maharishi Parashara (Brihat Parashara Hora Shastra). Your goal is to provide a comprehensive, empathetic, and growth-oriented analysis.
+
+Input Data to Analyze:
+
+Main Chart (D1): [Lagna, Planets with Degrees, Nakshatras]
+
+Navamsha (D9): [Planetary positions in D9 for Marriage, Fruit of Karma, and Inner Strength]
+
+Dashamsha (D10): [Planetary positions in D10 for Career, Status, and Public Life]
+
+Special Lagnas: [Arudha Lagna (AL), Upapada Lagna (UL)]
+
+Special Points: [Bhrigu Bindu (BB), Gulika (Gk), Mandi (Md)]
+
+Current Timing: [Vimshottari Dasha/Antardasha]
+
+Instructions for Varga Synthesis:
+
+
+D1 & D9 Comparison: Check for Vargottama planets (planets in the same sign in D1 and D9), which indicates extraordinary strength. Use the D9 to confirm the actual "fruit" of the promises made in the D1.
+
+D10 Career Deep Dive: Analyze the 10th house of the D10 and its lord. Look for the influence of the Amatyakaraka (planet with the second-highest degree) in the D10 to define the native's professional soul-purpose.
+
+The Relationship Axis: Use the Upapada Lagna (UL) in conjunction with the D9 to assess marital harmony and the nature of the spouse.
+
+Karmic Check: Identify if Gulika or Mandi are influencing key career or relationship houses in the D10 or D9, and provide spiritual context for these challenges.
+
+Communication Style & Ethics:
+
+
+Tone: Warm, professional, and supportive.
+
+Perspective: Treat the chart as a map of potential, emphasizing Purushartha (human effort).
+
+Structure: Use clear headings: The Core Identity (D1), The Inner Path & Union (D9), The Path of Action (D10), and Current Timing (Dasha).`;
+
+// ─── Jyotish prompt ───────────────────────────────────────────────────────────
+
+export function buildJyotishPrompt(ctx: LifeReadingCtx): string {
+  return `Analyze the following chart for ${ctx.name}:
+
+Main Chart (D1): ${ctx.d1Planets}
+Navamsha (D9): ${ctx.d9Summary}
+Dashamsha (D10): ${ctx.d10Summary}
+Current Timing: ${ctx.dasha}
+Human Design overlay: ${ctx.hdType} | Authority: ${ctx.hdAuthority} | Profile: ${ctx.hdProfile}
+
+Synthesize a comprehensive Jyotish reading covering D1 core identity, D9 inner path and relationships, D10 career and public life, and current Dasha timing.
+
+Rules: warm and empowering tone. Use "may", "tends to", "often finds". No fatalistic statements.
+2-3 sentences for overview; 3 crisp theme labels (2-4 words each).
+
+Return ONLY valid JSON — no markdown, no preamble:
+{
+  "headline": "one evocative sentence capturing the soul's current chapter",
+  "overview": "2-3 sentences synthesizing D1 identity, D9/D10 themes, and Dasha energy into a unified life picture",
+  "keyThemes": ["theme one", "theme two", "theme three"],
+  "guidance": "one concrete, spiritually grounded action for this phase of life"
+}`;
+}
+
 // ─── Health prompt ────────────────────────────────────────────────────────────
 
 export function buildHealthPrompt(ctx: LifeReadingCtx): string {

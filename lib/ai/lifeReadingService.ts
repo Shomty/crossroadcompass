@@ -16,6 +16,8 @@ import {
   buildCareerPrompt,
   buildLovePrompt,
   buildHealthPrompt,
+  buildJyotishPrompt,
+  JYOTISH_SYSTEM_INSTRUCTION,
   type LifeReadingCtx,
 } from "@/lib/ai/prompts/lifeReadingPrompts";
 import { InsightType, type BirthProfile } from "@prisma/client";
@@ -32,7 +34,7 @@ function gemini() {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type LifeReadingType = "career" | "love" | "health";
+export type LifeReadingType = "career" | "love" | "health" | "jyotish";
 
 export interface LifeReading {
   headline: string;
@@ -47,9 +49,10 @@ const EPOCH = new Date("2000-01-01T00:00:00.000Z");
 
 // Map our string type to Prisma InsightType enum values
 const TYPE_MAP: Record<LifeReadingType, InsightType> = {
-  career: InsightType.CAREER,
-  love:   InsightType.LOVE,
-  health: InsightType.HEALTH,
+  career:  InsightType.CAREER,
+  love:    InsightType.LOVE,
+  health:  InsightType.HEALTH,
+  jyotish: InsightType.JYOTISH,
 };
 
 // ─── Cache helpers ────────────────────────────────────────────────────────────
@@ -144,14 +147,23 @@ export async function generateLifeReading(
   const ctx = await buildCtx(userId, profile);
 
   const prompt =
-    type === "career" ? buildCareerPrompt(ctx) :
-    type === "love"   ? buildLovePrompt(ctx) :
-                        buildHealthPrompt(ctx);
+    type === "career"   ? buildCareerPrompt(ctx) :
+    type === "love"     ? buildLovePrompt(ctx) :
+    type === "jyotish"  ? buildJyotishPrompt(ctx) :
+                          buildHealthPrompt(ctx);
+
+  // Jyotish readings use the Gem: system instruction + high thinking budget
+  const isJyotish = type === "jyotish";
 
   const result = await gemini().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: prompt,
-    config: { temperature: 0.75, maxOutputTokens: 8192 },
+    config: {
+      ...(isJyotish && { systemInstruction: JYOTISH_SYSTEM_INSTRUCTION }),
+      ...(isJyotish && { thinkingConfig: { thinkingBudget: 8192 } }),
+      temperature: 0.75,
+      maxOutputTokens: 8192,
+    },
   });
 
   const raw = result.text;

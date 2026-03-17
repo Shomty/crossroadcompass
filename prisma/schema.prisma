@@ -199,6 +199,7 @@ enum InsightType {
   CAREER   // VIP life reading — career/vocation (D1 + D10 + HD); periodDate = epoch
   LOVE     // VIP life reading — relationships/love (D1 + D9 + HD); periodDate = epoch
   HEALTH   // VIP life reading — vitality/wellbeing (HD); periodDate = epoch
+  JYOTISH  // VIP life reading — comprehensive Vedic synthesis via Gem (D1+D9+D10+Dasha); periodDate = epoch
 }
 
 model Insight {

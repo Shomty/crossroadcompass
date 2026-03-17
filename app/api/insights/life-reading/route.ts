@@ -11,7 +11,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getLifeReading, generateLifeReading } from "@/lib/ai/lifeReadingService";
 
-const VALID_TYPES = ["career", "love", "health"] as const;
+const VALID_TYPES = ["career", "love", "health", "jyotish"] as const;
 type ReadingType = typeof VALID_TYPES[number];
 
 export async function POST(req: Request) {
