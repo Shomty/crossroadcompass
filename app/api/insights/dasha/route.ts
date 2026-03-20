@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const genAI = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-    const result = await genAI.models.generateContent({ model: "gemini-2.5-flash", contents: prompt });
+    const result = await genAI.models.generateContent({ model: "gemini-3-flash-preview", contents: prompt });
     const text = (result.text ?? "").trim();
     if (!text) return NextResponse.json({ insight: null });
 

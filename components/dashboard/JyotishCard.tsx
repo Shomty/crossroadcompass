@@ -6,9 +6,11 @@
  * Placed above Life Forecast on the dashboard.
  */
 
+// STATUS: done | Phase 4 Glimpse
 import { useEffect, useState, useCallback } from "react";
 import { RefreshCw, Crown } from "lucide-react";
 import type { LifeReading } from "@/lib/ai/lifeReadingService";
+import { GlimpseBlur } from "@/components/glimpse";
 
 // ─── Shared style tokens ──────────────────────────────────────────────────────
 
@@ -244,12 +246,13 @@ function VipGate() {
   return (
     <div style={{ display: "flex", gap: 28, alignItems: "flex-start", flex: 1 }}>
       <MandalaOrb loading={false} />
-      <div style={{ flex: 1, position: "relative" }}>
-        {/* Blurred mock */}
-        <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none", opacity: 0.3 }}>
-          <p style={{ fontFamily: "Lora, Georgia, serif", fontStyle: "italic", fontSize: 15, color: ACCENT, marginBottom: 12 }}>
-            Your chart speaks of a profound karmic turning point — the stars align for deep renewal.
-          </p>
+      <div style={{ flex: 1 }}>
+        <GlimpseBlur
+          preview="Your chart speaks of a profound karmic turning point — the stars align for deep renewal."
+          featureName="jyotish_reading"
+          ctaText="Unlock your Vedic synthesis"
+          ctaHref="/pricing"
+        >
           <p style={{ ...body, marginBottom: 14 }}>
             With Vargottama Venus anchoring your D1 and D9, the fruits of past effort are beginning to crystallise.
             The Amatyakaraka in your D10 reveals a career path rooted in wisdom and transformation.
@@ -259,44 +262,7 @@ function VipGate() {
               <span key={t} className="reading-theme-pill">{t}</span>
             ))}
           </div>
-        </div>
-        {/* Overlay */}
-        <div style={{
-          position: "absolute", inset: 0,
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", gap: 10,
-        }}>
-          <span style={{
-            ...mono,
-            fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase",
-            color: "var(--gold, #D4AF37)", opacity: 0.85,
-            border: "1px solid rgba(212,175,55,0.3)",
-            borderRadius: 3, padding: "3px 9px",
-          }}>
-            VIP Members Only
-          </span>
-          <p style={{
-            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-            fontSize: 12, color: "rgba(255,255,255,0.4)",
-            textAlign: "center", lineHeight: 1.5,
-            maxWidth: 200, margin: 0,
-          }}>
-            Unlock your full Vedic synthesis reading
-          </p>
-          <a href="/subscribe" style={{
-            display: "inline-flex", alignItems: "center", gap: 5,
-            padding: "8px 16px",
-            background: "transparent",
-            border: "1px solid rgba(212,175,55,0.35)",
-            borderRadius: 8,
-            ...mono,
-            fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase",
-            color: "var(--gold, #D4AF37)",
-            textDecoration: "none",
-          }}>
-            Upgrade to VIP →
-          </a>
-        </div>
+        </GlimpseBlur>
       </div>
     </div>
   );

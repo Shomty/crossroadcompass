@@ -1,11 +1,19 @@
 "use client";
+// STATUS: done | Phase 5 Feature Pages
 /**
  * components/dashboard/DashaCard.tsx
  * Flip card — front: Dasha stats, back: AI-generated insight for this period.
  * Click anywhere to flip. Insight is fetched lazily on first flip.
+ *
+ * Glimpse wiring:
+ *   FREE  → flip shows GlimpseBlur teaser (no API call)
+ *   CORE+ → full AI insight
  */
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { GlimpseBlur } from "@/components/glimpse";
+import type { SubscriptionTier } from "@/types";
 
 interface DashaData {
   planetName: string;
@@ -22,6 +30,7 @@ interface Props {
   planetColor: string;
   /** Sub-components rendered on the front (planet orb + guidance list) */
   frontContent: React.ReactNode;
+  userTier?: SubscriptionTier;
 }
 
 const PLANET_COLOR_2: Record<string, string> = {
@@ -44,7 +53,9 @@ export function DashaCard({
   planetGlyph,
   planetColor,
   frontContent,
+  userTier = "FREE",
 }: Props) {
+  const isPaid = userTier === "CORE" || userTier === "VIP";
   const [flipped, setFlipped] = useState(false);
   const [insight, setInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -103,7 +114,8 @@ export function DashaCard({
   async function handleFlip() {
     const next = !flipped;
     setFlipped(next);
-    if (next && !fetched) {
+    // Only fetch AI insight for paid users
+    if (next && !fetched && isPaid) {
       await fetchInsight();
     }
   }
@@ -205,6 +217,24 @@ export function DashaCard({
               )}
 
               {frontContent}
+              {activeMaha && (
+                <div style={{ marginTop: 10 }}>
+                  <Link
+                    href="/karma-timeline"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      fontFamily: "'DM Mono', monospace",
+                      fontSize: "var(--type-label)", letterSpacing: "0.12em",
+                      textTransform: "uppercase" as const,
+                      color: "var(--accent-indigo, #818CF8)",
+                      textDecoration: "none", opacity: 0.75,
+                      display: "inline-block",
+                    }}
+                  >
+                    View full timeline →
+                  </Link>
+                </div>
+              )}
               {activeMaha && mahaProgress != null && animatedProgress != null && (
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   {/* Mini SVG progress ring */}
@@ -311,7 +341,20 @@ export function DashaCard({
 
               {/* Insight text */}
               <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                {loading ? (
+                {!isPaid ? (
+                  // FREE user — Glimpse teaser instead of fetching AI
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <GlimpseBlur
+                      preview={`Your ${mahaName} Mahadasha carries a distinctive quality of energy that shapes how you experience work, relationships, and inner growth during this period.`}
+                      featureName="dasha_insight"
+                      ctaText="Unlock your Dasha insight"
+                    >
+                      <p style={{ fontFamily: "Cinzel, serif", fontSize: 16, fontStyle: "italic", fontWeight: 300, color: "var(--cream)", lineHeight: 1.8 }}>
+                        The {mahaName} period often brings shifts in your sense of direction and purpose. Pay close attention to how you invest your energy — the choices you make now carry long-range consequences across multiple life domains. Relationships may intensify or transform, and a latent talent may find its moment to emerge.
+                      </p>
+                    </GlimpseBlur>
+                  </div>
+                ) : loading ? (
                   <p style={{ fontFamily: "Cinzel, serif", fontSize: 16, fontStyle: "italic", color: "var(--cream)", opacity: 0.45, lineHeight: 1.8, animation: "dashaPulse 1.8s ease-in-out infinite" }}>
                     Reading the stars…
                   </p>

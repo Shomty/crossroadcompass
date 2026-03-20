@@ -15,6 +15,7 @@ import { env } from "@/lib/env";
 import type { VedicChart, VedicPlanet } from "@/lib/astro/types";
 import { kvGet, kvSet } from "@/lib/kv/helpers";
 import { kvKeys, KV_TTL } from "@/lib/kv/keys";
+import { buildTransitReadingPrompt } from "@/lib/content/promptBuilder";
 
 let _gemini: GoogleGenAI | null = null;
 function gemini() {
@@ -144,7 +145,26 @@ export async function generateTransitReading(
     isRetrograde: p.isRetrograde ?? false,
   }));
 
-  const prompt = buildTransitPrompt(natal, transit, dashaLord, userName, today);
+  const natalD1Tmp   = natal.rawResponse.chartD1;
+  const transitD1Tmp = transit.rawResponse.chartD1;
+  const moonPlanetTmp = natalD1Tmp.planets.find((p: VedicPlanet) => p.name === "moon");
+  const moonSignVar = moonPlanetTmp?.sign ?? natalD1Tmp.ascendant?.sign ?? "unknown";
+  const ascendantVar = natalD1Tmp.ascendant
+    ? `${natalD1Tmp.ascendant.sign} ${natalD1Tmp.ascendant.degree?.toFixed(1) ?? ""}°`
+    : "unknown";
+
+  const prompt = await buildTransitReadingPrompt(
+    {
+      userName,
+      today,
+      ascendant:     ascendantVar,
+      moonSign:      moonSignVar,
+      dashaLord:     dashaLord ?? "unknown",
+      natalPlanets:  formatPlanets(natalD1Tmp.planets),
+      transitPlanets: formatPlanets(transitD1Tmp.planets),
+    },
+    () => buildTransitPrompt(natal, transit, dashaLord, userName, today)
+  );
 
   const result = await gemini().models.generateContent({
     model: "gemini-3-flash-preview",

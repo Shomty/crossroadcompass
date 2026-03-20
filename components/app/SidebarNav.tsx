@@ -1,4 +1,5 @@
 "use client";
+// STATUS: done | Task R.11
 /**
  * components/app/SidebarNav.tsx
  * Left sidebar navigation — replaces top nav for authenticated app shell.
@@ -9,14 +10,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, X, Compass, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { LogOut, Menu, X, Compass, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight, Clock, BookOpen, Zap, Target, Sparkles, Timer, Heart, Telescope } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const NAV_ITEMS = [
-  { href: "/dashboard",        label: "Dashboard", Icon: Compass },
-  { href: "/report",           label: "My Chart",  Icon: Moon },
-  { href: "/transit",          label: "Transits",  Icon: Globe },
-  { href: "/settings/profile", label: "Settings",  Icon: SlidersHorizontal },
+  { href: "/dashboard",         label: "Dashboard",       Icon: Compass },
+  { href: "/reports",           label: "My Reports",      Icon: Moon },
+  { href: "/transit",           label: "Transits",        Icon: Globe },
+  { href: "/karma-timeline",    label: "Karma Timeline",  Icon: Clock },
+  { href: "/life-blueprint",    label: "Life Blueprint",  Icon: BookOpen },
+  { href: "/energy-blueprint",  label: "Energy Blueprint",Icon: Zap },
+  { href: "/purpose",           label: "Purpose Decoder", Icon: Target },
+  { href: "/shadow",            label: "Shadow Work",     Icon: Sparkles },
+  { href: "/muhurta",           label: "Muhurta Finder",  Icon: Timer },
+  { href: "/chemistry",         label: "Cosmic Chemistry",Icon: Heart },
+  { href: "/sky-observer",      label: "Sky Observer",    Icon: Telescope },
+  { href: "/settings/profile",  label: "Settings",        Icon: SlidersHorizontal },
 ];
 
 interface Props {

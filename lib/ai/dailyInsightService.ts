@@ -8,6 +8,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
+import { buildDailyInsightPrompt } from "@/lib/content/promptBuilder";
 import type { HDChartData } from "@/types";
 
 let _gemini: GoogleGenAI | null = null;
@@ -21,35 +22,6 @@ interface DashaContext {
   mahadasha: string; // e.g. "saturn"
   antardasha: string | null; // e.g. "mars"
   mahadashaEnds: string; // ISO date
-}
-
-function buildDailyPrompt(
-  chart: HDChartData,
-  dasha: DashaContext | null,
-  today: Date,
-  userName: string | null
-): string {
-  const name = userName ?? "the user";
-  const dateStr = today.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  const dashaLine = dasha
-    ? `Active Dasha: ${dasha.mahadasha}${dasha.antardasha ? ` / ${dasha.antardasha}` : ""} mahadasha`
-    : "";
-
-  return `Write a short personalised daily insight for ${name}.
-Today: ${dateStr}
-HD Type: ${chart.type} | Strategy: ${chart.strategy} | Authority: ${chart.authority} | Profile: ${chart.profile}
-${dashaLine}
-
-Rules: warm and practical tone, no "you will" predictions, 2-3 sentences for insight, one short action.
-
-Return ONLY valid JSON:
-{"summary":"one sentence headline","insight":"2-3 sentences personalised to this HD type and dasha","action":"one concrete action for today","energyTheme":"2-4 word theme"}`;
 }
 
 export interface DailyInsight {
@@ -87,7 +59,24 @@ export async function generateDailyInsight(
       }
     : null;
 
-  const prompt = buildDailyPrompt(chart, dashaCtx, today, userName);
+  const dateStr = today.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const prompt = await buildDailyInsightPrompt(chart.type, {
+    hdType:       chart.type,
+    strategy:     chart.strategy,
+    authority:    chart.authority,
+    profile:      chart.profile,
+    currentDasha: dashaCtx
+      ? `${dashaCtx.mahadasha}${dashaCtx.antardasha ? ` / ${dashaCtx.antardasha}` : ""} mahadasha`
+      : undefined,
+    todayDate:    dateStr,
+    userName:     userName ?? undefined,
+  });
 
   const result = await gemini().models.generateContent({
     model: "gemini-3-flash-preview",

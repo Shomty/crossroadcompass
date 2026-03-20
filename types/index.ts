@@ -1,4 +1,5 @@
 // STATUS: done | Task 1.1
+// STATUS: done | Task R.2
 // Shared types — used across the entire application.
 // These are TypeScript types, not Prisma models.
 // Prisma-generated types live in @prisma/client.
@@ -157,6 +158,37 @@ export interface HDChartData {
  */
 export type VedicChartData = Record<string, unknown>;
 
+// ─── Custom Report Builder ────────────────────────────────────────────────
+
+export type ReportVariable =
+  | 'hd_type_strategy' | 'hd_authority' | 'hd_profile'
+  | 'hd_defined_centers' | 'hd_incarnation_cross'
+  | 'vedic_natal_overview' | 'current_dasha' | 'dasha_guidance'
+  | 'active_transits' | 'sade_sati_status'
+  | 'career_purpose_theme' | 'relationship_theme'
+  | 'shadow_growth_theme' | 'monthly_focus' | 'custom_note'
+
+export interface CustomReportConfig {
+  userId: string
+  title: string
+  variables: ReportVariable[]
+  customNote?: string
+  deliveryMode: 'preview' | 'email' | 'pdf'
+}
+
+export interface ReportSection {
+  variable: ReportVariable
+  label: string
+  content: string
+}
+
+export interface CustomReportOutput {
+  config: CustomReportConfig
+  sections: ReportSection[]
+  generatedAt: Date
+  userEmail: string
+}
+
 // ─── Report ───────────────────────────────────────────────────────────────
 
 export interface ReportData {
@@ -172,4 +204,61 @@ export interface ReportData {
     timezone: string;
   };
   generatedAt: Date;
+}
+
+// ─── Reports Marketplace ────────────────────────────────────────────────
+
+export type ReportCategory =
+  | "LIFE_PURPOSE"
+  | "CAREER"
+  | "RELATIONSHIPS"
+  | "SHADOW_WORK"
+  | "TIMING"
+  | "HEALTH"
+  | "FINANCE"
+  | "CUSTOM";
+
+export type ReportPurchaseStatus =
+  | "PENDING"
+  | "PAID"
+  | "GENERATING"
+  | "COMPLETE"
+  | "FAILED";
+
+export interface ReportProductSummary {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  description: string;
+  category: ReportCategory;
+  priceUsd: number; // in cents
+  isActive: boolean;
+  sortOrder: number;
+  coverImageUrl: string | null;
+  estimatedWordCount: number;
+}
+
+export interface UserReportCard {
+  purchaseId: string;
+  product: ReportProductSummary;
+  status: ReportPurchaseStatus;
+  purchasedAt: string;
+  generatedAt: string | null;
+  wordCount: number | null;
+}
+
+export interface ReportContentResponse {
+  purchaseId: string;
+  productTitle: string;
+  content: string; // full markdown text
+  generatedAt: string;
+  wordCount: number;
+}
+
+// For admin panel: full product with prompt
+export interface ReportProductFull extends ReportProductSummary {
+  geminiPrompt: string;
+  createdBy: string;
+  createdAt: string;
 }

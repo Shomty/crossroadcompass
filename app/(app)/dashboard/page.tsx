@@ -56,10 +56,12 @@ export default async function DashboardPage({
     where: { userId },
     select: { tier: true },
   });
-  const tier    = subscription?.tier ?? "FREE";
-  const isAdmin = session.user?.email === "shomty@hotmail.com";
-  const isPaid  = isAdmin || tier === "CORE" || tier === "VIP";
-  const isVip   = isAdmin || tier === "VIP";
+  const tier        = subscription?.tier ?? "FREE";
+  const isAdmin     = session.user?.email === "shomty@hotmail.com";
+  const isPaid      = isAdmin || tier === "CORE" || tier === "VIP";
+  const isVip       = isAdmin || tier === "VIP";
+  // Admin sees all features as VIP — used for component-level tier props
+  const effectiveTier = isAdmin ? "VIP" : tier;
 
   // ── Birth profile + chart generation (must run before dasha queries) ────────
   const now = new Date();
@@ -163,6 +165,17 @@ export default async function DashboardPage({
                 <Settings size={15} />
               </Link>
 
+              {/* Life Blueprint CTA */}
+              <Link href="/life-blueprint" className="dash-chart-btn" style={{ background: "rgba(200,135,58,0.08)", borderColor: "rgba(200,135,58,0.25)", color: "#c8873a" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="16" />
+                  <line x1="8" y1="12" x2="16" y2="12" />
+                </svg>
+                Life Blueprint
+              </Link>
+
               {/* Full Chart CTA */}
               <Link href="/report" className="dash-chart-btn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -211,6 +224,7 @@ export default async function DashboardPage({
                 mahaProgress={mahaProgress}
                 planetGlyph={activeMaha ? (PLANET_GLYPH[activeMaha.planetName.toLowerCase()] ?? "★") : "★"}
                 planetColor={activeMaha ? (PLANET_COLOR[activeMaha.planetName.toLowerCase()] ?? "var(--accent-gold-cool, #D4AF37)") : "var(--accent-gold-cool, #D4AF37)"}
+                userTier={effectiveTier}
                 frontContent={
                   <div>
                     {activeMaha ? (
@@ -275,7 +289,7 @@ export default async function DashboardPage({
           <div className="glass-card dash-mb animate-enter animate-enter-3">
             <h2 className="dash-section-title">Today&apos;s Transits</h2>
             <span className="dash-section-subtitle">☿ Planetary positions</span>
-            <TransitCard />
+            <TransitCard userTier={effectiveTier} />
           </div>
 
           <Divider glyph="☽" />

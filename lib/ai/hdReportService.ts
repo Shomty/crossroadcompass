@@ -15,6 +15,7 @@ import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
 import type { HDChartData } from "@/types";
+import { buildHDReportPrompt } from "@/lib/content/promptBuilder";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ function gemini() {
 
 // ─── Prompt builder ─────────────────────────────────────────────────────────
 
-function buildPrompt(
+function _buildHDFallback(
   chart: HDChartData,
   intake: {
     lifeSituation?: string | null;
@@ -115,7 +116,22 @@ export async function generateHDReport(
     birthName?: string | null;
   }
 ): Promise<HDReport> {
-  const prompt = buildPrompt(chart, intake);
+  const channelList = chart.activeChannels
+    .map((c) => `${c.gates[0]}–${c.gates[1]} (${c.centers.join(" → ")})`)
+    .join(", ");
+
+  const fallbackStr = _buildHDFallback(chart, intake);
+  const prompt = await buildHDReportPrompt({
+    hdType: chart.type,
+    strategy: chart.strategy,
+    authority: chart.authority,
+    profile: chart.profile,
+    definition: chart.definition,
+    channels: channelList,
+    intakeLifeSituation: intake.lifeSituation ?? "",
+    intakePrimaryFocus: intake.primaryFocus ?? "",
+    _hardcoded: fallbackStr,
+  });
 
   const result = await gemini().models.generateContent({
     model: "gemini-3-flash-preview",

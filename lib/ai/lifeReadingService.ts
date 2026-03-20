@@ -12,14 +12,8 @@ import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
 import { getOrCreateHDChart, getOrCreateVedicChart } from "@/lib/astro/chartService";
-import {
-  buildCareerPrompt,
-  buildLovePrompt,
-  buildHealthPrompt,
-  buildJyotishPrompt,
-  JYOTISH_SYSTEM_INSTRUCTION,
-  type LifeReadingCtx,
-} from "@/lib/ai/prompts/lifeReadingPrompts";
+import { buildLifeReadingPrompt } from "@/lib/content/promptBuilder";
+import type { LifeReadingCtx } from "@/lib/ai/prompts/lifeReadingPrompts";
 import { InsightType, type BirthProfile } from "@prisma/client";
 import type { VedicChart } from "@/lib/astro/types";
 import type { VedicPlanet } from "@/lib/astro/types";
@@ -146,20 +140,16 @@ export async function generateLifeReading(
 ): Promise<LifeReading> {
   const ctx = await buildCtx(userId, profile);
 
-  const prompt =
-    type === "career"   ? buildCareerPrompt(ctx) :
-    type === "love"     ? buildLovePrompt(ctx) :
-    type === "jyotish"  ? buildJyotishPrompt(ctx) :
-                          buildHealthPrompt(ctx);
+  const { prompt, systemInstruction } = await buildLifeReadingPrompt(type, ctx);
 
-  // Jyotish readings use the Gem: system instruction + high thinking budget
+  // Jyotish readings use a high thinking budget
   const isJyotish = type === "jyotish";
 
   const result = await gemini().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: prompt,
     config: {
-      ...(isJyotish && { systemInstruction: JYOTISH_SYSTEM_INSTRUCTION }),
+      ...(systemInstruction && { systemInstruction }),
       ...(isJyotish && { thinkingConfig: { thinkingBudget: 8192 } }),
       temperature: 0.75,
       maxOutputTokens: 8192,

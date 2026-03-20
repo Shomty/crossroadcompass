@@ -9,6 +9,10 @@ import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
 import type { HDChartData } from "@/types";
+import {
+  buildWeeklyPrompt as pbBuildWeeklyPrompt,
+  buildMonthlyPrompt as pbBuildMonthlyPrompt,
+} from "@/lib/content/promptBuilder";
 
 let _gemini: GoogleGenAI | null = null;
 function gemini() {
@@ -63,7 +67,7 @@ export function getMonthStart(from = new Date()): Date {
 
 // ─── Prompt builders ─────────────────────────────────────────────────────────
 
-function buildWeeklyPrompt(
+function _buildWeeklyFallback(
   chart: HDChartData,
   mahadasha: string | null,
   antardasha: string | null,
@@ -98,7 +102,7 @@ Return ONLY valid JSON matching this exact shape:
 }`;
 }
 
-function buildMonthlyPrompt(
+function _buildMonthlyFallback(
   chart: HDChartData,
   mahadasha: string | null,
   antardasha: string | null,
@@ -152,7 +156,20 @@ export async function generateWeeklyForecast(
   const mahaName = activeMaha ? capitalize(activeMaha.planetName) : null;
   const antarName = activeAntar ? capitalize(activeAntar.planetName.split("/")[1] ?? "") : null;
 
-  const prompt = buildWeeklyPrompt(chart, mahaName, antarName, weekStart, userName);
+  const dashaLine = mahaName
+    ? `Active Dasha: ${mahaName} Mahadasha${antarName ? ` / ${antarName} Antardasha` : ""}`
+    : "";
+  const weekOf = weekStart.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const fallbackStr = _buildWeeklyFallback(chart, mahaName, antarName, weekStart, userName);
+
+  const prompt = await pbBuildWeeklyPrompt({
+    hdType: chart.type,
+    strategy: chart.strategy,
+    authority: chart.authority,
+    currentDasha: dashaLine,
+    weekStart: weekOf,
+    _hardcoded: fallbackStr,
+  });
 
   const result = await gemini().models.generateContent({
     model: "gemini-3-flash-preview",
@@ -204,7 +221,20 @@ export async function generateMonthlyForecast(
   const mahaName = activeMaha ? capitalize(activeMaha.planetName) : null;
   const antarName = activeAntar ? capitalize(activeAntar.planetName.split("/")[1] ?? "") : null;
 
-  const prompt = buildMonthlyPrompt(chart, mahaName, antarName, monthStart, userName);
+  const dashaLine = mahaName
+    ? `Active Dasha: ${mahaName} Mahadasha${antarName ? ` / ${antarName} Antardasha` : ""} (planetary themes influence the month)`
+    : "";
+  const monthName = monthStart.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const fallbackStr = _buildMonthlyFallback(chart, mahaName, antarName, monthStart, userName);
+
+  const prompt = await pbBuildMonthlyPrompt({
+    hdType: chart.type,
+    strategy: chart.strategy,
+    authority: chart.authority,
+    currentDasha: dashaLine,
+    monthName,
+    _hardcoded: fallbackStr,
+  });
 
   const result = await gemini().models.generateContent({
     model: "gemini-3-flash-preview",

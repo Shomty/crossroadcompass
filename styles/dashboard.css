@@ -493,14 +493,8 @@ body[data-sidebar="compact"] .app-main-content {
   left: 0;
   width: 256px;
   height: 100vh;
-  background: linear-gradient(
-    180deg,
-    rgba(212,175,55,0.04) 0%,
-    rgba(15,15,23,0.96) 30%,
-    rgba(15,15,23,0.96) 70%,
-    rgba(129,140,248,0.03) 100%
-  );
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--cc-bg-base, #080a14);
+  border-right: 1px solid var(--cc-border-card, rgba(255, 255, 255, 0.07));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   display: flex;
@@ -574,22 +568,22 @@ body[data-sidebar="compact"] .app-main-content {
   display: flex;
   flex-direction: column;
   gap: 0;
-  font-family: Cinzel, serif;
-  font-size: 11.5px;
-  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.20em;
   text-transform: uppercase;
-  color: #e8b96a;           /* --gold */
+  color: var(--cc-amber-light, #e8b86d);
   line-height: 1.35;
 }
 
 .logo-wordmark-sub {
   font-family: 'DM Mono', monospace;
-  font-size: 7.5px;
+  font-size: 9px;
   font-weight: 300;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(212,175,55,0.40);
+  color: var(--cc-text-tertiary, #4e4c44);
   margin-top: 3px;
 }
 
@@ -613,7 +607,7 @@ body[data-sidebar="compact"] .app-main-content {
   font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   font-size: 13px;
   font-weight: 400;
-  color: var(--text-muted, rgba(255,255,255,0.4));
+  color: var(--cc-text-secondary, #8a8678);
   transition: color 0.2s, background 0.2s, border-color 0.2s;
   position: relative;
   overflow: hidden;
@@ -621,20 +615,22 @@ body[data-sidebar="compact"] .app-main-content {
 }
 
 .app-sidebar-item:hover {
-  color: var(--text-secondary, rgba(255,255,255,0.6));
+  color: var(--cc-text-primary, #ede9dc);
   background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
 }
 
 .app-sidebar-item.active {
-  color: var(--accent-gold-cool, #D4AF37);
-  background: rgba(212, 175, 55, 0.08);
-  border-color: rgba(212, 175, 55, 0.20);
-  border-left-color: var(--accent-gold-cool, #D4AF37);
+  color: var(--cc-amber-light, #e8b86d);
+  background: rgba(200, 144, 42, 0.12);
+  border-color: rgba(200, 144, 42, 0.25);
+  border-left-color: var(--cc-amber-light, #e8b86d);
   padding-left: 12px;
+  border-radius: 8px;
 }
 
 .app-sidebar-item.active .app-sidebar-item-icon {
-  color: var(--accent-gold-cool, #D4AF37);
+  color: var(--cc-amber-light, #e8b86d);
 }
 
 .app-sidebar-item-icon {

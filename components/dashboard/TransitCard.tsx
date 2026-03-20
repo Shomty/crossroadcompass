@@ -1,4 +1,5 @@
 "use client";
+// STATUS: done | Phase 4 Glimpse
 /**
  * components/dashboard/TransitCard.tsx
  * Today's Vedic Transit Reading — auto-fetches on mount.
@@ -7,10 +8,16 @@
  *
  * Caching: /api/transit/reading uses 24h KV cache — Gemini is called
  * at most once per user per day. Refresh button forces re-generation.
+ *
+ * Glimpse wiring:
+ *   FREE  → overview + first 3 key transits + LockedInsightCard for rest + locked planet table
+ *   CORE+ → full content
  */
 
 import { useState, useEffect } from "react";
 import type { TransitReading, TransitPlanetLine, RawTransitPlanet } from "@/lib/ai/transitReadingService";
+import { LockedInsightCard, GlimpseBlur } from "@/components/glimpse";
+import type { SubscriptionTier } from "@/types";
 
 const PLANET_GLYPHS: Record<string, string> = {
   sun: "☉", moon: "☽", mars: "♂", mercury: "☿", jupiter: "♃",
@@ -42,7 +49,14 @@ function formatGeneratedAt(iso: string): string {
   }
 }
 
-export function TransitCard() {
+const FREE_TRANSIT_LIMIT = 3;
+
+interface TransitCardProps {
+  userTier?: SubscriptionTier;
+}
+
+export function TransitCard({ userTier = "FREE" }: TransitCardProps) {
+  const isPaid = userTier === "CORE" || userTier === "VIP";
   const [reading, setReading] = useState<TransitReading | null>(null);
   const [source, setSource] = useState<"cache" | "generated" | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,6 +159,20 @@ export function TransitCard() {
         {reading.keyTransits.map((t: TransitPlanetLine, i: number) => {
           const glyph = PLANET_GLYPHS[t.planet.toLowerCase()] ?? "·";
           const isOpen = expanded === t.planet;
+
+          // FREE users: lock transits beyond the limit
+          if (!isPaid && i >= FREE_TRANSIT_LIMIT) {
+            return (
+              <LockedInsightCard
+                key={t.planet}
+                icon={<span style={{ fontFamily: "serif" }}>{glyph}</span>}
+                label={`${t.planet.charAt(0).toUpperCase() + t.planet.slice(1)} Transit`}
+                teaser={`${t.natalSign} → ${t.transitSign}`}
+                featureName="transit_pulse"
+              />
+            );
+          }
+
           return (
             <div key={i}>
               <button
@@ -214,41 +242,81 @@ export function TransitCard() {
           <p style={{ ...mono, fontSize: "var(--type-label)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 14 }}>
             All Planetary Positions
           </p>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", ...mono, fontSize: "var(--type-mono)" }}>
-              <thead>
-                <tr>
-                  {["Planet", "Sign", "House", "Degree", "Nakshatra", ""].map((h) => (
-                    <th key={h} style={{ textAlign: "left", padding: "4px 10px 8px 0", fontSize: "var(--type-label)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", fontWeight: 400, borderBottom: "1px solid rgba(200,135,58,0.12)" }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {reading.allPlanets.map((p: RawTransitPlanet, i: number) => {
-                  const glyph = PLANET_GLYPHS[p.name.toLowerCase()] ?? "·";
-                  return (
-                    <tr key={i} className={i % 2 === 1 ? "transit-table-row-alt" : ""} style={{ borderBottom: "1px solid rgba(212,175,55,0.08)" }}>
-                      <td style={{ padding: "7px 10px 7px 0", color: "var(--cream)" }}>
-                        <span style={{ ...serif, fontSize: 14, marginRight: 6 }}>{glyph}</span>
-                        <span style={{ ...sans, fontSize: 12, textTransform: "capitalize" }}>{p.name}</span>
-                      </td>
-                      <td style={{ padding: "7px 10px 7px 0", color: "var(--cream)", ...sans, fontSize: 12, textTransform: "capitalize" }}>{p.sign}</td>
-                      <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-mono)" }}>{p.house ?? "—"}</td>
-                      <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-mono)" }}>{p.degreeFmt || `${p.degree?.toFixed(1)}°`}</td>
-                      <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-label)", textTransform: "capitalize" }}>
-                        {p.nakshatra?.replace(/_/g, " ") ?? "—"}
-                      </td>
-                      <td style={{ padding: "7px 0 7px 0", color: "rgba(220,120,60,0.7)", fontSize: "var(--type-label)" }}>
-                        {p.isRetrograde ? "℞" : ""}
-                      </td>
+
+          {/* FREE users: glimpse blur over planet table */}
+          {!isPaid ? (
+            <GlimpseBlur
+              preview={`${reading.allPlanets.length} planetary positions calculated for today. Unlock Core to see every planet's exact degree, nakshatra, house position, and retrograde status.`}
+              featureName="transit_planet_table"
+              ctaText="Unlock full planet data"
+            >
+              {/* Placeholder rows — real positional data is not sent to free users */}
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", ...mono, fontSize: "var(--type-mono)" }}>
+                  <thead>
+                    <tr>
+                      {["Planet", "Sign", "House", "Degree", "Nakshatra", ""].map((h) => (
+                        <th key={h} style={{ textAlign: "left", padding: "4px 10px 8px 0", fontSize: "var(--type-label)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", fontWeight: 400, borderBottom: "1px solid rgba(200,135,58,0.12)" }}>
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {["☉", "☽", "♂", "☿", "♃", "♀", "♄", "☊", "☋"].map((glyph, i) => (
+                      <tr key={i} style={{ borderBottom: "1px solid rgba(212,175,55,0.08)" }}>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--cream)" }}>
+                          <span style={{ ...serif, fontSize: 14, marginRight: 6 }}>{glyph}</span>
+                          <span style={{ ...sans, fontSize: 12 }}>——</span>
+                        </td>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-mono)" }}>———</td>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-mono)" }}>—</td>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-mono)" }}>——°</td>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-label)" }}>————</td>
+                        <td style={{ padding: "7px 0 7px 0" }} />
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </GlimpseBlur>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", ...mono, fontSize: "var(--type-mono)" }}>
+                <thead>
+                  <tr>
+                    {["Planet", "Sign", "House", "Degree", "Nakshatra", ""].map((h) => (
+                      <th key={h} style={{ textAlign: "left", padding: "4px 10px 8px 0", fontSize: "var(--type-label)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--amber)", fontWeight: 400, borderBottom: "1px solid rgba(200,135,58,0.12)" }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {reading.allPlanets.map((p: RawTransitPlanet, i: number) => {
+                    const glyph = PLANET_GLYPHS[p.name.toLowerCase()] ?? "·";
+                    return (
+                      <tr key={i} className={i % 2 === 1 ? "transit-table-row-alt" : ""} style={{ borderBottom: "1px solid rgba(212,175,55,0.08)" }}>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--cream)" }}>
+                          <span style={{ ...serif, fontSize: 14, marginRight: 6 }}>{glyph}</span>
+                          <span style={{ ...sans, fontSize: 12, textTransform: "capitalize" }}>{p.name}</span>
+                        </td>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--cream)", ...sans, fontSize: 12, textTransform: "capitalize" }}>{p.sign}</td>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-mono)" }}>{p.house ?? "—"}</td>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-mono)" }}>{p.degreeFmt || `${p.degree?.toFixed(1)}°`}</td>
+                        <td style={{ padding: "7px 10px 7px 0", color: "var(--mist)", fontSize: "var(--type-label)", textTransform: "capitalize" }}>
+                          {p.nakshatra?.replace(/_/g, " ") ?? "—"}
+                        </td>
+                        <td style={{ padding: "7px 0 7px 0", color: "rgba(220,120,60,0.7)", fontSize: "var(--type-label)" }}>
+                          {p.isRetrograde ? "℞" : ""}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 

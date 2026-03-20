@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "public/wireframe", "public/dharma-compass 2"]
+  "exclude": ["node_modules", "public/wireframe", "public/dharma-compass 2", "hello-prisma", "vedic-sky-observer"]
 }

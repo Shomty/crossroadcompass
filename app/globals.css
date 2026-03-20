@@ -80,6 +80,23 @@
   --lh-body:    1.65;
   --lh-ui:      1.4;
   --lh-data:    1.35;
+
+  /* Crossroads Compass canonical UI alignment tokens */
+  --cc-bg-base:        #080a14;
+  --cc-bg-card:        #0d1022;
+  --cc-bg-card-hover:  #111428;
+  --cc-border-card:    rgba(255, 255, 255, 0.07);
+  --cc-border-subtle:  rgba(255, 255, 255, 0.04);
+  --cc-text-primary:   #ede9dc;
+  --cc-text-secondary: #8a8678;
+  --cc-text-tertiary:  #4e4c44;
+  --cc-amber:          #c8902a;
+  --cc-amber-light:    #e8b86d;
+  --cc-amber-dim:      rgba(200, 144, 42, 0.15);
+  --cc-green:          #4a9c6a;
+  --cc-green-dim:      rgba(74, 156, 106, 0.15);
+  --cc-neutral-tag:    rgba(255, 255, 255, 0.08);
+  --cc-red-dim:        rgba(180, 60, 60, 0.18);
 }
 
 /* ─── Tailwind v4 theme overrides ──────────────────────────────────────── */
@@ -1002,5 +1019,129 @@ label {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: var(--type-body, 1rem);
   color: var(--muted, rgba(232, 224, 208, 0.45));
+}
+
+/* ─── Crossroads Compass UI alignment utilities ─────────────────────────── */
+.cc-title-lg {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--cc-text-primary);
+  line-height: 1.15;
+}
+
+.cc-title-card {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--cc-text-primary);
+  line-height: 1.2;
+}
+
+.cc-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cc-text-secondary);
+}
+
+.cc-body {
+  font-family: 'Instrument Sans', 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--cc-text-primary);
+}
+
+.cc-mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--cc-text-primary);
+  letter-spacing: 0.02em;
+}
+
+.cc-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--cc-neutral-tag);
+  color: var(--cc-text-secondary);
+  border: 1px solid var(--cc-border-subtle);
+  line-height: 1.2;
+}
+
+.cc-tag--amber {
+  background: var(--cc-amber-dim);
+  color: var(--cc-amber-light);
+  border-color: rgba(200, 144, 42, 0.25);
+}
+
+.cc-tag--green {
+  background: var(--cc-green-dim);
+  color: var(--cc-green);
+  border-color: rgba(74, 156, 106, 0.25);
+}
+
+.cc-card {
+  background: var(--cc-bg-card);
+  border: 1px solid var(--cc-border-card);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.cc-card--compact {
+  padding: 14px 18px;
+}
+
+.cc-divider {
+  border: none;
+  border-top: 1px solid var(--cc-border-subtle);
+  margin: 16px 0;
+}
+
+.cc-card--focused {
+  border-left: 2px solid var(--cc-amber);
+  padding-left: 22px;
+}
+
+.cc-nav-active {
+  background: rgba(200, 144, 42, 0.12);
+  border-radius: 8px;
+  color: var(--cc-amber-light);
+}
+
+/* Sky Observer page header alignment */
+.sky-observer-page .page-layout-header {
+  margin-bottom: 1rem;
+}
+.sky-observer-page .page-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cc-text-secondary);
+}
+.sky-observer-page .page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  color: var(--cc-text-primary);
+}
+.sky-observer-page .page-subtitle {
+  font-family: 'Instrument Sans', 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  color: var(--cc-text-secondary);
 }
 

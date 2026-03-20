@@ -133,3 +133,93 @@ rtk init --global       # Add RTK to ~/.claude/CLAUDE.md
 
 Overall average: **60-90% token reduction** on common development operations.
 <!-- /rtk-instructions -->
+
+---
+
+# Crossroads Compass — Project Instructions
+
+You are building **Crossroads Compass** (also called Cosmic Gateway), a B2C SaaS platform that synthesizes Vedic Astrology (Jyotish, Parashara system) and Human Design into a unified "Life Blueprint" experience. This is NOT a generic astrology app. It is a personal navigation system for adults at life crossroads.
+
+## Critical Context
+
+- **Tech Stack**: Next.js 16+ App Router, TypeScript strict, Tailwind CSS, SQLite/Prisma (PostgreSQL for production), Upstash Redis (KV), NextAuth v5, Stripe, Resend email, Vercel/Railway deployment
+- **APIs Available**: Jyotish REST API (`http://144.76.78.183:9000/api/v1/`, auth: `X-Api-Key` header), Human Design engine via `openhumandesign-library` (GitHub: `nikolamilenkovic/openhumandesign-library`)
+- **AI Layer**: Gemini API (`@google/generative-ai`) for narrative synthesis — all content generation lives in `lib/ai/`
+- **Design System**: Dark-only cosmic-luxury aesthetic. Fonts: Cormorant Garamond (display), Instrument Sans (body), DM Mono (data). Colors: cosmos `#0d1220`, amber `#c8873a`, gold `#e8b96a`, star `#f0dca0`, earth `#2e1f0f`, sky `#1c2340`. Glassmorphism components with `backdrop-filter: blur()`.
+- **Subscription Tiers**: `FREE | CORE | VIP` — these are the canonical names in code, schema, and type system. Do NOT use SEEKER/NAVIGATOR (those are marketing display names only).
+
+## Architecture
+Read `docs/GAP-ANALYSIS.md` for current build status, resolved decisions, and open decisions.
+
+## Task System
+
+All work is driven by the task files in `docs/tasks/`. Each task is self-contained with:
+- Exact files to create/modify
+- Acceptance criteria
+- What NOT to do (scope boundaries)
+
+**Rules:**
+1. Read the current task file completely before writing any code
+2. Complete ONE task fully before moving to the next
+3. Add `// STATUS: done | Task X.Y` to every file you create or modify
+4. If you hit a `DECISION NEEDED`, stop and surface it — do not guess
+5. Never refactor code from a previous task unless the current task explicitly requires it
+6. Run `rtk npm run dev` after every task to verify nothing is broken
+7. Run `rtk tsc` after every task to catch type errors (not `npx tsc --noEmit` — use rtk)
+8. Never drop a database, always make local backup of database if you need to make changes.
+
+## Feature Architecture — The "Glimpse" System
+
+The entire product is built around a 3-tier monetization model. Every feature has a FREE tier, a GLIMPSE tier (conversion hook), and a PREMIUM tier. The Glimpse layer is the critical conversion mechanism — it shows users enough premium content to create urgency.
+
+Read `docs/FEATURES.md` for the complete feature specification with per-tier behavior.
+Read `docs/GLIMPSE.md` for the 7 conversion patterns and implementation guide.
+
+## Content Rules (Non-Negotiable)
+
+These rules apply to ALL AI-generated content in the app:
+- **NEVER** use prediction language: "you will...", "this will cause..." → Use "this period tends to bring...", "you may notice..."
+- **NEVER** use mystical/woo framing → Use warm, specific, practical language
+- Every astrological term must be defined on first use: "Your 7th house (the area of partnerships and relationships)..."
+- Every insight must end with a practical implication or action
+- Daily insights: max 4 sentences, unique per user, no repeats within 30 days
+- HD tips must be branched by Type (5 types = 5 different tips minimum)
+
+## File Organization
+
+```
+app/
+  (app)/           — Main authenticated app (dashboard, features)
+  (marketing)/     — Landing page, pricing, public pages
+  api/             — API routes
+components/
+  ui/              — Design system primitives
+  chart/           — Rashi, Navamsha, Bodygraph renders
+  insights/        — Daily card, transit pulse, life phase
+  onboarding/      — Birth data form, report preview
+  glimpse/         — Blur overlay, locked insight, CTA components (Phase 4 — NOT YET BUILT)
+  dashboard/       — Dashboard-specific components
+lib/
+  ai/              — Gemini content generation services
+  astro/           — Jyotish API client, HD calculator, chart service
+  kv/              — Redis client, key schema, helpers
+  email/           — Resend client, templates
+  payments/        — Stripe checkout, webhooks
+  validation/      — Zod schemas
+  analytics/       — Glimpse event tracking (Phase 4 — NOT YET BUILT)
+  gdpr/            — Data export, deletion (Phase 11 — NOT YET BUILT)
+types/             — Shared TypeScript types
+docs/              — Architecture, features, tasks, gap analysis
+prisma/            — Schema, migrations
+```
+
+## Environment Variables
+
+All env vars are validated via `/lib/env.ts` using Zod. Never access `process.env` directly — always import from `lib/env`.
+
+## Testing
+
+- Run `rtk tsc` after every task to catch type errors
+- Run `rtk npm run dev` to verify the app starts
+- Run `rtk vitest run` for unit tests
+- For API routes: test with `rtk curl` examples documented in each task

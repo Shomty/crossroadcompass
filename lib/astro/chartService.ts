@@ -66,11 +66,37 @@ export async function getOrCreateHDChart(
   userId: string,
   birthProfile: BirthProfile
 ): Promise<HDChartData> {
+  // ── Layer 1: KV hot cache ────────────────────────────────────────────────
   const cached = await kvGet<HDChartData>(kvKeys.hdChart(userId));
   if (cached !== null) return cached;
 
+  // ── Layer 2: DB durable store ────────────────────────────────────────────
+  const dbProfile = await db.birthProfile.findUnique({
+    where: { userId },
+    select: { chartDataHumanDesign: true, hdProfileVersion: true, profileVersion: true },
+  });
+
+  if (
+    dbProfile?.chartDataHumanDesign != null &&
+    dbProfile.hdProfileVersion === dbProfile.profileVersion
+  ) {
+    const chartData = dbProfile.chartDataHumanDesign as unknown as HDChartData;
+    await kvSet(kvKeys.hdChart(userId), chartData, KV_TTL.NATAL_CHART);
+    return chartData;
+  }
+
+  // ── Layer 3: Calculate (local, no external API cost) ────────────────────
   const birthInfo = profileToBirthInfo(birthProfile);
   const chart = calculateHDChart(birthInfo);
+
+  // Persist to DB — survives KV eviction; only re-calculated when profileVersion changes
+  await db.birthProfile.update({
+    where: { userId },
+    data: {
+      chartDataHumanDesign: chart as object,
+      hdProfileVersion: birthProfile.profileVersion,
+    },
+  });
 
   await kvSet(kvKeys.hdChart(userId), chart, KV_TTL.NATAL_CHART);
 

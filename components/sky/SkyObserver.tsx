@@ -245,9 +245,10 @@ const ZodiacLabel: React.FC<ZodiacLabelProps> = ({
       />
 
       <motion.div
-        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-8 text-[10px] font-mono uppercase tracking-widest transition-all duration-300"
+        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-8 text-[10px] font-mono uppercase transition-all duration-300"
         style={{
-          color: isSelected ? AMBER.accent : "rgba(255,255,255,0.20)",
+          color: isSelected ? "var(--cc-text-secondary)" : "var(--cc-text-tertiary)",
+          letterSpacing: "0.08em",
           fontWeight: isSelected ? 700 : 400,
           filter: isSelected ? `drop-shadow(0 0 8px ${AMBER.tint50})` : undefined,
           transform: isSelected ? "scale(1.1)" : undefined,
@@ -511,8 +512,8 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
         <div
           className="lg:col-span-7 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] rounded-2xl p-6 flex items-center justify-center relative overflow-hidden"
           style={{
-            background: "rgba(3,5,15,0.45)",
-            border: "1px solid var(--border)",
+            background:
+              "radial-gradient(ellipse at center, #0d102080 0%, var(--cc-bg-page, #07080f) 70%)",
             backdropFilter: "blur(12px)",
           }}
         >
@@ -529,7 +530,10 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                     height: `${style.radius}%`,
                     borderWidth: name === "Ascendant" ? "2px" : "1px",
                     borderStyle: style.borderStyle,
-                    borderColor: style.color,
+                    borderColor:
+                      name === "Ascendant"
+                        ? "rgba(42, 184, 150, 0.3)"
+                        : "rgba(255,255,255,0.06)",
                     opacity: isSelected ? 0.8 : style.opacity,
                     boxShadow: isSelected
                       ? `0 0 20px ${style.color}40 inset, 0 0 20px ${style.color}40`
@@ -548,10 +552,29 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
 
             {/* Horizon line */}
             <div className="absolute top-1/2 left-4 right-4 h-px bg-white/20 -translate-y-1/2 pointer-events-none z-10" />
-            <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-full pr-2 text-[10px] text-white/60 font-mono uppercase tracking-widest z-10">
-              East (Lagna)
+            <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-full pr-2 z-10 flex items-center gap-1.5">
+              <span className="cc-tag cc-tag--teal" style={{ fontSize: 9, padding: "1px 6px" }}>
+                ASC
+              </span>
+              <span
+                className="font-mono uppercase"
+                style={{
+                  fontSize: 9,
+                  color: "var(--cc-text-secondary)",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                East (Lagna)
+              </span>
             </div>
-            <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-full pl-2 text-[10px] text-white/60 font-mono uppercase tracking-widest z-10">
+            <div
+              className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-full pl-2 font-mono uppercase z-10"
+              style={{
+                fontSize: 10,
+                color: "var(--cc-text-secondary)",
+                letterSpacing: "0.08em",
+              }}
+            >
               West
             </div>
 

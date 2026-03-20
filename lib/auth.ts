@@ -40,14 +40,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/auth-error",
   },
   callbacks: {
-    jwt({ token, user }) {
-      // Attach DB user id to token on initial sign-in
-      if (user) token.id = user.id;
+    async jwt({ token, user }) {
+      // Attach DB user id + role to token on initial sign-in
+      if (user) {
+        token.id = user.id;
+        // Fetch role from DB — not in default user object
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: { role: true },
+        });
+        token.role = dbUser?.role ?? "USER";
+      }
       return token;
     },
     session({ session, token }) {
-      // Expose user id from JWT token to session consumers
+      // Expose user id and role from JWT token to session consumers
       session.user.id = token.id as string;
+      session.user.role = token.role as string;
       return session;
     },
   },

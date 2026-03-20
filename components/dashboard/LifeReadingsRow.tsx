@@ -6,9 +6,11 @@
  * Prompts are editable in lib/ai/prompts/lifeReadingPrompts.ts
  */
 
+// STATUS: done | Phase 4 Glimpse
 import { useEffect, useState, useCallback } from "react";
 import { RefreshCw, Crown } from "lucide-react";
 import type { LifeReading } from "@/lib/ai/lifeReadingService";
+import { GlimpseBlur } from "@/components/glimpse";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -251,58 +253,19 @@ function VipGateCard({ config }: { config: CardConfig }) {
         </div>
       </div>
 
-      {/* Blurred preview + overlay */}
-      <div style={{ position: "relative" }}>
-        <div style={{ filter: "blur(5px)", userSelect: "none", pointerEvents: "none", opacity: 0.35 }}>
-          <p style={{ ...bodyText, marginBottom: 12 }}>{config.mockLine}</p>
-          <div style={{ display: "flex", gap: 6 }}>
-            {["Focus", "Growth", "Alignment"].map((t) => (
-              <span key={t} className="reading-theme-pill">{t}</span>
-            ))}
-          </div>
+      {/* Glimpse blur with analytics */}
+      <GlimpseBlur
+        preview={config.mockLine}
+        featureName={`life_reading_${config.type}`}
+        ctaText={`Unlock your ${config.title.toLowerCase()} reading`}
+        ctaHref="/pricing"
+      >
+        <div style={{ display: "flex", gap: 6 }}>
+          {["Focus", "Growth", "Alignment"].map((t) => (
+            <span key={t} className="reading-theme-pill">{t}</span>
+          ))}
         </div>
-
-        <div style={{
-          position: "absolute", inset: 0,
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", gap: 8,
-        }}>
-          <span style={{
-            ...mono,
-            fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase",
-            color: "var(--gold, #D4AF37)", opacity: 0.85,
-            border: "1px solid rgba(212,175,55,0.3)",
-            borderRadius: 3, padding: "3px 9px",
-          }}>
-            VIP Members Only
-          </span>
-          <p style={{
-            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-            fontSize: 12, color: "rgba(255,255,255,0.45)",
-            textAlign: "center", lineHeight: 1.5,
-            maxWidth: 180, margin: 0,
-          }}>
-            Unlock personalised {config.title.toLowerCase()} readings
-          </p>
-          <a
-            href="/subscribe"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 5,
-              padding: "8px 16px",
-              background: "transparent",
-              border: "1px solid rgba(212,175,55,0.35)",
-              borderRadius: 8,
-              ...mono,
-              fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase",
-              color: "var(--gold, #D4AF37)",
-              textDecoration: "none",
-              transition: "border-color 0.2s, color 0.2s",
-            }}
-          >
-            Upgrade to VIP →
-          </a>
-        </div>
-      </div>
+      </GlimpseBlur>
     </div>
   );
 }

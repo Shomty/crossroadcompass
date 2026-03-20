@@ -12,8 +12,17 @@ import { SidebarNav } from "@/components/app/SidebarNav";
 import { TimeColorProvider } from "@/components/app/TimeColorProvider";
 import "@/styles/v2.css";
 import "@/styles/dashboard.css";
+// #region agent log
+import * as fs from "fs";
+const debugLog = (msg: string, data?: object) => {
+  try { fs.appendFileSync('/Users/miloshmarkovic/Documents/crossroadcompass/.cursor/debug-2f76b5.log', JSON.stringify({sessionId:'2f76b5',location:'app/(app)/layout.tsx',message:msg,data,timestamp:Date.now(),hypothesisId:'C'})+'\n'); } catch {}
+};
+// #endregion
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  // #region agent log
+  debugLog('AppLayout render started');
+  // #endregion
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 

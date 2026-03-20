@@ -36,7 +36,7 @@ export function StarfieldCanvas() {
     }
 
     function resize() {
-      if (!canvas) return;
+      if (!canvas || !ctx) return;
       width = window.innerWidth;
       height = window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);

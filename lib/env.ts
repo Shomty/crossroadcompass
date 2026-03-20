@@ -6,6 +6,8 @@
  * See copilot-instructions section 20 for the full variable reference.
  */
 
+// STATUS: done | Task R.3
+
 import { z } from "zod";
 
 // Coerce empty strings to undefined so optional fields in .env.local may be
@@ -51,8 +53,11 @@ const envSchema = z.object({
   // Cron authentication (set in Vercel → optional locally)
   CRON_SECRET: opt(z.string().min(1)),
 
-  // Gemini AI — optional locally; AI features degrade gracefully when absent
-  GEMINI_API_KEY: opt(z.string().min(1)),
+  // Gemini AI — required for report generation
+  GEMINI_API_KEY: z.string().min(1),
+  /** Default: Gemini 3.1 Flash-Lite Preview (text). Override with e.g. gemini-3-flash-preview. */
+  GEMINI_MODEL: z.string().default("gemini-3.1-flash-lite-preview"),
+  ADMIN_EMAIL: z.string().email().default("shomty@hotmail.com"),
 
   // App URL — defaults to NEXTAUTH_URL when absent
   APP_URL: z.string().url().optional(),
