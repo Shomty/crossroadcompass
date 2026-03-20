@@ -9,12 +9,15 @@
 import { Resend } from "resend";
 import { render } from "@react-email/components";
 import React from "react";
+import { env } from "@/lib/env";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
+const resend = env.RESEND_API_KEY
+  ? new Resend(env.RESEND_API_KEY)
   : null;
 
-const FROM_ADDRESS = "Crossroads Compass <hello@crossroadscompass.com>";
+const FROM_ADDRESS = env.NODE_ENV === "production"
+  ? "Crossroads Compass <hello@crossroadscompass.com>"
+  : "Crossroads Compass <onboarding@resend.dev>";
 
 export async function sendEmail(options: {
   to: string;

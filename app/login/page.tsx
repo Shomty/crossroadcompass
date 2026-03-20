@@ -4,17 +4,19 @@
  */
 
 import Link from "next/link";
+import { env } from "@/lib/env";
 import { LoginForm, type SocialProviderId } from "./LoginForm";
 
 export default function LoginPage() {
   const enabledProviders: SocialProviderId[] = [];
   const missingSecret: SocialProviderId[] = [];
-  const isDev = process.env.NODE_ENV === "development";
+  const isDev = env.NODE_ENV === "development";
+  const emailLoginEnabled = Boolean(env.RESEND_API_KEY);
 
   // Google
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
     enabledProviders.push("google");
-  } else if (isDev && process.env.GOOGLE_CLIENT_ID) {
+  } else if (isDev && env.GOOGLE_CLIENT_ID) {
     missingSecret.push("google");
   }
 
@@ -83,6 +85,7 @@ export default function LoginPage() {
       <div className="card" style={{ width: "100%", maxWidth: 420, padding: "2.5rem" }}>
         <LoginForm
           enabledProviders={enabledProviders}
+          emailLoginEnabled={emailLoginEnabled}
           missingSecret={isDev ? missingSecret : []}
           isDev={isDev}
         />

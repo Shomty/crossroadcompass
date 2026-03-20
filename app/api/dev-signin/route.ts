@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { encode } from "next-auth/jwt";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV !== "development") {
@@ -30,8 +31,14 @@ export async function GET(req: NextRequest) {
 
   // Encode a JWT that NextAuth's JWT strategy will accept
   const token = await encode({
-    token: { sub: user.id, id: user.id, email: user.email, name: user.name ?? email },
-    secret: process.env.AUTH_SECRET!,
+    token: {
+      sub: user.id,
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      name: user.name ?? email,
+    },
+    secret: env.AUTH_SECRET,
     salt: "authjs.session-token",
     maxAge,
   });

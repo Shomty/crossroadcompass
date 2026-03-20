@@ -56,31 +56,31 @@ const AMBER = {
 
 const RAIL = {
   card: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid var(--border)",
-    borderRadius: 16,
+    background: "rgba(13,18,32,0.5)",
+    border: "1px solid rgba(200,135,58,0.12)",
+    borderRadius: 12,
+    padding: "1.25rem",
   } as const,
   glowCard: {
     background:
-      "linear-gradient(180deg, rgba(200,135,58,0.07) 0%, rgba(255,255,255,0.03) 22%, rgba(255,255,255,0.03) 100%)",
-    border: "1px solid var(--border-lit)",
-    borderRadius: 16,
+      "linear-gradient(180deg, rgba(200,135,58,0.08) 0%, rgba(13,18,32,0.5) 100%)",
+    border: "1px solid rgba(200,135,58,0.2)",
+    borderRadius: 12,
+    padding: "1.25rem",
   } as const,
 };
 
 function RailCard({
   children,
   glow = false,
-  className,
 }: {
   children: React.ReactNode;
   glow?: boolean;
-  className?: string;
 }) {
   return (
-    <section className={cn("overflow-hidden", className)} style={glow ? RAIL.glowCard : RAIL.card}>
+    <div style={glow ? RAIL.glowCard : RAIL.card}>
       {children}
-    </section>
+    </div>
   );
 }
 
@@ -179,16 +179,16 @@ const PLANET_RING_STYLES: Record<
   string,
   { radius: number; color: string; borderStyle: string; opacity: number }
 > = {
-  Ascendant: { radius: 100, color: "#10B981", borderStyle: "solid", opacity: 0.3 },
-  Ketu:      { radius: 92,  color: "#A9A9A9", borderStyle: "dashed", opacity: 0.2 },
-  Rahu:      { radius: 84,  color: "#8A2BE2", borderStyle: "dashed", opacity: 0.2 },
-  Saturn:    { radius: 76,  color: "#708090", borderStyle: "dotted", opacity: 0.3 },
-  Jupiter:   { radius: 68,  color: AMBER.highlight, borderStyle: "solid", opacity: 0.25 },
-  Mars:      { radius: 60,  color: "#FF4500", borderStyle: "solid", opacity: 0.2 },
-  Sun:       { radius: 52,  color: "#FFD700", borderStyle: "solid", opacity: 0.3 },
-  Venus:     { radius: 44,  color: "#FF69B4", borderStyle: "solid", opacity: 0.2 },
-  Mercury:   { radius: 36,  color: "#00CED1", borderStyle: "dotted", opacity: 0.3 },
-  Moon:      { radius: 28,  color: "#F0F8FF", borderStyle: "dashed", opacity: 0.2 },
+  Ascendant: { radius: 100, color: "#10B981", borderStyle: "solid", opacity: 0.55 },
+  Ketu:      { radius: 92,  color: "#A9A9A9", borderStyle: "dashed", opacity: 0.4 },
+  Rahu:      { radius: 84,  color: "#8A2BE2", borderStyle: "dashed", opacity: 0.45 },
+  Saturn:    { radius: 76,  color: "#708090", borderStyle: "dotted", opacity: 0.4 },
+  Jupiter:   { radius: 68,  color: AMBER.highlight, borderStyle: "solid", opacity: 0.45 },
+  Mars:      { radius: 60,  color: "#FF4500", borderStyle: "solid", opacity: 0.4 },
+  Sun:       { radius: 52,  color: "#FFD700", borderStyle: "solid", opacity: 0.45 },
+  Venus:     { radius: 44,  color: "#FF69B4", borderStyle: "solid", opacity: 0.4 },
+  Mercury:   { radius: 36,  color: "#00CED1", borderStyle: "dotted", opacity: 0.4 },
+  Moon:      { radius: 28,  color: "#F0F8FF", borderStyle: "dashed", opacity: 0.35 },
 };
 
 function getOrdinal(n: number) {
@@ -510,14 +510,9 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
       <main className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Sky Map */}
         <div
-          className="lg:col-span-7 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] rounded-2xl p-6 flex items-center justify-center relative overflow-hidden"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, #0d102080 0%, var(--cc-bg-page, #07080f) 70%)",
-            backdropFilter: "blur(12px)",
-          }}
+          className="lg:col-span-7 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] flex flex-col items-center gap-4"
         >
-          <div className="relative w-full max-w-[680px] aspect-square">
+          <div className="relative w-full max-w-[min(100%,68vh)] aspect-square">
             {/* Planetary rings */}
             {Object.entries(PLANET_RING_STYLES).map(([name, style]) => {
               const isSelected = selectedPlanet === name;
@@ -530,15 +525,13 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                     height: `${style.radius}%`,
                     borderWidth: name === "Ascendant" ? "2px" : "1px",
                     borderStyle: style.borderStyle,
-                    borderColor:
-                      name === "Ascendant"
-                        ? "rgba(42, 184, 150, 0.3)"
-                        : "rgba(255,255,255,0.06)",
+                    borderColor: style.color,
                     opacity: isSelected ? 0.8 : style.opacity,
                     boxShadow: isSelected
                       ? `0 0 20px ${style.color}40 inset, 0 0 20px ${style.color}40`
                       : "none",
                     zIndex: isSelected ? 10 : 0,
+                    transform: "translateZ(0)",
                   }}
                 />
               );
@@ -552,7 +545,7 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
 
             {/* Horizon line */}
             <div className="absolute top-1/2 left-4 right-4 h-px bg-white/20 -translate-y-1/2 pointer-events-none z-10" />
-            <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-full pr-2 z-10 flex items-center gap-1.5">
+            <div className="absolute top-1/2 left-3 -translate-y-1/2 z-10 flex items-center gap-1.5">
               <span className="cc-tag cc-tag--teal" style={{ fontSize: 9, padding: "1px 6px" }}>
                 ASC
               </span>
@@ -568,7 +561,7 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
               </span>
             </div>
             <div
-              className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-full pl-2 font-mono uppercase z-10"
+              className="absolute top-1/2 right-3 -translate-y-1/2 font-mono uppercase z-10"
               style={{
                 fontSize: 10,
                 color: "var(--cc-text-secondary)",
@@ -603,7 +596,7 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
           </div>
 
           {/* Legend */}
-          <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 flex flex-col gap-2">
+          <div className="flex flex-col gap-2 px-1">
             <div className="flex items-center gap-2 text-[10px] text-white/40 uppercase tracking-widest font-mono">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
               Earth ({location ? "Topocentric" : "Geocentric"} Center)
@@ -616,12 +609,12 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
         </div>
 
         {/* Right panel: data */}
-        <div className="lg:col-span-5 flex flex-col gap-4 self-start">
-          <RailCard className="p-6">
-                <div className="dash-card-header">
+        <div className="lg:col-span-5 flex flex-col gap-5 self-start">
+          <RailCard>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
                   <div>
-                    <h2 className="dash-section-title" style={{ fontSize: 15 }}>Temporal Engine</h2>
-                    <span className="dash-section-subtitle">Time navigation · Live or manual</span>
+                    <h2 style={{ fontFamily: "Cinzel, serif", fontSize: 15, fontWeight: 400, color: "#e8b96a", margin: "0 0 4px", lineHeight: 1.3 }}>Temporal Engine</h2>
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" as const, letterSpacing: "0.14em", display: "block", margin: 0 }}>Time navigation · Live or manual</span>
                   </div>
                   <MetaChip tone={isLive ? "success" : "amber"}>
                     {isLive ? "Live Sync" : "Manual Override"}
@@ -783,11 +776,11 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                 </div>
               </RailCard>
 
-          <RailCard glow className="p-6">
-                <div className="dash-card-header mb-4">
+          <RailCard glow>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
                   <div>
-                    <h2 className="dash-section-title" style={{ fontSize: 15 }}>Focused Body</h2>
-                    <span className="dash-section-subtitle">Select a planet or sign on the map</span>
+                    <h2 style={{ fontFamily: "Cinzel, serif", fontSize: 15, fontWeight: 400, color: "#e8b96a", margin: "0 0 4px", lineHeight: 1.3 }}>Focused Body</h2>
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" as const, letterSpacing: "0.14em", display: "block", margin: 0 }}>Select a planet or sign on the map</span>
                   </div>
                 </div>
                 <AnimatePresence mode="wait">
@@ -798,10 +791,10 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                     >
-                      <div className="flex items-start justify-between gap-4 mb-5">
-                        <div className="flex items-center gap-4">
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="flex items-center gap-3">
                           <div
-                            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-lg"
                             style={{
                               background: "rgba(200,135,58,0.14)",
                               border: "1px solid rgba(200,135,58,0.28)",
@@ -814,7 +807,7 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                             <h2
                               style={{
                                 fontFamily: "Cinzel, serif",
-                                fontSize: 30,
+                                fontSize: 20,
                                 fontWeight: 400,
                                 color: "var(--gold)",
                                 margin: 0,
@@ -857,10 +850,14 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                         ].map(({ label, value, color }) => (
                           <div
                             key={label}
-                            className="p-3 rounded-xl"
                             style={{
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid var(--border)",
+                              padding: "12px 16px",
+                              borderRadius: 10,
+                              background: "rgba(13,18,32,0.4)",
+                              border: "1px solid rgba(255,255,255,0.05)",
+                              cursor: "pointer",
+                              transition: "background 0.15s, border-color 0.15s",
+                              opacity: 0.65,
                             }}
                           >
                             <div className="ui-label" style={{ color: "var(--mist)", opacity: 0.65 }}>
@@ -881,10 +878,13 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                       </div>
 
                       <div
-                        className="p-4 rounded-xl"
                         style={{
-                          background: "rgba(200,135,58,0.06)",
-                          border: "1px solid rgba(200,135,58,0.16)",
+                          background: "rgba(200,135,58,0.08)",
+                          borderRadius: 8,
+                          padding: "8px 12px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
                         }}
                       >
                         <RailLabel>Planets in {RASHIS[selectedZodiac]}</RailLabel>
@@ -930,14 +930,14 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                     >
-                      <div className="flex items-start justify-between gap-4 mb-5">
-                        <div className="flex items-center gap-4">
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div className="flex items-center gap-3">
                           <div
-                            className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
                             style={{
                               backgroundColor: activePlanet.color,
                               color: "#000",
-                              fontSize: activePlanet.symbol.length > 1 ? 18 : 28,
+                              fontSize: activePlanet.symbol.length > 1 ? 12 : 18,
                               fontWeight: 700,
                             }}
                           >
@@ -948,7 +948,7 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                               <h2
                                 style={{
                                   fontFamily: "Cinzel, serif",
-                                  fontSize: 30,
+                                  fontSize: 20,
                                   fontWeight: 400,
                                   color: "var(--cream)",
                                   margin: 0,
@@ -1001,9 +1001,9 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                           <div
                             className="data-value"
                             style={{
-                              fontSize: 32,
-                              fontWeight: 300,
-                              letterSpacing: -1,
+                              fontSize: 18,
+                              fontWeight: 400,
+                              letterSpacing: -0.5,
                               color: "var(--cream)",
                             }}
                           >
@@ -1041,10 +1041,10 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                         ].map(({ label, value, sub, subColor }) => (
                           <div
                             key={label}
-                            className="p-4 rounded-xl"
                             style={{
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid var(--border)",
+                              background: "rgba(200,135,58,0.08)",
+                              borderRadius: 8,
+                              padding: "8px 12px",
                             }}
                           >
                             <div className="ui-label" style={{ color: "var(--mist)", opacity: 0.65 }}>
@@ -1053,9 +1053,9 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                             <div
                               style={{
                                 fontFamily: "Cinzel, serif",
-                                fontSize: 18,
+                                fontSize: 13,
                                 color: "var(--cream)",
-                                marginTop: 6,
+                                marginTop: 4,
                               }}
                             >
                               {value}
@@ -1072,10 +1072,10 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                           activePlanet.name
                         ) && (
                           <div
-                            className="p-4 rounded-xl"
                             style={{
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid var(--border)",
+                              background: "rgba(200,135,58,0.08)",
+                              borderRadius: 8,
+                              padding: "8px 12px",
                             }}
                           >
                             <div className="ui-label" style={{ color: "var(--mist)", opacity: 0.65 }}>
@@ -1083,7 +1083,7 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                             </div>
                             <div
                               className="data-value"
-                              style={{ fontSize: 18, marginTop: 6, color: "var(--cream)" }}
+                              style={{ fontSize: 13, marginTop: 4, color: "var(--cream)" }}
                             >
                               {ashtakavarga.bav[activePlanet.name]?.[RASHIS.indexOf(activePlanet.rashi)]}
                               <span style={{ fontSize: 12, color: "var(--mist)", opacity: 0.65 }}>
@@ -1103,11 +1103,11 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
           </RailCard>
 
               {/* ── Active Yogas ─────────────────────────────────── */}
-          <RailCard className="p-6">
-                <div className="dash-card-header">
+          <RailCard>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
                   <div>
-                    <h2 className="dash-section-title" style={{ fontSize: 15 }}>Active Yogas</h2>
-                    <span className="dash-section-subtitle">Classical combinations · Current sky</span>
+                    <h2 style={{ fontFamily: "Cinzel, serif", fontSize: 15, fontWeight: 400, color: "#e8b96a", margin: "0 0 4px", lineHeight: 1.3 }}>Active Yogas</h2>
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" as const, letterSpacing: "0.14em", display: "block", margin: 0 }}>Classical combinations · Current sky</span>
                   </div>
                   {yogas.length > 0
                     ? <MetaChip tone="amber">{yogas.length} active</MetaChip>
@@ -1120,32 +1120,47 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                     No classical yoga combinations are active for the current sky configuration.
                   </p>
                 ) : (
-                  <div className="flex flex-col gap-2">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {yogas.slice(0, isYogasExpanded ? undefined : 2).map((yoga, i) => {
-                      const accent =
-                        yoga.type === "auspicious" ? "rgba(110,231,183,0.7)"
-                        : yoga.type === "inauspicious" ? "rgba(251,113,133,0.7)"
-                        : "rgba(147,197,253,0.55)";
+                      const accentColor =
+                        yoga.type === "auspicious" ? "#6ee7b7"
+                        : yoga.type === "inauspicious" ? "#fb7185"
+                        : "#93c5fd";
                       return (
                         <motion.div
                           key={i}
                           initial={{ opacity: 0, y: -8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05 }}
-                          className="flex gap-3 rounded-xl overflow-hidden"
-                          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)" }}
+                          style={{
+                            display: "flex", alignItems: "flex-start", gap: 12,
+                            padding: "12px 16px", borderRadius: 10,
+                            background: "rgba(13,18,32,0.4)",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                          }}
                         >
-                          <div style={{ width: 3, flexShrink: 0, background: accent, borderRadius: "0 2px 2px 0" }} />
-                          <div className="py-3 pr-3 flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <span style={{ fontFamily: "Cinzel, serif", fontSize: 13, color: "var(--cream)", lineHeight: 1.3 }}>
+                          {/* Type badge */}
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                            background: `${accentColor}18`,
+                            border: `1px solid ${accentColor}40`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontFamily: "'DM Mono', monospace", fontSize: 13,
+                            color: accentColor, fontWeight: 600, marginTop: 1,
+                          }}>
+                            {yoga.type === "auspicious" ? "✦" : yoga.type === "inauspicious" ? "▾" : "~"}
+                          </div>
+                          {/* Content */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+                              <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, fontWeight: 500, color: "var(--cream, rgba(255,255,255,0.88))", lineHeight: 1.3 }}>
                                 {yoga.name}
                               </span>
                               <MetaChip tone={yoga.type === "auspicious" ? "success" : yoga.type === "inauspicious" ? "danger" : "cool"}>
                                 {yoga.type}
                               </MetaChip>
                             </div>
-                            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11.5, color: "var(--mist)", opacity: 0.78, margin: 0, lineHeight: 1.55 }}>
+                            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--mist, rgba(255,255,255,0.35))", margin: 0, lineHeight: 1.6 }}>
                               {yoga.description}
                             </p>
                           </div>
@@ -1155,15 +1170,17 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                     {yogas.length > 2 && (
                       <button
                         onClick={() => setIsYogasExpanded(!isYogasExpanded)}
-                        className="flex items-center justify-center gap-2 w-full py-2 rounded-xl transition-colors"
+                        className="flex items-center justify-center gap-2 w-full py-2 transition-colors"
                         style={{
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid var(--border)",
-                          color: "var(--mist)",
+                          borderRadius: 10,
+                          background: "rgba(13,18,32,0.4)",
+                          border: "1px solid rgba(255,255,255,0.05)",
+                          color: "rgba(255,255,255,0.38)",
                           fontFamily: "'DM Mono', monospace",
                           fontSize: 10,
                           textTransform: "uppercase",
                           letterSpacing: "0.14em",
+                          cursor: "pointer",
                         }}
                       >
                         {isYogasExpanded
@@ -1177,11 +1194,11 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
           </RailCard>
 
               {/* ── Transit Events ───────────────────────────────── */}
-          <RailCard className="p-6">
-                <div className="dash-card-header">
+          <RailCard>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
                   <div>
-                    <h2 className="dash-section-title" style={{ fontSize: 15 }}>Transit Events</h2>
-                    <span className="dash-section-subtitle">Dignity · Retrograde · Conjunctions</span>
+                    <h2 style={{ fontFamily: "Cinzel, serif", fontSize: 15, fontWeight: 400, color: "#e8b96a", margin: "0 0 4px", lineHeight: 1.3 }}>Transit Events</h2>
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" as const, letterSpacing: "0.14em", display: "block", margin: 0 }}>Dignity · Retrograde · Conjunctions</span>
                   </div>
                   {transits.length > 0
                     ? <MetaChip tone="cool">{transits.length} events</MetaChip>
@@ -1194,32 +1211,47 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                     No notable dignity, retrograde, or conjunction events at this time.
                   </p>
                 ) : (
-                  <div className="flex flex-col gap-2">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {transits.slice(0, isTransitsExpanded ? undefined : 3).map((transit, i) => {
-                      const accent =
-                        transit.type === "positive" ? "rgba(110,231,183,0.7)"
-                        : transit.type === "negative" ? "rgba(251,113,133,0.7)"
-                        : "rgba(147,197,253,0.55)";
+                      const accentColor =
+                        transit.type === "positive" ? "#6ee7b7"
+                        : transit.type === "negative" ? "#fb7185"
+                        : "#93c5fd";
                       return (
                         <motion.div
                           key={i}
                           initial={{ opacity: 0, y: -8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.04 }}
-                          className="flex gap-3 rounded-xl overflow-hidden"
-                          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)" }}
+                          style={{
+                            display: "flex", alignItems: "flex-start", gap: 12,
+                            padding: "12px 16px", borderRadius: 10,
+                            background: "rgba(13,18,32,0.4)",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                          }}
                         >
-                          <div style={{ width: 3, flexShrink: 0, background: accent, borderRadius: "0 2px 2px 0" }} />
-                          <div className="py-3 pr-3 flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <span style={{ fontFamily: "Cinzel, serif", fontSize: 13, color: "var(--cream)", lineHeight: 1.3 }}>
+                          {/* Type badge */}
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                            background: `${accentColor}18`,
+                            border: `1px solid ${accentColor}40`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontFamily: "'DM Mono', monospace", fontSize: 13,
+                            color: accentColor, fontWeight: 600, marginTop: 1,
+                          }}>
+                            {transit.type === "positive" ? "✦" : transit.type === "negative" ? "▾" : "~"}
+                          </div>
+                          {/* Content */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+                              <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 13, fontWeight: 500, color: "var(--cream, rgba(255,255,255,0.88))", lineHeight: 1.3 }}>
                                 {transit.title}
                               </span>
                               <MetaChip tone={transit.type === "positive" ? "success" : transit.type === "negative" ? "danger" : "cool"}>
                                 {transit.type}
                               </MetaChip>
                             </div>
-                            <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 11.5, color: "var(--mist)", opacity: 0.78, margin: 0, lineHeight: 1.55 }}>
+                            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--mist, rgba(255,255,255,0.35))", margin: 0, lineHeight: 1.6 }}>
                               {transit.description}
                             </p>
                           </div>
@@ -1229,15 +1261,17 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                     {transits.length > 3 && (
                       <button
                         onClick={() => setIsTransitsExpanded(!isTransitsExpanded)}
-                        className="flex items-center justify-center gap-2 w-full py-2 rounded-xl transition-colors"
+                        className="flex items-center justify-center gap-2 w-full py-2 transition-colors"
                         style={{
-                          background: "rgba(255,255,255,0.03)",
-                          border: "1px solid var(--border)",
-                          color: "var(--mist)",
+                          borderRadius: 10,
+                          background: "rgba(13,18,32,0.4)",
+                          border: "1px solid rgba(255,255,255,0.05)",
+                          color: "rgba(255,255,255,0.38)",
                           fontFamily: "'DM Mono', monospace",
                           fontSize: 10,
                           textTransform: "uppercase",
                           letterSpacing: "0.14em",
+                          cursor: "pointer",
                         }}
                       >
                         {isTransitsExpanded
@@ -1250,11 +1284,11 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                 )}
           </RailCard>
 
-          <RailCard className="p-6">
-                <div className="dash-card-header">
+          <RailCard>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
                   <div>
-                    <h2 className="dash-section-title" style={{ fontSize: 15 }}>Sarvashtakavarga</h2>
-                    <span className="dash-section-subtitle">Rashi strength scores</span>
+                    <h2 style={{ fontFamily: "Cinzel, serif", fontSize: 15, fontWeight: 400, color: "#e8b96a", margin: "0 0 4px", lineHeight: 1.3 }}>Sarvashtakavarga</h2>
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" as const, letterSpacing: "0.14em", display: "block", margin: 0 }}>Rashi strength scores</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-6 gap-2">
@@ -1299,102 +1333,105 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                 </div>
           </RailCard>
 
-          <RailCard className="p-6">
-                <div className="dash-card-header">
+          <RailCard>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 }}>
                   <div>
-                    <h2 className="dash-section-title" style={{ fontSize: 15 }}>Planetary Positions</h2>
-                    <span className="dash-section-subtitle">Sidereal longitudes · Nakshatras</span>
+                    <h2 style={{ fontFamily: "Cinzel, serif", fontSize: 15, fontWeight: 400, color: "#e8b96a", margin: "0 0 4px", lineHeight: 1.3 }}>Planetary Positions</h2>
+                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: "rgba(255,255,255,0.38)", textTransform: "uppercase" as const, letterSpacing: "0.14em", display: "block", margin: 0 }}>Sidereal longitudes · Nakshatras</span>
                   </div>
                   {selectedZodiac !== null && <MetaChip tone="amber">{RASHIS[selectedZodiac]}</MetaChip>}
                 </div>
-                <div className="space-y-1">
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {positions.map((p) => {
                     const isInSelectedZodiac =
                       selectedZodiac !== null && p.rashi === RASHIS[selectedZodiac];
                     const isSelected = selectedPlanet === p.name;
+                    const isHighlighted = isSelected || isInSelectedZodiac;
                     return (
                       <button
                         key={p.name}
                         onClick={() => setSelectedPlanet(p.name)}
-                        className="w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 group"
+                        className="w-full transition-all duration-150"
                         style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          padding: "12px 16px",
+                          borderRadius: 10,
                           background: isSelected
-                            ? "rgba(200,135,58,0.10)"
+                            ? "rgba(200,135,58,0.08)"
                             : isInSelectedZodiac
-                            ? "rgba(200,135,58,0.06)"
-                            : "rgba(255,255,255,0.02)",
-                          border: isSelected
-                            ? "1px solid var(--border-lit)"
-                            : isInSelectedZodiac
-                            ? "1px solid rgba(200,135,58,0.16)"
-                            : "1px solid transparent",
-                          transform: isSelected ? "translateY(-1px)" : undefined,
+                            ? "rgba(200,135,58,0.04)"
+                            : "rgba(13,18,32,0.4)",
+                          border: `1px solid ${
+                            isSelected
+                              ? "rgba(200,135,58,0.28)"
+                              : isInSelectedZodiac
+                              ? "rgba(200,135,58,0.14)"
+                              : "rgba(255,255,255,0.05)"
+                          }`,
+                          cursor: "pointer",
+                          textAlign: "left",
                         }}
                       >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                            style={{
-                              backgroundColor: p.color,
-                              color: "#000",
-                              fontSize: p.symbol.length > 1 ? 10 : 16,
-                              fontWeight: 700,
-                              boxShadow: isSelected ? "0 0 0 1px rgba(255,255,255,0.12) inset" : undefined,
-                            }}
-                          >
-                            {p.symbol}
+                        {/* Planet icon badge */}
+                        <div
+                          style={{
+                            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                            backgroundColor: p.color,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: "#000",
+                            fontSize: p.symbol.length > 1 ? 10 : 15,
+                            fontWeight: 700,
+                            boxShadow: isSelected ? `0 0 8px ${p.color}66` : undefined,
+                          }}
+                        >
+                          {p.symbol}
+                        </div>
+
+                        {/* Name + nakshatra */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+                            fontSize: 13, fontWeight: 500,
+                            color: "var(--cream, rgba(255,255,255,0.88))",
+                            marginBottom: 2,
+                            display: "flex", alignItems: "center", gap: 6,
+                          }}>
+                            {p.name}
+                            {p.isRetrograde && !["Rahu", "Ketu"].includes(p.name) && (
+                              <MetaChip tone="amber">Rx</MetaChip>
+                            )}
+                            {p.isCombust && <MetaChip tone="danger">C</MetaChip>}
                           </div>
-                          <div className="text-left">
-                            <div
-                              style={{
-                                fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-                                fontSize: 13.5,
-                                color: "var(--cream)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              {p.name}
-                              <div className="flex gap-1">
-                                {p.isRetrograde && !["Rahu", "Ketu"].includes(p.name) && (
-                                  <MetaChip tone="amber">Rx</MetaChip>
-                                )}
-                                {p.isCombust && <MetaChip tone="danger">C</MetaChip>}
-                              </div>
-                            </div>
-                            <div
-                              className="data-value"
-                              style={{
-                                fontSize: 10,
-                                color: "var(--mist)",
-                                opacity: 0.68,
-                                marginTop: 3,
-                              }}
-                            >
-                              {p.nakshatra} · P{p.pada}
-                              {p.house ? ` · ${getOrdinal(p.house)} H` : ""}
-                            </div>
+                          <div style={{
+                            fontFamily: "'DM Mono', monospace", fontSize: 9,
+                            letterSpacing: "0.12em", textTransform: "uppercase" as const,
+                            color: "var(--mist, rgba(255,255,255,0.35))",
+                          }}>
+                            {p.nakshatra} · P{p.pada}{p.house ? ` · ${getOrdinal(p.house)} H` : ""}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="data-value"
-                            style={{
-                              fontSize: 13,
-                              color: isSelected || isInSelectedZodiac ? "var(--amber)" : "var(--mist)",
-                            }}
-                          >
+
+                        {/* Degree value */}
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
+                        }}>
+                          <span style={{
+                            fontFamily: "'DM Mono', monospace", fontSize: 12,
+                            letterSpacing: "0.04em",
+                            color: isHighlighted ? p.color : "var(--mist, rgba(255,255,255,0.45))",
+                            filter: isHighlighted ? `drop-shadow(0 0 4px ${p.color}80)` : undefined,
+                          }}>
                             {p.degree}°{p.minute}&apos;
-                          </div>
-                          <ChevronRight
-                            size={14}
-                            style={{
-                              color: isSelected ? "var(--amber)" : "rgba(255,255,255,0.22)",
-                              transform: isSelected ? "rotate(90deg)" : undefined,
-                              transition: "transform 0.2s",
-                            }}
-                          />
+                          </span>
+                          <span style={{
+                            color: isSelected ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.18)",
+                            fontSize: 12,
+                            transform: isSelected ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s",
+                            display: "inline-block",
+                          }}>▾</span>
                         </div>
                       </button>
                     );
@@ -1402,7 +1439,7 @@ export function SkyObserver({ defaultLat, defaultLon }: SkyObserverProps) {
                 </div>
           </RailCard>
 
-          <RailCard className="p-5">
+          <RailCard>
               <div className="grid grid-cols-3 gap-3">
                 {[
                   {

@@ -97,13 +97,30 @@ function SocialButton({ id, label, icon }: SocialProvider) {
 
 interface Props {
   enabledProviders: SocialProviderId[];
+  emailLoginEnabled: boolean;
   /** Dev-only: providers that have CLIENT_ID set but are missing the SECRET */
   missingSecret?: SocialProviderId[];
   /** Server-computed environment flag; avoids process.env usage in client bundle */
   isDev?: boolean;
 }
 
-export function LoginForm({ enabledProviders, missingSecret = [], isDev = false }: Props) {
+function getMagicLinkErrorMessage(error: string | undefined, isDev: boolean): string {
+  if (!error) {
+    return "We couldn't send the magic link. Please try again.";
+  }
+
+  if (error === "Configuration") {
+    return isDev
+      ? "Magic link email is not configured correctly. Check RESEND_API_KEY and the sender domain."
+      : "Magic link email is temporarily unavailable. Please try again later.";
+  }
+
+  return isDev
+    ? `Magic link sign-in failed: ${error}`
+    : "We couldn't send the magic link. Please try again.";
+}
+
+export function LoginForm({ enabledProviders, emailLoginEnabled, missingSecret = [], isDev = false }: Props) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -113,9 +130,22 @@ export function LoginForm({ enabledProviders, missingSecret = [], isDev = false 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!emailLoginEnabled) {
+      setError(
+        isDev
+          ? "Magic link is disabled until RESEND_API_KEY is configured for auth."
+          : "Magic link is temporarily unavailable."
+      );
+      return;
+    }
+
     setLoading(true); setError(null);
     const result = await signIn("resend", { email, redirect: false, callbackUrl: "/onboarding" });
-    if (result?.error) { setError("Something went wrong. Please try again."); setLoading(false); return; }
+    if (result?.error) {
+      setError(getMagicLinkErrorMessage(result.error, isDev));
+      setLoading(false);
+      return;
+    }
     setSent(true); setLoading(false);
   }
 
@@ -187,10 +217,18 @@ export function LoginForm({ enabledProviders, missingSecret = [], isDev = false 
           <label htmlFor="email">Email address</label>
           <input id="email" type="email" required autoFocus value={email}
             onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
-            className={error ? "error" : ""} />
+            className={error ? "error" : ""}
+            disabled={!emailLoginEnabled} />
           {error && <p className="field-error">{error}</p>}
+          {!error && !emailLoginEnabled && (
+            <p className="field-error">
+              {isDev
+                ? "Magic link is unavailable until RESEND_API_KEY is configured for NextAuth email sign-in."
+                : "Magic link is temporarily unavailable."}
+            </p>
+          )}
         </div>
-        <button type="submit" disabled={loading || !email} className="btn-primary" style={{ marginTop: "0.25rem" }}>
+        <button type="submit" disabled={loading || !email || !emailLoginEnabled} className="btn-primary" style={{ marginTop: "0.25rem" }}>
           {loading ? "Sending…" : "Send magic link"}
         </button>
       </form>

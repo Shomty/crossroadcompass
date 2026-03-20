@@ -918,6 +918,11 @@ label {
   .v4-wrap { padding: calc(64px + 1.25rem) 1rem 3rem; gap: 1.25rem; }
 }
 
+/* Sky Observer gets full-width treatment */
+.v4-wrap.sky-observer-page {
+  max-width: 100%;
+}
+
 /* Section divider */
 .v4-divider {
   display: flex;
