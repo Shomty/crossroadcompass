@@ -54,7 +54,7 @@ export async function GET(req: Request) {
     });
 
     const tier = subscription?.tier ?? "FREE";
-    const isAdmin = session.user?.email === "shomty@hotmail.com";
+    const isAdmin = session.user.role === "ADMIN";
     const isPremium = isAdmin || tier === "CORE" || tier === "VIP";
 
     if (isPremium) {
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
     });
 
     const tier = subscription?.tier ?? "FREE";
-    const isAdmin = session.user?.email === "shomty@hotmail.com";
+    const isAdmin = session.user.role === "ADMIN";
     const isPremium = isAdmin || tier === "CORE" || tier === "VIP";
 
     if (isPremium) {

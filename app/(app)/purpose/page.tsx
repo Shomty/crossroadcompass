@@ -47,7 +47,7 @@ export default async function PurposePage() {
     select: { tier: true },
   });
   const tier = subscription?.tier ?? "FREE";
-  const isAdmin = session.user?.email === "shomty@hotmail.com";
+  const isAdmin = session.user.role === "ADMIN";
   const effectiveTier: SubscriptionTier = isAdmin ? "VIP" : (tier as SubscriptionTier);
   const isPremium = effectiveTier === "CORE" || effectiveTier === "VIP";
 

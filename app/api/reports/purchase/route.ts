@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
 
 const PurchaseSchema = z.object({
   reportProductId: z.string().min(1),
@@ -59,7 +58,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const isAdmin = (session?.user?.email ?? "") === env.ADMIN_EMAIL;
+  const isAdmin = session?.user?.role === "ADMIN";
 
   const purchase = await db.reportPurchase.create({
     data: {

@@ -28,7 +28,12 @@ export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const token = authHeader?.replace("Bearer ", "");
 
-  if (env.CRON_SECRET && token !== env.CRON_SECRET) {
+  if (!env.CRON_SECRET) {
+    console.error("[cron/daily-insights] CRON_SECRET is not configured");
+    return NextResponse.json({ error: "Cron secret not configured" }, { status: 500 });
+  }
+
+  if (token !== env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

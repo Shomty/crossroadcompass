@@ -4,9 +4,6 @@
  * components/chemistry/CompatibilityForm.tsx
  * Partner birth data input form for compatibility analysis.
  */
-// #region agent log
-console.log('[DEBUG-2f76b5] CompatibilityForm module loaded');
-// #endregion
 
 import { useState } from "react";
 

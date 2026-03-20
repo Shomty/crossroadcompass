@@ -3,7 +3,7 @@
  * Body: { type: "career" | "love" | "health", force?: boolean }
  *
  * VIP-only endpoint. Returns cached reading or generates a new one.
- * Pass force: true to bypass cache and regenerate from Gemini.
+ * force: true is honored for admins only.
  */
 
 import { NextResponse } from "next/server";
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     where: { userId },
     select: { tier: true },
   });
-  const isAdmin = session.user?.email === "shomty@hotmail.com";
+  const isAdmin = session.user.role === "ADMIN";
   const isVip = isAdmin || sub?.tier === "VIP";
 
   if (!isVip) {
@@ -58,7 +58,9 @@ export async function POST(req: Request) {
   // ── Return cache unless force=true ────────────────────────────────────────
   const readingType = type as ReadingType;
 
-  if (!force) {
+  const forceRegenerate = force === true && isAdmin;
+
+  if (!forceRegenerate) {
     const cached = await getLifeReading(userId, readingType);
     if (cached) {
       return NextResponse.json({ reading: cached, cached: true });

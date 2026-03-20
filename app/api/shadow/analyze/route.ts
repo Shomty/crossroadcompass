@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     const userId = session.user.id;
     const body = await req.json().catch(() => ({}));
-    const forceRegenerate = body.force === true;
+    const forceRegenerate = body.force === true && session.user.role === "ADMIN";
 
     const birthProfile = await db.birthProfile.findUnique({
       where: { userId },
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     });
 
     const tier = subscription?.tier ?? "FREE";
-    const isAdmin = session.user?.email === "shomty@hotmail.com";
+    const isAdmin = session.user.role === "ADMIN";
     const isPremium = isAdmin || tier === "CORE" || tier === "VIP";
 
     if (isPremium) {
@@ -89,7 +89,7 @@ export async function GET() {
     });
 
     const tier = subscription?.tier ?? "FREE";
-    const isAdmin = session.user?.email === "shomty@hotmail.com";
+    const isAdmin = session.user.role === "ADMIN";
     const isPremium = isAdmin || tier === "CORE" || tier === "VIP";
 
     if (isPremium) {

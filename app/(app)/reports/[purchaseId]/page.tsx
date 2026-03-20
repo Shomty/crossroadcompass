@@ -1,7 +1,6 @@
 // STATUS: done | Task R.10
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -63,7 +62,7 @@ export default async function ReportReaderPage({
   if (!purchase) redirect("/reports");
 
   const isOwner = purchase.user.id === userId;
-  const isAdmin = (session.user.email ?? "") === env.ADMIN_EMAIL;
+  const isAdmin = session.user.role === "ADMIN";
 
   if (!isOwner && !isAdmin) {
     redirect("/reports");

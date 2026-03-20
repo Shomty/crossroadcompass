@@ -4,10 +4,14 @@ import { parseEnv, envSchema } from "./env";
 describe("env", () => {
   const minimalValid = {
     NODE_ENV: "test",
+    VEDIC_API_URL: "http://localhost:9000/api/v1",
+    VEDIC_API_KEY: "test-vedic-key",
     DATABASE_URL: "file:test.db",
     AUTH_SECRET: "test-secret",
     NEXTAUTH_URL: "http://localhost:3000",
+    CRON_SECRET: "test-cron-secret",
     GEMINI_API_KEY: "test-gemini-key",
+    GEMINI_MODEL: "gemini-2.5-flash",
   };
 
   it("parseEnv accepts minimal valid env", () => {

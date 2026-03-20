@@ -4,13 +4,8 @@ import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
 
-const ADMIN_EMAIL = "shomty@hotmail.com";
-
 function isAdmin(session: Session | null): boolean {
-  if (!session?.user) return false;
-  return (
-    session.user.role === "ADMIN" || session.user.email === ADMIN_EMAIL
-  );
+  return session?.user?.role === "ADMIN";
 }
 
 /**

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = session.user.id;
-  const force = new URL(req.url).searchParams.get("force") === "true";
+  const force = new URL(req.url).searchParams.get("force") === "true" && session.user.role === "ADMIN";
   const now = new Date();
 
   const maha = await db.dasha.findFirst({

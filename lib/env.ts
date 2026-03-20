@@ -6,16 +6,19 @@
  * See copilot-instructions section 20 for the full variable reference.
  */
 
-// STATUS: done | Task R.3
-
 import { z } from "zod";
 
 // Coerce empty strings to undefined so optional fields in .env.local may be
 // left blank (VAR=) without triggering a validation error.
 const opt = (schema: z.ZodString) =>
   z.preprocess((v) => (v === "" ? undefined : v), schema.optional());
+const optWithDefault = (schema: z.ZodString, fallback: string) =>
+  z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    schema.optional().default(fallback)
+  );
 
-const envSchema = z.object({
+export const envSchema = z.object({
   // Vedic Astrology API (external, paid — section 16.1)
   VEDIC_API_URL: z.string().url(),
   VEDIC_API_KEY: z.string().min(1),
@@ -50,14 +53,12 @@ const envSchema = z.object({
   UPSTASH_REDIS_REST_URL: opt(z.string().url()),
   UPSTASH_REDIS_REST_TOKEN: opt(z.string().min(1)),
 
-  // Cron authentication (set in Vercel → optional locally)
+  // Cron authentication (required in deployment; route fails closed when missing)
   CRON_SECRET: opt(z.string().min(1)),
 
-  // Gemini AI — required for report generation
-  GEMINI_API_KEY: z.string().min(1),
-  /** Default: Gemini 3.1 Flash-Lite Preview (text). Override with e.g. gemini-3-flash-preview. */
-  GEMINI_MODEL: z.string().default("gemini-3.1-flash-lite-preview"),
-  ADMIN_EMAIL: z.string().email().default("shomty@hotmail.com"),
+  // Gemini AI — optional locally; AI features degrade gracefully when absent
+  GEMINI_API_KEY: opt(z.string().min(1)),
+  GEMINI_MODEL: optWithDefault(z.string().min(1), "gemini-2.5-flash"),
 
   // App URL — defaults to NEXTAUTH_URL when absent
   APP_URL: z.string().url().optional(),
@@ -68,16 +69,20 @@ const envSchema = z.object({
     .default("development"),
 });
 
-const parsed = envSchema.safeParse(process.env);
+export function parseEnv(source: NodeJS.ProcessEnv) {
+  const parsed = envSchema.safeParse(source);
 
-if (!parsed.success) {
-  console.error(
-    "❌  Missing or invalid environment variables:\n",
-    parsed.error.flatten().fieldErrors
-  );
-  throw new Error(
-    "Invalid environment configuration — check your .env.local file."
-  );
+  if (!parsed.success) {
+    console.error(
+      "❌  Missing or invalid environment variables:\n",
+      parsed.error.flatten().fieldErrors
+    );
+    throw new Error(
+      "Invalid environment configuration — check your .env.local file."
+    );
+  }
+
+  return parsed.data;
 }
 
-export const env = parsed.data;
+export const env = parseEnv(process.env);

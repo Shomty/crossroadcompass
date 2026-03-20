@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
 
 export async function GET(
   _req: Request,
@@ -31,7 +30,7 @@ export async function GET(
   }
 
   const isOwner = purchase.user.id === userId;
-  const isAdmin = (session?.user?.email ?? "") === env.ADMIN_EMAIL;
+  const isAdmin = session?.user?.role === "ADMIN";
 
   if (!isOwner && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

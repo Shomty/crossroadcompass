@@ -1,8 +1,4 @@
 "use client";
-// #region agent log
-console.log('[DEBUG-2f76b5] ChemistryFormWrapper module loaded');
-import { useEffect } from "react";
-// #endregion
 /**
  * components/chemistry/ChemistryFormWrapper.tsx
  * Client wrapper for CompatibilityForm - handles form submission and state.
@@ -31,17 +27,7 @@ export function ChemistryFormWrapper({ disabled = false, isPremium = false }: Ch
   const [partnerName, setPartnerName] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7426/ingest/80b354b8-514f-43f5-adc2-d0dd49407633',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f76b5'},body:JSON.stringify({sessionId:'2f76b5',location:'ChemistryFormWrapper.tsx:35',message:'Client component mounted',data:{disabled,isPremium},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-  }, [disabled, isPremium]);
-  // #endregion
-
   const handleSubmit = async (data: PartnerData) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7426/ingest/80b354b8-514f-43f5-adc2-d0dd49407633',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'2f76b5'},body:JSON.stringify({sessionId:'2f76b5',location:'ChemistryFormWrapper.tsx:42',message:'Form submitted',data:{partnerName:data.name},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-
     if (disabled) return;
 
     setIsLoading(true);

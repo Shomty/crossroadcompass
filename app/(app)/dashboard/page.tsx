@@ -57,7 +57,7 @@ export default async function DashboardPage({
     select: { tier: true },
   });
   const tier        = subscription?.tier ?? "FREE";
-  const isAdmin     = session.user?.email === "shomty@hotmail.com";
+  const isAdmin     = session.user.role === "ADMIN";
   const isPaid      = isAdmin || tier === "CORE" || tier === "VIP";
   const isVip       = isAdmin || tier === "VIP";
   // Admin sees all features as VIP — used for component-level tier props

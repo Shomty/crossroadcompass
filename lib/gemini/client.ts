@@ -7,7 +7,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { env } from "@/lib/env";
 
-const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+function getGeminiClient() {
+  if (!env.GEMINI_API_KEY) {
+    throw new GeminiGenerationError("GEMINI_API_KEY is not set");
+  }
+  return new GoogleGenerativeAI(env.GEMINI_API_KEY);
+}
 
 export class GeminiGenerationError extends Error {
   constructor(message: string, public readonly cause?: unknown) {
@@ -63,7 +68,7 @@ export async function generateReportWithGemini(
   userDataContext: string,
   options?: GeminiReportGenerationOptions
 ): Promise<GeminiGenerationResult> {
-  const model = genAI.getGenerativeModel({
+  const model = getGeminiClient().getGenerativeModel({
     model: env.GEMINI_MODEL,
     systemInstruction: systemPrompt,
   });
@@ -122,7 +127,7 @@ export interface GeminiPingResult {
  * Minimal live call to verify API key + model (admin diagnostics).
  */
 export async function testGeminiConnection(): Promise<GeminiPingResult> {
-  const model = genAI.getGenerativeModel({ model: env.GEMINI_MODEL });
+  const model = getGeminiClient().getGenerativeModel({ model: env.GEMINI_MODEL });
   const start = Date.now();
 
   try {

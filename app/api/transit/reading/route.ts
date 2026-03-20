@@ -29,7 +29,8 @@ export async function GET(req: NextRequest) {
   }
 
   const userId = session.user.id;
-  const force = new URL(req.url).searchParams.get("force") === "true";
+  const isAdmin = session.user.role === "ADMIN";
+  const force = new URL(req.url).searchParams.get("force") === "true" && isAdmin;
 
   // Check for a cached reading first (skip on force)
   if (!force) {
