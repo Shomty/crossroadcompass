@@ -151,12 +151,122 @@ export interface HDChartData {
 }
 
 // ─── Vedic Astrology ──────────────────────────────────────────────────────
+// STATUS: done | Task SP.1
 
-/**
- * TODO: tighten this type once the Vedic API response schema is confirmed.
- * DECISION NEEDED: Vedic API endpoint paths and response shapes — Task 3.5
- */
-export type VedicChartData = Record<string, unknown>;
+export type SignNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+
+export type PlanetName =
+  | 'Sun' | 'Moon' | 'Mars' | 'Mercury' | 'Jupiter'
+  | 'Venus' | 'Saturn' | 'Rahu' | 'Ketu'
+
+export type Charakaraka =
+  | 'Atmakaraka'       // AK  - soul's core lesson
+  | 'Amatyakaraka'     // AmK - career / minister
+  | 'Bhratrukaraka'    // BK  - siblings
+  | 'Matrukaraka'      // MK  - mother
+  | 'Pitrukaraka'      // PiK - father
+  | 'Putrakaraka'      // PK  - children / creativity
+  | 'Gnatikaraka'      // GK  - kinsmen / obstacles
+  | 'Darakaraka'       // DK  - spouse / partnerships
+
+export interface PlanetPosition {
+  planet: PlanetName
+  signNumber: SignNumber      // 1-12
+  degreeInSign: number        // 0-29 whole degrees within the sign
+  arcMinutes: number          // 0-59 minutes of arc (for precise CK tiebreaking)
+  arcSeconds: number          // 0-59 seconds of arc (for precise CK tiebreaking)
+}
+
+export interface ArudhaLagnaResult {
+  arudhaSignNumber: SignNumber
+  lagnaSignNumber: SignNumber
+  lagnaLord: PlanetName
+  lordSignNumber: SignNumber
+  stepsFromLagnaToLord: number
+  exceptionApplied: 'none' | 'use_10th' | 'use_4th'
+}
+
+export interface GhatiLagnaResult {
+  ghatiLagnaSignNumber: SignNumber
+  ghatiLagnaDegree: number
+  fullGhatikasSinceSunrise: number
+  vighatikasFraction: number         // 0-59.99
+  sunLongitudeAtSunrise: number
+}
+
+export interface BhavaLagnaResult {
+  bhavaLagnaSignNumber: SignNumber
+  bhavaLagnaDegree: number
+  totalGhatikasSinceSunrise: number
+  sunLongitudeAtSunrise: number
+}
+
+export interface HoraLagnaResult {
+  horaLagnaSignNumber: SignNumber
+  horaLagnaDegree: number
+  totalGhatikasSinceSunrise: number
+  sunLongitudeAtSunrise: number
+}
+
+export interface CharakarakaResult {
+  rank: Charakaraka
+  planet: PlanetName
+  rankingDegree: number          // whole degrees (after Rahu inversion)
+  rankingArcMinutes: number      // arc-minutes component (after Rahu inversion)
+  rankingArcSeconds: number      // arc-seconds component (after Rahu inversion)
+  rawDegreeInSign: number
+  sharedRank: boolean            // true if another planet holds the identical longitude
+}
+
+export interface SthiraKarakaDeficit {
+  missingRank: Charakaraka       // the Karaka position left vacant
+  sthiraKaraka: PlanetName       // the constant significator to use instead
+  reason: string                 // human-readable explanation
+}
+
+export interface CharakarakaSetResult {
+  karakas: CharakarakaResult[]   // length 7 or 8 depending on deficit
+  deficit: SthiraKarakaDeficit | null  // present only when a shared-rank tie occurred
+}
+
+export interface SpecialPointsResult {
+  arudhaLagna:  ArudhaLagnaResult
+  ghatiLagna:   GhatiLagnaResult
+  bhavaLagna:   BhavaLagnaResult
+  horaLagna:    HoraLagnaResult
+  charakarakas: CharakarakaSetResult
+}
+
+export interface SpecialPointsInsights {
+  lagnas: {
+    AL: string
+    GL: string
+    HL: string
+    BL: string
+  }
+  charakarakas: {
+    Atmakaraka:    string
+    Amatyakaraka:  string
+    Bhratrukaraka: string
+    Matrukaraka:   string
+    Pitrukaraka:   string
+    Putrakaraka:   string
+    Gnatikaraka:   string
+    Darakaraka:    string
+  }
+  generatedAt: string
+}
+
+/** Vedic natal chart data. Field names confirmed 2026-03-25 from Jyotish REST API. */
+export interface VedicChartData {
+  lagnaSignNumber: SignNumber
+  planets: PlanetPosition[]
+  sunriseData: {
+    sunAbsoluteLongitude: number
+    minutesSinceSunrise: number
+  }
+  [key: string]: unknown   // open for other Vedic API fields
+}
 
 // ─── Custom Report Builder ────────────────────────────────────────────────
 

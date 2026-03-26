@@ -208,6 +208,7 @@ enum InsightType {
   HEALTH   // VIP life reading — vitality/wellbeing (HD); periodDate = epoch
   JYOTISH  // VIP life reading — comprehensive Vedic synthesis via Gem (D1+D9+D10+Dasha); periodDate = epoch
   MUHURTA_WEEKLY  // cached muhurta AI insight; periodDate = Monday of that week
+  SPECIAL_POINTS  // AI explanations for Vedic lagnas and charakarakas; periodDate = epoch
 }
 
 model Insight {

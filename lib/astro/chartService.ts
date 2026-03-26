@@ -1,4 +1,4 @@
-// STATUS: done | Tasks 3.3, 3.4, 3.5
+// STATUS: done | Tasks 3.3, 3.4, 3.5, SP.11, SP.12
 /**
  * lib/astro/chartService.ts
  * Orchestrator: KV cache-check → calculate/fetch → store in KV → return.
@@ -11,15 +11,17 @@
  *   Transits    — see transitService.ts (3.6)
  */
 
-import type { BirthProfile } from "@prisma/client";
+import { InsightType, type BirthProfile } from "@prisma/client";
 import { calculateHDChart } from "@/lib/astro/hdCalculator";
 import { fetchVedicNatalChart } from "@/lib/astro/vedicApiClient";
 import { storeDashasFromChart } from "@/lib/astro/dashaService";
 import { kvGet, kvSet, kvDeleteMany } from "@/lib/kv/helpers";
 import { kvKeys, KV_TTL } from "@/lib/kv/keys";
 import { db } from "@/lib/db";
-import type { BirthInfo, HDChartData, VedicChartData } from "@/types";
+import type { BirthInfo, HDChartData, VedicChartData, SpecialPointsResult } from "@/types";
 import type { VedicChart } from "@/lib/astro/types";
+import { calculateSpecialPoints } from "@/lib/astro/specialPoints";
+import { extractSpecialPointsInputs } from "@/lib/astro/vedicChartMapper";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -48,10 +50,17 @@ function profileToBirthInfo(profile: BirthProfile): BirthInfo {
  * Does NOT touch transit keys — those expire automatically (24h TTL).
  */
 export async function invalidateChartCache(userId: string): Promise<void> {
-  await kvDeleteMany([
-    kvKeys.vedicChart(userId),
-    kvKeys.hdChart(userId),
-    kvKeys.dashas(userId),
+  await Promise.all([
+    kvDeleteMany([
+      kvKeys.vedicChart(userId),
+      kvKeys.hdChart(userId),
+      kvKeys.dashas(userId),
+      kvKeys.specialPoints(userId),
+      kvKeys.specialPointsInsights(userId),
+    ]),
+    db.insight.deleteMany({
+      where: { userId, type: InsightType.SPECIAL_POINTS },
+    }),
   ]);
 }
 
@@ -193,4 +202,111 @@ export async function getOrCreateVedicChart(
 
   await kvSet(kvKeys.vedicChart(userId), chartData, KV_TTL.NATAL_CHART);
   return chartData;
+}
+
+// ─── SP.11 — Derive special points from stored chart + birth profile ──────
+
+/**
+ * Derive special points from a VedicChart and birth profile data.
+ * Uses vedicChartMapper to handle both confirmed-field and rawResponse formats.
+ * Returns null with a warning if essential data is missing.
+ */
+export function deriveSpecialPoints(
+  vedicChartRaw: unknown,
+  birthYear:      number,
+  birthMonth:     number,
+  birthDay:       number,
+  birthHourUTC:   number,
+  birthMinuteUTC: number,
+  birthLatDeg:    number,
+  birthLonDeg:    number
+): SpecialPointsResult | null {
+  const inputs = extractSpecialPointsInputs(
+    vedicChartRaw,
+    birthYear, birthMonth, birthDay,
+    birthHourUTC, birthMinuteUTC,
+    birthLatDeg, birthLonDeg
+  )
+
+  if (!inputs) {
+    console.warn('[deriveSpecialPoints] Could not extract inputs from chart data')
+    return null
+  }
+
+  try {
+    return calculateSpecialPoints(
+      inputs.lagnaSignNumber,
+      inputs.planets,
+      inputs.sunAbsoluteLongitudeAtSunrise,
+      inputs.minutesSinceSunrise
+    )
+  } catch (err) {
+    console.error('[deriveSpecialPoints] Calculation error:', err)
+    return null
+  }
+}
+
+// ─── SP.12 — KV-cached special points ────────────────────────────────────
+
+/**
+ * Returns special points for a user, with three fallback layers:
+ *   1. KV cache (SpecialPointsResult)
+ *   2. KV Vedic chart → derive
+ *   3. DB chartDataVedic → derive
+ * No TTL on the cached result — invalidated when birth profile changes.
+ */
+export async function getOrCreateSpecialPoints(
+  userId: string
+): Promise<SpecialPointsResult | null> {
+  const cacheKey = kvKeys.specialPoints(userId)
+
+  // Layer 1: cached result
+  const cached = await kvGet<SpecialPointsResult>(cacheKey)
+  if (cached !== null) return cached
+
+  // Need birth profile for sunrise calculation
+  const birthProfile = await db.birthProfile.findUnique({
+    where: { userId },
+    select: {
+      birthDate:      true,
+      birthHour:      true,
+      birthMinute:    true,
+      birthTimeKnown: true,
+      latitude:       true,
+      longitude:      true,
+    },
+  })
+  if (!birthProfile) return null
+
+  const d = new Date(birthProfile.birthDate)
+  const hour   = birthProfile.birthTimeKnown ? (birthProfile.birthHour   ?? 12) : 12
+  const minute = birthProfile.birthTimeKnown ? (birthProfile.birthMinute ?? 0)  : 0
+
+  // Layer 2: Vedic chart from KV
+  let vedicChartRaw: unknown = await kvGet<unknown>(kvKeys.vedicChart(userId))
+
+  // Layer 3: Vedic chart from DB
+  if (!vedicChartRaw) {
+    const dbProfile = await db.birthProfile.findUnique({
+      where: { userId },
+      select: { chartDataVedic: true },
+    })
+    if (!dbProfile?.chartDataVedic) {
+      console.warn(`[getOrCreateSpecialPoints] No Vedic chart for user ${userId}`)
+      return null
+    }
+    vedicChartRaw = dbProfile.chartDataVedic
+  }
+
+  const result = deriveSpecialPoints(
+    vedicChartRaw,
+    d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(),
+    hour, minute,
+    birthProfile.latitude, birthProfile.longitude
+  )
+
+  if (result) {
+    await kvSet(cacheKey, result)
+  }
+  return result
 }

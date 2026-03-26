@@ -1,4 +1,4 @@
-// STATUS: done | Phase 5 Feature Pages
+// STATUS: done | Phase 5 Feature Pages, SP.14
 /**
  * app/(app)/life-blueprint/page.tsx
  * 6-chapter synthesis report: Jyotish natal + Human Design.
@@ -19,6 +19,9 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { ChapterCard } from "@/components/blueprint/ChapterCard";
 import { GlimpseCTA } from "@/components/glimpse";
 import { getLatestHDReport } from "@/lib/ai/hdReportService";
+import { getOrCreateSpecialPoints } from "@/lib/astro/chartService";
+import { getOrCreateSpecialPointsInsights } from "@/lib/ai/specialPointsInsightService";
+import { SpecialPointsPanel } from "@/components/blueprint/SpecialPointsPanel";
 import type { SubscriptionTier } from "@/types";
 
 // Maps the 7 HD report sections → 6 Life Blueprint chapters
@@ -59,8 +62,17 @@ export default async function LifeBlueprintPage() {
   const effectiveTier: SubscriptionTier = isAdmin ? "VIP" : (tier as SubscriptionTier);
   const isPaid = effectiveTier === "CORE" || effectiveTier === "VIP";
 
-  // ── Load latest HD report ─────────────────────────────────────────────────
-  const report = await getLatestHDReport(userId);
+  // ── Load latest HD report + special points ────────────────────────────────
+  const [report, specialPoints] = await Promise.all([
+    getLatestHDReport(userId),
+    getOrCreateSpecialPoints(userId),
+  ]);
+
+  // ── Load AI insights for special points (CORE+ only) ─────────────────────
+  const userName = session.user.name ?? session.user.email?.split("@")[0] ?? "the native";
+  const specialPointsInsights = (isPaid && specialPoints)
+    ? await getOrCreateSpecialPointsInsights(userId, specialPoints, userName)
+    : null;
 
   // ── Map report sections → 6 chapters ─────────────────────────────────────
   // HD report has 7 sections; we remap to our 6 blueprint chapters:
@@ -134,6 +146,13 @@ export default async function LifeBlueprintPage() {
         </section>
       ) : (
         <section className="animate-enter animate-enter-2" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {specialPoints && (
+            <SpecialPointsPanel
+              specialPoints={specialPoints}
+              insights={specialPointsInsights}
+              userTier={effectiveTier}
+            />
+          )}
           {chapters.map((chapter, i) => (
             <ChapterCard
               key={i}

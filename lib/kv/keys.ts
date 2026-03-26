@@ -1,4 +1,4 @@
-// STATUS: done | Task 2.2
+// STATUS: done | Task 2.2 SP.12
 /**
  * lib/kv/keys.ts
  * Typed KV key builders and TTL constants.
@@ -15,6 +15,10 @@ export const kvKeys = {
   transitPrefix:  (userId: string) => `transit:${userId}:`,
   /** Gemini AI reading cache (one per user per day) — date must be YYYY-MM-DD */
   transitReading: (userId: string, date: string) => `transit-reading:${userId}:${date}`,
+  /** Vedic special points — permanent, invalidated only when birth profile changes */
+  specialPoints:  (userId: string) => `chart:specialpoints:${userId}`,
+  /** AI-generated insights for Vedic special points — permanent, invalidated with birth profile changes */
+  specialPointsInsights: (userId: string) => `chart:specialpoints:insights:${userId}`,
 } as const;
 
 export const KV_TTL = {
@@ -24,4 +28,6 @@ export const KV_TTL = {
   NATAL_CHART: undefined,
   /** No TTL — dashas are permanent until birth data changes */
   DASHAS: undefined,
+  /** No TTL — special points insights are permanent until birth data changes */
+  SPECIAL_POINTS_INSIGHTS: undefined,
 } as const;
