@@ -18,10 +18,20 @@ import { storeDashasFromChart } from "@/lib/astro/dashaService";
 import { kvGet, kvSet, kvDeleteMany } from "@/lib/kv/helpers";
 import { kvKeys, KV_TTL } from "@/lib/kv/keys";
 import { db } from "@/lib/db";
-import type { BirthInfo, HDChartData, VedicChartData, SpecialPointsResult } from "@/types";
+import type { BirthInfo, HDChartData, VedicChartData, SpecialPointsResult, ExtendedSpecialPointsResult, KaalVelaSetResult, SignNumber } from "@/types";
 import type { VedicChart } from "@/lib/astro/types";
-import { calculateSpecialPoints } from "@/lib/astro/specialPoints";
-import { extractSpecialPointsInputs } from "@/lib/astro/vedicChartMapper";
+import {
+  calculateSpecialPoints,
+  calculateExtendedSpecialPoints,
+  calculateKaalVelas,
+  planetAbsoluteLongitude,
+} from "@/lib/astro/specialPoints";
+import SunCalc from "suncalc";
+import {
+  extractSpecialPointsInputs,
+  extractNatalLagnaInfo,
+  type SpecialPointsInputs,
+} from "@/lib/astro/vedicChartMapper";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -57,6 +67,7 @@ export async function invalidateChartCache(userId: string): Promise<void> {
       kvKeys.dashas(userId),
       kvKeys.specialPoints(userId),
       kvKeys.specialPointsInsights(userId),
+      kvKeys.extendedSpecialPoints(userId),
     ]),
     db.insight.deleteMany({
       where: { userId, type: InsightType.SPECIAL_POINTS },
@@ -234,12 +245,15 @@ export function deriveSpecialPoints(
   }
 
   try {
-    return calculateSpecialPoints(
+    const result = calculateSpecialPoints(
       inputs.lagnaSignNumber,
       inputs.planets,
       inputs.sunAbsoluteLongitudeAtSunrise,
       inputs.minutesSinceSunrise
     )
+    const natalFromChart = extractNatalLagnaInfo(vedicChartRaw)
+    const natalLagna = natalFromChart ?? { signNumber: inputs.lagnaSignNumber }
+    return { ...result, natalLagna }
   } catch (err) {
     console.error('[deriveSpecialPoints] Calculation error:', err)
     return null
@@ -305,6 +319,134 @@ export async function getOrCreateSpecialPoints(
     birthProfile.latitude, birthProfile.longitude
   )
 
+  if (result) {
+    await kvSet(cacheKey, result)
+  }
+  return result
+}
+
+// ─── SP-EXT.9 — Extended special points ──────────────────────────────────
+
+/**
+ * Extended points from the same `SpecialPointsInputs` as foundation special points
+ * (supports rawResponse.chartD1 when top-level VedicChartData fields are absent).
+ */
+export function deriveExtendedSpecialPoints(
+  inputs: SpecialPointsInputs,
+  horaLagnaSignNumber: SignNumber,
+  kaalVelaSetResult: KaalVelaSetResult | null
+): ExtendedSpecialPointsResult | null {
+  const sunPlanet = inputs.planets.find((p) => p.planet === 'Sun')
+  if (!sunPlanet) {
+    console.warn('[deriveExtendedSpecialPoints] Sun not found in planets array')
+    return null
+  }
+  const sunNatalLongitude = planetAbsoluteLongitude(sunPlanet)
+  const gulikaLongitude =
+    kaalVelaSetResult?.gulika?.referenceLongitude
+    ?? kaalVelaSetResult?.gulika?.midpointLongitude
+    ?? null
+
+  try {
+    return calculateExtendedSpecialPoints(
+      inputs.lagnaSignNumber,
+      horaLagnaSignNumber,
+      inputs.planets,
+      inputs.sunAbsoluteLongitudeAtSunrise,
+      sunNatalLongitude,
+      inputs.minutesSinceSunrise,
+      gulikaLongitude,
+      kaalVelaSetResult
+    )
+  } catch (err) {
+    console.error('[deriveExtendedSpecialPoints] Calculation error:', err)
+    return null
+  }
+}
+
+export async function getOrCreateExtendedSpecialPoints(
+  userId: string
+): Promise<ExtendedSpecialPointsResult | null> {
+  const cacheKey = kvKeys.extendedSpecialPoints(userId)
+  const cached   = await kvGet<ExtendedSpecialPointsResult>(cacheKey)
+  if (cached !== null) return cached
+
+  const basePoints = await getOrCreateSpecialPoints(userId)
+  if (!basePoints) {
+    console.warn('[getOrCreateExtendedSpecialPoints] Base special points unavailable')
+    return null
+  }
+  const horaLagnaSignNumber = basePoints.horaLagna.horaLagnaSignNumber
+
+  let vedicChartRaw: unknown = await kvGet<unknown>(kvKeys.vedicChart(userId))
+  if (!vedicChartRaw) {
+    const dbProfile = await db.birthProfile.findUnique({
+      where: { userId },
+      select: { chartDataVedic: true },
+    })
+    if (!dbProfile?.chartDataVedic) {
+      console.warn(`[getOrCreateExtendedSpecialPoints] No Vedic chart for user ${userId}`)
+      return null
+    }
+    vedicChartRaw = dbProfile.chartDataVedic
+  }
+
+  const birthProfile = await db.birthProfile.findUnique({
+    where: { userId },
+    select: {
+      birthDate: true,
+      birthHour: true,
+      birthMinute: true,
+      birthTimeKnown: true,
+      latitude: true,
+      longitude: true,
+      timezone: true,
+    },
+  })
+  if (!birthProfile) {
+    console.warn(`[getOrCreateExtendedSpecialPoints] No birth profile for user ${userId}`)
+    return null
+  }
+
+  const d = new Date(birthProfile.birthDate)
+  const hour   = birthProfile.birthTimeKnown ? (birthProfile.birthHour   ?? 12) : 12
+  const minute = birthProfile.birthTimeKnown ? (birthProfile.birthMinute ?? 0)  : 0
+
+  const inputs = extractSpecialPointsInputs(
+    vedicChartRaw,
+    d.getUTCFullYear(),
+    d.getUTCMonth() + 1,
+    d.getUTCDate(),
+    hour,
+    minute,
+    birthProfile.latitude,
+    birthProfile.longitude
+  )
+  if (!inputs) {
+    console.warn(
+      '[getOrCreateExtendedSpecialPoints] Could not extract chart inputs for extended points (check rawResponse / chartD1)'
+    )
+    return null
+  }
+
+  let kaalVelaSetResult: KaalVelaSetResult | null = null
+  try {
+    const birthDate = new Date(birthProfile.birthDate)
+    const times     = SunCalc.getTimes(birthDate, birthProfile.latitude, birthProfile.longitude)
+    const dayDurationMinutes = (times.sunset.getTime() - times.sunrise.getTime()) / 60000
+    const weekdayStr = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: birthProfile.timezone ?? 'UTC' })
+      .format(birthDate)
+    const WEEKDAY_MAP: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+    const weekdayIndex = WEEKDAY_MAP[weekdayStr] ?? birthDate.getDay()
+    const sunAtSunrise = inputs.sunAbsoluteLongitudeAtSunrise
+    if (dayDurationMinutes > 0) {
+      kaalVelaSetResult = calculateKaalVelas(sunAtSunrise, dayDurationMinutes, weekdayIndex)
+    }
+  } catch (err) {
+    console.warn('[getOrCreateExtendedSpecialPoints] Kaal Vela calculation failed:', err)
+  }
+
+  const result = deriveExtendedSpecialPoints(inputs, horaLagnaSignNumber, kaalVelaSetResult)
   if (result) {
     await kvSet(cacheKey, result)
   }

@@ -19,6 +19,8 @@ export const kvKeys = {
   specialPoints:  (userId: string) => `chart:specialpoints:${userId}`,
   /** AI-generated insights for Vedic special points — permanent, invalidated with birth profile changes */
   specialPointsInsights: (userId: string) => `chart:specialpoints:insights:${userId}`,
+  /** Extended Vedic special points (incl. Bhrigu Bindu, Varnada, Sphutas, Dhooma, Kaal Velas). v2 adds BB. */
+  extendedSpecialPoints: (userId: string) => `chart:specialpoints:ext:v2:${userId}`,
 } as const;
 
 export const KV_TTL = {

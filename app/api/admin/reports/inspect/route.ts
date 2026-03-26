@@ -58,6 +58,10 @@ export async function GET(request: NextRequest) {
         available: sources.transitData != null,
         preview: previewOf(sources.transitData),
       },
+      specialPoints: {
+        available: sources.specialPoints != null,
+        extendedAvailable: sources.extendedSpecialPoints != null,
+      },
     },
   });
 }

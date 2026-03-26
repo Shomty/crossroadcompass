@@ -54,6 +54,27 @@ export const REPORT_TEMPLATE_VARIABLE_KEYS = [
   "transit_date",
   "today_date",
   "today_iso",
+
+  // Vedic special points (foundation + extended; JSON mirrors KV cache)
+  "sp_foundation_json",
+  "sp_extended_json",
+  "sp_arudha_sign",
+  "sp_ghati_sign",
+  "sp_bhava_sign",
+  "sp_hora_sign",
+  "sp_charakarakas_json",
+  "sp_varnada_sign",
+  "sp_pranapada_sign",
+  "sp_upapada_sign",
+  "sp_sree_sign",
+  "sp_bhrigu_sign",
+  "sp_bhrigu_longitude",
+  "sp_beeja_sign",
+  "sp_kshetra_sign",
+  "sp_trisphuta_sign",
+  "sp_trisphuta_longitude",
+  "sp_dhooma_chain_json",
+  "sp_kaal_velas_json",
 ] as const;
 
 export type ReportTemplateVariableKey =

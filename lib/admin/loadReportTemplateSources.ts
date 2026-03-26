@@ -2,6 +2,10 @@
 import { db } from "@/lib/db";
 import { kvGet } from "@/lib/kv/helpers";
 import { kvKeys } from "@/lib/kv/keys";
+import {
+  getOrCreateExtendedSpecialPoints,
+  getOrCreateSpecialPoints,
+} from "@/lib/astro/chartService";
 import type { HDChartData } from "@/types";
 import type { BuildReportTemplateVarsInput } from "@/lib/reports/reportTemplateVars";
 
@@ -15,15 +19,25 @@ export async function loadReportTemplateSources(
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
-  const [hdDataKv, vedicDataKv, transitDataKv, dashasKv, user, birthProfile] =
-    await Promise.all([
-      kvGet<HDChartData>(kvKeys.hdChart(userId)),
-      kvGet<Record<string, unknown>>(kvKeys.vedicChart(userId)),
-      kvGet<unknown>(kvKeys.transit(userId, todayStr)),
-      kvGet<unknown>(kvKeys.dashas(userId)),
-      db.user.findUnique({ where: { id: userId }, select: { email: true } }),
-      db.birthProfile.findUnique({ where: { userId } }),
-    ]);
+  const [
+    hdDataKv,
+    vedicDataKv,
+    transitDataKv,
+    dashasKv,
+    user,
+    birthProfile,
+    specialPoints,
+    extendedSpecialPoints,
+  ] = await Promise.all([
+    kvGet<HDChartData>(kvKeys.hdChart(userId)),
+    kvGet<Record<string, unknown>>(kvKeys.vedicChart(userId)),
+    kvGet<unknown>(kvKeys.transit(userId, todayStr)),
+    kvGet<unknown>(kvKeys.dashas(userId)),
+    db.user.findUnique({ where: { id: userId }, select: { email: true } }),
+    db.birthProfile.findUnique({ where: { userId } }),
+    getOrCreateSpecialPoints(userId),
+    getOrCreateExtendedSpecialPoints(userId),
+  ]);
 
   let hdData: HDChartData | null = hdDataKv;
   if (!hdData && birthProfile?.chartDataHumanDesign) {
@@ -115,5 +129,7 @@ export async function loadReportTemplateSources(
     userEmail: user?.email ?? "",
     currentMahadasha: activeMaha?.planetName ?? "",
     currentAntardasha: activeAntar?.planetName ?? "",
+    specialPoints,
+    extendedSpecialPoints,
   };
 }

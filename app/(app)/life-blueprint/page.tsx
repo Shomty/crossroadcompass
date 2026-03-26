@@ -19,7 +19,7 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { ChapterCard } from "@/components/blueprint/ChapterCard";
 import { GlimpseCTA } from "@/components/glimpse";
 import { getLatestHDReport } from "@/lib/ai/hdReportService";
-import { getOrCreateSpecialPoints } from "@/lib/astro/chartService";
+import { getOrCreateSpecialPoints, getOrCreateExtendedSpecialPoints } from "@/lib/astro/chartService";
 import { getOrCreateSpecialPointsInsights } from "@/lib/ai/specialPointsInsightService";
 import { SpecialPointsPanel } from "@/components/blueprint/SpecialPointsPanel";
 import type { SubscriptionTier } from "@/types";
@@ -67,6 +67,10 @@ export default async function LifeBlueprintPage() {
     getLatestHDReport(userId),
     getOrCreateSpecialPoints(userId),
   ]);
+
+  const extendedPoints = specialPoints
+    ? await getOrCreateExtendedSpecialPoints(userId)
+    : null;
 
   // ── Load AI insights for special points (CORE+ only) ─────────────────────
   const userName = session.user.name ?? session.user.email?.split("@")[0] ?? "the native";
@@ -149,9 +153,48 @@ export default async function LifeBlueprintPage() {
           {specialPoints && (
             <SpecialPointsPanel
               specialPoints={specialPoints}
+              extendedPoints={extendedPoints}
               insights={specialPointsInsights}
               userTier={effectiveTier}
             />
+          )}
+          {hasReport && !specialPoints && (
+            <div
+              style={{
+                padding: "18px 22px",
+                background: "rgba(13,18,32,0.5)",
+                borderRadius: 16,
+                border: "1px solid rgba(200,135,58,0.12)",
+                backdropFilter: "blur(14px)",
+              }}
+            >
+              <p style={{
+                fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+                fontSize: 13,
+                color: "rgba(255,255,255,0.55)",
+                margin: 0,
+                lineHeight: 1.65,
+              }}>
+                Vedic foundation points will appear once your chart is generated from your birth data.
+              </p>
+              <p style={{
+                fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+                fontSize: 12,
+                color: "rgba(255,255,255,0.35)",
+                margin: "10px 0 0",
+                lineHeight: 1.6,
+              }}>
+                Confirm your birth time and place in{" "}
+                <Link href="/settings/profile" style={{ color: "rgba(232,185,106,0.95)", textDecoration: "none" }}>
+                  profile settings
+                </Link>
+                , or open your{" "}
+                <Link href="/report" style={{ color: "rgba(232,185,106,0.95)", textDecoration: "none" }}>
+                  chart report
+                </Link>{" "}
+                to trigger chart generation.
+              </p>
+            </div>
           )}
           {chapters.map((chapter, i) => (
             <ChapterCard

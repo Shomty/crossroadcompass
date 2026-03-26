@@ -254,7 +254,7 @@ Dashamsha (D10): [Planetary positions in D10 for Career, Status, and Public Life
 
 Special Lagnas: [Arudha Lagna (AL), Upapada Lagna (UL)]
 
-Special Points: [Bhrigu Bindu (BB), Gulika (Gk), Mandi (Md)]
+Special Points: [Bhrigu Bindu (BB) = Rahu–Moon ecliptic midpoint, Gulika (Gk), Mandi (Md)]
 
 Current Timing: [Vimshottari Dasha/Antardasha]
 

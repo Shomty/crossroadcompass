@@ -14,6 +14,8 @@ export default defineConfig({
       AUTH_SECRET: "test-secret",
       NEXTAUTH_URL: "http://localhost:3000",
       GEMINI_API_KEY: "test-gemini-key",
+      VEDIC_API_URL: "https://example.com",
+      VEDIC_API_KEY: "test-vedic-key",
     },
   },
 });

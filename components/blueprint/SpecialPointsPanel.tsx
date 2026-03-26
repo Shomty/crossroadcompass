@@ -11,7 +11,9 @@ import Link from 'next/link'
 import type {
   SpecialPointsResult, SpecialPointsInsights, SignNumber, Charakaraka,
   CharakarakaResult, SthiraKarakaDeficit, SubscriptionTier,
+  ExtendedSpecialPointsResult,
 } from '@/types'
+import { ExtendedSpecialPointsSection } from '@/components/blueprint/ExtendedSpecialPointsSection'
 
 // ─── Lookup tables ─────────────────────────────────────────────────────────
 
@@ -129,6 +131,7 @@ interface LagnaRow {
   sign: SignNumber
   deg?: number   // undefined = whole-sign only (AL has no degree precision)
   min?: number
+  sec?: number
   note?: string
 }
 
@@ -194,7 +197,7 @@ function LagnasTable({
                 </td>
                 <td style={{ ...tdBase, paddingRight: 0 }}>
                   {r.deg !== undefined
-                    ? <DegreeCell deg={r.deg} min={r.min ?? 0} sec={0} />
+                    ? <DegreeCell deg={r.deg} min={r.min ?? 0} sec={r.sec ?? 0} />
                     : <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>—</span>
                   }
                 </td>
@@ -374,15 +377,28 @@ function CharakarakasTable({
 
 interface Props {
   specialPoints: SpecialPointsResult
+  /** SP-EXT: Varnada, Upapada, Sphuta, Dhooma, Kaal Velas — null if not yet computed */
+  extendedPoints?: ExtendedSpecialPointsResult | null
   insights?: SpecialPointsInsights | null
   userTier?: SubscriptionTier
 }
 
-export function SpecialPointsPanel({ specialPoints, insights, userTier }: Props) {
+export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, userTier }: Props) {
   const { arudhaLagna, ghatiLagna, bhavaLagna, horaLagna, charakarakas } = specialPoints
   const isPaid = userTier === 'CORE' || userTier === 'VIP'
 
+  const natal = specialPoints.natalLagna ?? { signNumber: arudhaLagna.lagnaSignNumber }
+
   const lagnaRows: LagnaRow[] = [
+    {
+      abbr:    'LG',
+      name:    'Lagna (D1 Ascendant)',
+      meaning: 'Birth horizon · self & body',
+      sign:    natal.signNumber,
+      deg:     natal.degreeInSign,
+      min:     natal.arcMinutes,
+      sec:     natal.arcSeconds,
+    },
     {
       abbr:    'AL',
       name:    'Arudha Lagna',
@@ -514,6 +530,8 @@ export function SpecialPointsPanel({ specialPoints, insights, userTier }: Props)
           </div>
         )}
       </div>
+
+      <ExtendedSpecialPointsSection extended={extendedPoints ?? null} />
 
     </div>
   )

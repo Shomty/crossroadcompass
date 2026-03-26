@@ -1,8 +1,18 @@
 # Task: Vedic Special Points Calculator Service
-# STATUS: pending
+# STATUS: done
 # Target: Claude Code CLI / Cursor
 # Project root: /Users/miloshmarkovic/Documents/crossroadcompass
-# Updated: 2026-03-25 - API field names confirmed; Bhava Lagna + Hora Lagna added (SP.7, SP.8)
+# Updated: 2026-03-26 - SP.1-SP.13 shipped; see IMPLEMENTATION NOTES below
+
+---
+
+## IMPLEMENTATION NOTES (shipped code vs this spec)
+
+These deviations are intentional:
+
+- **SP.11 wiring:** `deriveSpecialPoints` in `lib/astro/chartService.ts` uses `extractSpecialPointsInputs` from `lib/astro/vedicChartMapper.ts` so special points work from both normalized `VedicChartData` and raw `rawResponse` chart shapes, not only the direct field paths shown in the SP.11 snippet.
+- **SP.13 auth:** `app/api/chart/special-points/route.ts` uses `auth()` from `@/lib/auth` and returns **401** JSON when unauthenticated, instead of `getRequiredSession` (same user-visible outcome).
+- **Beyond SP.13:** Gemini-backed explanations (`lib/ai/specialPointsInsightService.ts`), Prisma `InsightType.SPECIAL_POINTS`, KV `specialPointsInsights`, `GET /api/chart/special-points-insights`, and Life Blueprint UI (`SpecialPointsPanel`) are product additions not listed in the original checklist.
 
 ---
 
@@ -962,8 +972,8 @@ export async function GET() {
 ```
 
 Behaviour contract:
-  - 401 / redirect to /login if no session (getRequiredSession handles this)
-  - 202 if Vedic chart absent from KV (not an error - still processing)
+  - 401 JSON if no session (`auth()` in route; same intent as getRequiredSession)
+  - 202 if special points not yet computable (no Vedic chart in KV/DB or missing inputs)
   - 200 + SpecialPointsResult JSON when available
 
 Done when: route compiles and returns 202 for users without Vedic chart data.
@@ -972,34 +982,44 @@ Done when: route compiles and returns 202 for users without Vedic chart data.
 
 ## COMPLETION CHECKLIST
 
-- [ ] SP.1   Types in types/index.ts - all five result types present
-- [ ] SP.2   Constants in specialPoints.ts - time constants present
-- [ ] SP.3   countSignsBetween, advanceSigns, longitudeToSignAndDegree compile
-- [ ] SP.4   getStrongerLord - five tiebreaker steps, no `any`
-- [ ] SP.5   calculateArudhaLagna - both exceptions handled
-- [ ] SP.6   calculateGhatiLagna - Ghati + Vighati arithmetic
-- [ ] SP.7   calculateBhavaLagna - 5-Ghati rate
-- [ ] SP.8   calculateHoraLagna - 2.5-Ghati rate
-- [ ] SP.9   calculateCharakarakas - three-level tiebreak, shared-rank + deficit logic, Sthira Karaka table
-- [ ] SP.10  calculateSpecialPoints aggregator - all five results present
-- [ ] SP.11  deriveSpecialPoints in chartService.ts - confirmed field names, no `any`
-- [ ] SP.12  KV key added, getOrCreateSpecialPoints correct, invalidation updated
-- [ ] SP.13  API route /api/chart/special-points - 202/200 contract correct
+- [x] SP.1   Types in types/index.ts - all five result types present
+- [x] SP.2   Constants in specialPoints.ts - time constants present
+- [x] SP.3   countSignsBetween, advanceSigns, longitudeToSignAndDegree compile
+- [x] SP.4   getStrongerLord - five tiebreaker steps, no `any`
+- [x] SP.5   calculateArudhaLagna - both exceptions handled
+- [x] SP.6   calculateGhatiLagna - Ghati + Vighati arithmetic
+- [x] SP.7   calculateBhavaLagna - 5-Ghati rate
+- [x] SP.8   calculateHoraLagna - 2.5-Ghati rate
+- [x] SP.9   calculateCharakarakas - three-level tiebreak, shared-rank + deficit logic, Sthira Karaka table
+- [x] SP.10  calculateSpecialPoints aggregator - all five results present
+- [x] SP.11  deriveSpecialPoints in chartService.ts - mapper-based inputs, no `any`
+- [x] SP.12  KV key added, getOrCreateSpecialPoints correct, invalidation updated
+- [x] SP.13  API route /api/chart/special-points - 401/202/200 contract correct
 
 ---
 
 ## OPEN DECISIONS
 
 ```
-DECISION NEEDED (potential)
+RESOLVED (2026-03-26)
 Task: SP.11
 File: lib/astro/chartService.ts
 Question: If vedicChart.sunriseData is absent from the stored KV object,
   deriveSpecialPoints returns null silently. Should this trigger a re-fetch
   from the Vedic API, or is null + 202 the correct degraded-mode behaviour?
-Blocking: Only relevant if the Vedic API sometimes omits sunriseData.
+
+Resolution: Do NOT auto re-fetch the Vedic API from deriveSpecialPoints or
+getOrCreateSpecialPoints when sunrise data is missing. Rationale: (1) read
+paths must not trigger surprise paid API usage or partial writes; (2) chart
+population and invalidateChartCache on birth-profile changes already drive
+re-fetch at the appropriate boundary. Behaviour: callers get null from
+getOrCreateSpecialPoints; GET /api/chart/special-points returns 202 with the
+existing error payload; clients retry after chart generation completes or
+after the user updates birth data. If sunriseData is persistently missing,
+fix the Vedic API response mapping or the chart-persist path—not silent
+re-fetch inside special-points reads.
 Raised: 2026-03-25
-Resolved: [fill in]
+Resolved: 2026-03-26 — degraded mode = null + 202 + retry; no API re-fetch here.
 ```
 
 ---

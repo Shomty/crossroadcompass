@@ -192,6 +192,10 @@ export interface GhatiLagnaResult {
   fullGhatikasSinceSunrise: number
   vighatikasFraction: number         // 0-59.99
   sunLongitudeAtSunrise: number
+  /** True when night branch used (udaya lagna base). DECISION [1]: OPEN — requires API fields. */
+  isNightBirth?: boolean
+  /** Base ecliptic longitude used for accumulation (sunrise or udaya lagna). */
+  baseLongitudeUsed?: number
 }
 
 export interface BhavaLagnaResult {
@@ -199,6 +203,8 @@ export interface BhavaLagnaResult {
   bhavaLagnaDegree: number
   totalGhatikasSinceSunrise: number
   sunLongitudeAtSunrise: number
+  isNightBirth?: boolean
+  baseLongitudeUsed?: number
 }
 
 export interface HoraLagnaResult {
@@ -206,6 +212,8 @@ export interface HoraLagnaResult {
   horaLagnaDegree: number
   totalGhatikasSinceSunrise: number
   sunLongitudeAtSunrise: number
+  isNightBirth?: boolean
+  baseLongitudeUsed?: number
 }
 
 export interface CharakarakaResult {
@@ -229,12 +237,141 @@ export interface CharakarakaSetResult {
   deficit: SthiraKarakaDeficit | null  // present only when a shared-rank tie occurred
 }
 
+/** D1 Ascendant — sign always; degree when chart D1 ascendant is available. */
+export interface NatalLagnaInfo {
+  signNumber: SignNumber
+  degreeInSign?: number
+  arcMinutes?: number
+  arcSeconds?: number
+}
+
 export interface SpecialPointsResult {
+  /** Natal Lagna (D1); may be absent on older KV cache — use arudhaLagna.lagnaSignNumber as fallback */
+  natalLagna?: NatalLagnaInfo
   arudhaLagna:  ArudhaLagnaResult
   ghatiLagna:   GhatiLagnaResult
   bhavaLagna:   BhavaLagnaResult
   horaLagna:    HoraLagnaResult
   charakarakas: CharakarakaSetResult
+}
+
+// ─── Extended Special Points (SP-EXT) ────────────────────────────────────
+
+export interface VarnadaLagnaResult {
+  varnadaLagnaSignNumber: SignNumber
+  lagnaIsOdd: boolean
+  horaLagnaIsOdd: boolean
+  countFromAries: number
+  countFromHoraLagna: number
+}
+
+export type PranapadaStartingRule = 'from_sun' | 'from_9th_from_sun' | 'from_5th_from_sun'
+
+export interface PranapadalagnaResult {
+  pranapadalagnaSignNumber: SignNumber
+  pranapadalagnaDegree: number
+  sunSignAtSunrise: SignNumber
+  startingRule: PranapadaStartingRule
+  startingSignNumber: SignNumber
+  sunLongitudeAtSunrise: number
+  vighatisSinceSunrise: number
+  offsetDegrees: number
+  /** @deprecated Use offsetDegrees — kept for older KV payloads */
+  baseOffsetDegrees?: number
+}
+
+export interface UpapadaLagnaResult {
+  upapadaSignNumber: SignNumber
+  twelfthHouseLord: PlanetName
+  lordSignNumber: SignNumber
+  stepsFromTwelfthToLord: number
+  exceptionApplied: 'none' | 'use_10th_from_12th' | 'use_4th_from_12th'
+}
+
+export interface SreeLagnaResult {
+  sreeLagnaSignNumber: SignNumber
+  ninthLordFromLagnaKalas: number
+  ninthLordFromMoonKalas: number
+  totalKalas: number
+  remainder: number
+}
+
+/** Bhrigu Bindu — DECISION [8]: arithmetic mean (Moon + Rahu) / 2 on the ecliptic; Rahu uses chart longitude (no CK inversion). */
+export interface BhriguBinduResult {
+  bhriguBinduLongitude: number
+  bhriguBinduSign: SignNumber
+  bhriguBinduDegree: number
+  moonLongitudeUsed: number
+  rahuLongitudeUsed: number
+}
+
+export interface BeejaSphutaResult {
+  beejaSphutaLongitude: number
+  beejaSphutaSign: SignNumber
+  beejaSphutaDegree: number
+}
+
+export interface KsheetraSphutaResult {
+  kshetraSphutaLongitude: number
+  kshetraSphutaSign: SignNumber
+  kshetraSphutaDegree: number
+}
+
+export interface TriSphutaResult {
+  triSphutaLongitude: number
+  triSphutaSign: SignNumber
+  triSphutaDegree: number
+  gulikaLongitudeUsed: number
+}
+
+export interface DhoomaChainResult {
+  dhooma: number
+  vyatipata: number
+  parivesha: number
+  indraChapa: number
+  upaketu: number
+  dhoomaSign: SignNumber
+  vyatipataSign: SignNumber
+  pariveshaSign: SignNumber
+  indraChapSign: SignNumber
+  upaKetuSign: SignNumber
+}
+
+export type KaalVelaPlanet =
+  | 'Gulika' | 'Maandi' | 'Kaala' | 'Mrityu' | 'Ardhaprahara' | 'Yamaghantaka'
+
+export interface KaalVelaResult {
+  planet: KaalVelaPlanet
+  portionNumber: number
+  startMinutesFromSunrise: number
+  endMinutesFromSunrise: number
+  /** Canonical longitude: Gulika=start of portion, Maandi=midpoint of Saturn eighth, others=portion midpoint. */
+  referenceLongitude: number
+  /** Same as referenceLongitude (legacy name for cached payloads). */
+  midpointLongitude: number
+  signNumber: SignNumber
+}
+
+export interface KaalVelaSetResult {
+  gulika: KaalVelaResult
+  maandi: KaalVelaResult
+  kaala: KaalVelaResult
+  mrityu: KaalVelaResult
+  ardhaprahara: KaalVelaResult
+  yamaghantaka: KaalVelaResult
+}
+
+export interface ExtendedSpecialPointsResult {
+  varnadaLagna: VarnadaLagnaResult
+  pranapada: PranapadalagnaResult
+  upapadaLagna: UpapadaLagnaResult
+  sreeLagna: SreeLagnaResult
+  bhriguBindu: BhriguBinduResult
+  beejaSphuata: BeejaSphutaResult
+  kshetraSphuata: KsheetraSphutaResult
+  trisphuta: TriSphutaResult | null
+  dhoomaChain: DhoomaChainResult
+  kaalVelas: KaalVelaSetResult | null
 }
 
 export interface SpecialPointsInsights {

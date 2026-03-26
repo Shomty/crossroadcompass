@@ -15,7 +15,7 @@
  */
 
 import type { VedicChart, VedicPlanet } from '@/lib/astro/types'
-import type { SignNumber, PlanetName, PlanetPosition } from '@/types'
+import type { NatalLagnaInfo, SignNumber, PlanetName, PlanetPosition } from '@/types'
 
 // ─── Lookup tables ────────────────────────────────────────────────────────
 
@@ -197,5 +197,27 @@ export function extractSpecialPointsInputs(
     planets,
     sunAbsoluteLongitudeAtSunrise: ((sunLonAtSunrise % 360) + 360) % 360,
     minutesSinceSunrise,
+  }
+}
+
+/**
+ * Extract D1 ascendant sign and degree from stored chart (rawResponse.chartD1.ascendant
+ * or top-level chartD1). Returns null if ascendant cannot be read; caller may fall back
+ * to lagnaSignNumber from extractSpecialPointsInputs.
+ */
+export function extractNatalLagnaInfo(vedicChartRaw: unknown): NatalLagnaInfo | null {
+  const raw = vedicChartRaw as Record<string, unknown>
+  const rawResp = raw.rawResponse as Record<string, unknown> | undefined
+  const d1 = (rawResp?.chartD1 ?? raw.chartD1) as { ascendant?: { sign: string; degree: number; degreeDMSFormatted: string } } | undefined
+  const asc = d1?.ascendant
+  if (!asc?.sign) return null
+  const signNumber = SIGN_NUMBER[asc.sign.toLowerCase()]
+  if (!signNumber) return null
+  const { min, sec } = parseDMS(asc.degreeDMSFormatted ?? '0:0:0')
+  return {
+    signNumber,
+    degreeInSign: Math.floor(asc.degree),
+    arcMinutes:   min,
+    arcSeconds:   sec,
   }
 }

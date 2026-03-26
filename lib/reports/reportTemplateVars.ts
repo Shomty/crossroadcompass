@@ -1,9 +1,38 @@
 // STATUS: done | Report template placeholders
-import type { HDChartData } from "@/types";
+import type {
+  HDChartData,
+  SpecialPointsResult,
+  ExtendedSpecialPointsResult,
+  SignNumber,
+} from "@/types";
 import {
   REPORT_TEMPLATE_VARIABLE_KEYS,
   type ReportTemplateVariableKey,
 } from "./reportTemplateVariableKeys";
+
+const ZODIAC_SIGN: Record<SignNumber, string> = {
+  1: "Aries",
+  2: "Taurus",
+  3: "Gemini",
+  4: "Cancer",
+  5: "Leo",
+  6: "Virgo",
+  7: "Libra",
+  8: "Scorpio",
+  9: "Sagittarius",
+  10: "Capricorn",
+  11: "Aquarius",
+  12: "Pisces",
+};
+
+function signLabel(n: number): string {
+  return ZODIAC_SIGN[n as SignNumber] ?? "";
+}
+
+function formatLon(n: number | undefined): string {
+  if (n === undefined || Number.isNaN(n)) return "";
+  return String(Math.round(n * 1000) / 1000);
+}
 
 const JSON_MAX = 12_000;
 
@@ -94,6 +123,9 @@ export type BuildReportTemplateVarsInput = {
   currentMahadasha: string;
   /** Active Antardasha planet name (from DB or caller) */
   currentAntardasha: string;
+  /** From KV + chartService; null if chart / inputs unavailable */
+  specialPoints?: SpecialPointsResult | null;
+  extendedSpecialPoints?: ExtendedSpecialPointsResult | null;
 };
 
 export { REPORT_TEMPLATE_VARIABLE_KEYS, type ReportTemplateVariableKey };
@@ -110,6 +142,8 @@ export function buildReportTemplateVars(
     userEmail,
     currentMahadasha,
     currentAntardasha,
+    specialPoints,
+    extendedSpecialPoints,
   } = input;
 
   const today = new Date();
@@ -255,6 +289,58 @@ export function buildReportTemplateVars(
   vars.dashas_json = dashasData ? safeJson(dashasData) : "";
 
   vars.transit_json = transitData ? safeJson(transitData) : "";
+
+  if (specialPoints) {
+    vars.sp_foundation_json = safeJson(specialPoints, 12_000);
+    vars.sp_arudha_sign = signLabel(specialPoints.arudhaLagna.arudhaSignNumber);
+    vars.sp_ghati_sign = signLabel(specialPoints.ghatiLagna.ghatiLagnaSignNumber);
+    vars.sp_bhava_sign = signLabel(specialPoints.bhavaLagna.bhavaLagnaSignNumber);
+    vars.sp_hora_sign = signLabel(specialPoints.horaLagna.horaLagnaSignNumber);
+    vars.sp_charakarakas_json = safeJson(specialPoints.charakarakas, 4000);
+  } else {
+    vars.sp_foundation_json = "";
+    vars.sp_arudha_sign = "";
+    vars.sp_ghati_sign = "";
+    vars.sp_bhava_sign = "";
+    vars.sp_hora_sign = "";
+    vars.sp_charakarakas_json = "";
+  }
+
+  if (extendedSpecialPoints) {
+    vars.sp_extended_json = safeJson(extendedSpecialPoints, 16_000);
+    const e = extendedSpecialPoints;
+    vars.sp_varnada_sign = signLabel(e.varnadaLagna.varnadaLagnaSignNumber);
+    vars.sp_pranapada_sign = signLabel(e.pranapada.pranapadalagnaSignNumber);
+    vars.sp_upapada_sign = signLabel(e.upapadaLagna.upapadaSignNumber);
+    vars.sp_sree_sign = signLabel(e.sreeLagna.sreeLagnaSignNumber);
+    vars.sp_bhrigu_sign = signLabel(e.bhriguBindu.bhriguBinduSign);
+    vars.sp_bhrigu_longitude = formatLon(e.bhriguBindu.bhriguBinduLongitude);
+    vars.sp_beeja_sign = signLabel(e.beejaSphuata.beejaSphutaSign);
+    vars.sp_kshetra_sign = signLabel(e.kshetraSphuata.kshetraSphutaSign);
+    if (e.trisphuta) {
+      vars.sp_trisphuta_sign = signLabel(e.trisphuta.triSphutaSign);
+      vars.sp_trisphuta_longitude = formatLon(e.trisphuta.triSphutaLongitude);
+    } else {
+      vars.sp_trisphuta_sign = "";
+      vars.sp_trisphuta_longitude = "";
+    }
+    vars.sp_dhooma_chain_json = safeJson(e.dhoomaChain, 4000);
+    vars.sp_kaal_velas_json = e.kaalVelas ? safeJson(e.kaalVelas, 8000) : "";
+  } else {
+    vars.sp_extended_json = "";
+    vars.sp_varnada_sign = "";
+    vars.sp_pranapada_sign = "";
+    vars.sp_upapada_sign = "";
+    vars.sp_sree_sign = "";
+    vars.sp_bhrigu_sign = "";
+    vars.sp_bhrigu_longitude = "";
+    vars.sp_beeja_sign = "";
+    vars.sp_kshetra_sign = "";
+    vars.sp_trisphuta_sign = "";
+    vars.sp_trisphuta_longitude = "";
+    vars.sp_dhooma_chain_json = "";
+    vars.sp_kaal_velas_json = "";
+  }
 
   for (const k of REPORT_TEMPLATE_VARIABLE_KEYS) {
     if (vars[k] === undefined) vars[k] = "";
