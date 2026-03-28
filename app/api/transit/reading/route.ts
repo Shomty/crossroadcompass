@@ -75,9 +75,13 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Fetch today's transit chart — use observation location if set
-  const locationOverride = profile.observationCity ?? undefined;
-  const transitChart = await getTodayTransitChart(userId, profile, locationOverride);
+  // Fetch today's transit chart — use observation location if set, otherwise fall back to birth location
+  const transitChart = await getTodayTransitChart(
+    userId,
+    profile,
+    profile.observationLatitude  ?? undefined,
+    profile.observationLongitude ?? undefined,
+  );
   if (!transitChart) {
     console.error("[transit/reading] Transit chart unavailable for userId:", userId);
     return NextResponse.json(

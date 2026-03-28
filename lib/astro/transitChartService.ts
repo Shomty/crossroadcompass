@@ -23,18 +23,22 @@ function pad2(n: number) {
  * Returns today's transit chart for the user, using KV cache when available.
  * "Today" is resolved in the user's timezone from their birth profile.
  *
- * @param locationOverride - Optional "City, Country" string. When provided
- *   (from the user's saved observation location), the Vedic API geocodes
- *   using this position instead of birth location.
+ * @param latOverride  - Optional latitude override (observation location).
+ * @param lngOverride  - Optional longitude override (observation location).
+ * @param tzOverride   - Optional IANA timezone override.
  */
 export async function getTodayTransitChart(
   userId: string,
   profile: BirthProfile,
-  locationOverride?: string
+  latOverride?: number,
+  lngOverride?: number,
+  tzOverride?: string
 ): Promise<VedicChart | null> {
+  const timezone = tzOverride ?? profile.timezone;
+
   // Date key in user's timezone: YYYY-MM-DD
   const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: profile.timezone,
+    timeZone: timezone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -44,21 +48,22 @@ export async function getTodayTransitChart(
   const cached = await kvGet<VedicChart>(cacheKey);
   if (cached !== null) return cached;
 
-  // Use observation location if provided, otherwise fall back to birth location
-  const location = locationOverride
-    ?? [profile.birthCity, profile.birthCountry].filter(Boolean).join(", ");
+  const latitude  = latOverride ?? (profile.observationLatitude  ?? profile.latitude);
+  const longitude = lngOverride ?? (profile.observationLongitude ?? profile.longitude);
 
   // Build current time for the transit call
   const now = new Date();
   const timeOfBirth = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
 
   try {
+    const gender = (profile.gender as "male" | "female" | null) ?? "male";
     const chart = await fetchVedicNatalChart({
       dateOfBirth: today,
       timeOfBirth,
-      location,
-      isTimeApproximate: false,
-      gender: (profile.gender as "male" | "female" | "other" | null) ?? "male",
+      latitude,
+      longitude,
+      timezone,
+      gender: gender === "female" ? "female" : "male",
       name: "transit",
     });
 

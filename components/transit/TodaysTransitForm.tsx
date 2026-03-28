@@ -26,6 +26,10 @@ interface Props {
   userName: string;
   /** Pre-populated from DB (BirthProfile.observationCity). Skips localStorage check when present. */
   savedCity?: string;
+  /** Pre-populated from DB (BirthProfile.observationLatitude). */
+  savedLatitude?: number;
+  /** Pre-populated from DB (BirthProfile.observationLongitude). */
+  savedLongitude?: number;
 }
 
 interface CityResult {
@@ -83,8 +87,11 @@ function syncLocationToDB(coords: { lat: number; lon: number }) {
   });
 }
 
-export function TodaysTransitForm({ userName, savedCity }: Props) {
+export function TodaysTransitForm({ userName, savedCity, savedLatitude, savedLongitude }: Props) {
   const [location, setLocation] = useState<string | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(
+    savedLatitude != null && savedLongitude != null ? { lat: savedLatitude, lon: savedLongitude } : null
+  );
   const [locationSource, setLocationSource] = useState<"geo" | "manual" | "saved" | null>(null);
   const [geoState, setGeoState] = useState<"idle" | "requesting" | "granted" | "denied" | "error">("idle");
   const [geoError, setGeoError] = useState<string | null>(null);
@@ -109,20 +116,22 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
     return () => clearInterval(timer);
   }, []);
 
-  /** Core submit — accepts location string directly to avoid stale closure issues */
-  const submitWithLocation = useCallback(async (loc: string) => {
+  /** Core submit — accepts coordinates directly to avoid stale closure issues */
+  const submitWithCoords = useCallback(async (lat: number, lon: number) => {
     setSubmitting(true);
     setSubmitError(null);
     setResult(null);
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     try {
       const res = await fetch("/api/transit/today", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ location: loc }),
+        body: JSON.stringify({ latitude: lat, longitude: lon, timezone }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setSubmitError(data.error ?? "Chart generation failed. Please try again.");
+        const detail = data.detail ? ` (${data.detail})` : "";
+        setSubmitError((data.error ?? "Chart generation failed. Please try again.") + detail);
       } else {
         setResult(data as TransitResult);
       }
@@ -136,10 +145,10 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
   // Restore saved location on mount and auto-submit
   useEffect(() => {
     // 1. DB-persisted location passed as server prop (highest priority)
-    if (savedCity) {
+    if (savedCity && savedLatitude != null && savedLongitude != null) {
       setLocation(savedCity);
       setLocationSource("saved");
-      submitWithLocation(savedCity);
+      submitWithCoords(savedLatitude, savedLongitude);
       return;
     }
 
@@ -150,8 +159,9 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
         const stored: StoredLocation = JSON.parse(raw);
         if (Date.now() - stored.savedAt < LOCATION_MAX_AGE_MS) {
           setLocation(stored.displayName);
+          setCoords({ lat: stored.lat, lon: stored.lon });
           setLocationSource("saved");
-          submitWithLocation(stored.displayName);
+          submitWithCoords(stored.lat, stored.lon);
         } else {
           localStorage.removeItem(LOCATION_STORAGE_KEY);
         }
@@ -160,7 +170,7 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
       // ignore parse errors
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // mount-only — savedCity is stable from SSR
+  }, []); // mount-only — savedCity/savedLatitude/savedLongitude are stable from SSR
 
   // City search debounce
   const searchCities = useCallback(async (q: string) => {
@@ -192,6 +202,7 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
 
   function selectCity(city: CityResult) {
     setLocation(city.displayName);
+    setCoords({ lat: city.lat, lon: city.lon });
     setLocationSource("manual");
     setShowCitySearch(false);
     setCityQuery("");
@@ -227,11 +238,14 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
           const data = await res.json();
           if (data.displayName) {
             setLocation(data.displayName);
+            setCoords({ lat: latitude, lon: longitude });
             setLocationSource("geo");
             setGeoState("granted");
             // Persist to localStorage and sync to DB
             saveLocationToStorage({ displayName: data.displayName, lat: latitude, lon: longitude });
             syncLocationToDB({ lat: latitude, lon: longitude });
+            // Auto-submit like saved/localStorage locations
+            submitWithCoords(latitude, longitude);
           } else {
             throw new Error("No city returned");
           }
@@ -258,6 +272,7 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
 
   function handleChangeLocation() {
     setLocation(null);
+    setCoords(null);
     setLocationSource(null);
     setShowCitySearch(true);
     setCityQuery("");
@@ -267,8 +282,8 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
   }
 
   async function handleSubmit() {
-    if (!location) return;
-    submitWithLocation(location);
+    if (!coords) return;
+    submitWithCoords(coords.lat, coords.lon);
   }
 
   // ── Render ──────────────────────────────────────────────────────────────
@@ -408,15 +423,15 @@ export function TodaysTransitForm({ userName, savedCity }: Props) {
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <button
             onClick={handleSubmit}
-            disabled={!location || submitting}
+            disabled={!coords || submitting}
             style={{
               padding: "12px 36px",
-              background: location && !submitting ? "rgba(200,135,58,0.08)" : "rgba(200,135,58,0.03)",
-              border: `1px solid ${location && !submitting ? "rgba(200,135,58,0.45)" : "rgba(200,135,58,0.15)"}`,
+              background: coords && !submitting ? "rgba(200,135,58,0.08)" : "rgba(200,135,58,0.03)",
+              border: `1px solid ${coords && !submitting ? "rgba(200,135,58,0.45)" : "rgba(200,135,58,0.15)"}`,
               borderRadius: 2, ...sans, fontSize: 13, fontWeight: 500,
               letterSpacing: "0.1em", textTransform: "uppercase",
-              color: location && !submitting ? "var(--gold)" : "var(--mist)",
-              cursor: location && !submitting ? "pointer" : "not-allowed",
+              color: coords && !submitting ? "var(--gold)" : "var(--mist)",
+              cursor: coords && !submitting ? "pointer" : "not-allowed",
               transition: "all 0.2s",
             }}
           >

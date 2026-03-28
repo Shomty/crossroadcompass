@@ -21,12 +21,14 @@ export default async function TodaysTransitPage() {
   const userId = session.user.id;
   const userName = session.user?.name ?? session.user?.email?.split("@")[0] ?? "Traveler";
 
-  // Load saved observation city (null-safe — first visit will have no profile)
+  // Load saved observation location (null-safe — first visit will have no profile)
   const profile = await db.birthProfile.findUnique({
     where: { userId },
-    select: { observationCity: true },
+    select: { observationCity: true, observationLatitude: true, observationLongitude: true },
   });
   const savedCity = profile?.observationCity ?? undefined;
+  const savedLatitude = profile?.observationLatitude ?? undefined;
+  const savedLongitude = profile?.observationLongitude ?? undefined;
 
   return (
     <div className="v4-wrap">
@@ -51,7 +53,7 @@ export default async function TodaysTransitPage() {
       </div>
 
       {/* ── Form ───────────────────────────────────────────────── */}
-      <TodaysTransitForm userName={userName} savedCity={savedCity} />
+      <TodaysTransitForm userName={userName} savedCity={savedCity} savedLatitude={savedLatitude} savedLongitude={savedLongitude} />
 
     </div>
   );

@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
   // that must remain as external CommonJS requires at runtime.
   serverExternalPackages: [
     "sweph",
+    "swisseph",
     "openhumandesign-library",
+    "openastrology-library",
+    "luxon",
     "@libsql/darwin-arm64",
     "@libsql/client",
     "@prisma/adapter-libsql",

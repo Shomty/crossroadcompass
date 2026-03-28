@@ -112,24 +112,26 @@ export interface HDChart {
 }
 
 // ─── Vedic Astrology ──────────────────────────────────────────────────────
+// Calculated locally via openastrology-library (VedicAstrologyCalculator).
+// No external API call — Swiss Ephemeris runs in-process.
 
-// ─── Vedic API request ────────────────────────────────────────────────────
+// ─── Vedic chart request ──────────────────────────────────────────────────
 
 /**
- * Parameters for POST /api/v1/birth-charts
- * location is "City, Country" string — the API handles geocoding.
- * gender and name are required by the API for chart interpretation context.
+ * Parameters passed to VedicAstrologyCalculator.calculateChart().
+ * latitude/longitude are used directly — no API geocoding needed.
  */
 export interface VedicBirthChartRequest {
   dateOfBirth: string;        // "YYYY-MM-DD"
   timeOfBirth: string;        // "HH:MM"
-  location: string;           // "City, Country" — API geocodes internally
-  isTimeApproximate: boolean;
+  latitude: number;
+  longitude: number;
+  timezone: string;           // IANA timezone e.g. "Europe/Belgrade"
   gender: "male" | "female" | "other";
   name: string;
 }
 
-// ─── Vedic API response types (mapped from live API data) ─────────────────
+// ─── Vedic calculation result types (mapped from openastrology-library) ───
 
 export interface VedicPlanet {
   name: string;               // "sun" | "moon" | "mercury" | etc.
@@ -181,31 +183,42 @@ export interface VedicDashas {
   };
 }
 
+export interface VedicYoga {
+  name: string;
+  type: "Raja" | "Dhana" | "Arishtabhanga" | "Neechabhanga" | "Other";
+  description: string;
+  planets: string[];
+  houses: number[];
+  strength: "Weak" | "Moderate" | "Strong";
+}
+
+export interface VedicAshtakavarga {
+  bhinna: Record<string, Record<string, number[]>>;
+  sarva: Record<string, number[]>;
+}
+
 /** One divisional chart (D1 = rasi, D9 = navamsa, etc.) */
 export interface VedicDivisionalChart {
   planets: VedicPlanet[];
   houses: VedicHouse[];
-  yogas: unknown[];     // extend once yoga schema is needed
-  dashas: VedicDashas;  // only meaningful on D1
+  yogas: VedicYoga[];
+  ashtakavarga?: VedicAshtakavarga; // populated on D1 only
+  dashas: VedicDashas;              // only meaningful on D1
   ascendant: VedicAscendant;
   ayanamsa: number;
 }
 
 /**
- * Full API response from POST /api/v1/birth-charts
- * Divisional charts: D1 (rasi), D2–D60.
- * Dashas are embedded in chartD1.dashas — no separate API call needed.
+ * Calculated birth chart stored in BirthProfile.chartDataVedic.
+ * Produced locally by openastrology-library — not from an external API.
+ * Divisional charts D1 (rasi) through D60.
+ * Dashas are embedded in chartD1.dashas — no separate call needed.
  */
 export interface VedicBirthChartResponse {
-  id: string;
-  userId: string;
-  name: string;
-  gender: string;
   birthInfo: {
     name: string;
     dateOfBirth: string;
     timeOfBirth: string;
-    location: string;
     latitude: number;
     longitude: number;
     timezone: string;
@@ -230,14 +243,8 @@ export interface VedicBirthChartResponse {
   chartD40?: VedicDivisionalChart;
   chartD45?: VedicDivisionalChart;
   chartD60?: VedicDivisionalChart;
-  chartStyle: string;
   ayanamsa: string;
   houseSystem: string;
-  chartHash: string;
-  generationTimeMs: number;
-  createdAt: string;
-  updatedAt: string;
-  metadata: Record<string, unknown>;
 }
 
 /**

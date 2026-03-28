@@ -32,6 +32,7 @@
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",
     "ogl": "^1.0.11",
+    "openastrology-library": "^1.0.0",
     "openhumandesign-library": "github:nikolamilenkovic/openhumandesign-library",
     "prisma": "^7.4.2",
     "puppeteer": "^24.37.5",

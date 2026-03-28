@@ -1,6 +1,6 @@
 #!/bin/bash
 # scripts/download-ephe.sh
-# Downloads Swiss Ephemeris data files required by openhumandesign-library.
+# Downloads Swiss Ephemeris data files required by openhumandesign-library and openastrology-library.
 # Run once after cloning: bash scripts/download-ephe.sh
 # Source: https://www.astro.com/ftp/swisseph/ephe/
 
@@ -12,6 +12,7 @@ BASE_URL="https://www.astro.com/ftp/swisseph/ephe"
 FILES=(
   sepl_00.se1 sepl_06.se1 sepl_12.se1 sepl_18.se1 sepl_24.se1 sepl_30.se1
   semo_00.se1 semo_06.se1 semo_12.se1 semo_18.se1 semo_24.se1 semo_30.se1
+  seas_00.se1 seas_06.se1 seas_12.se1 seas_18.se1 seas_24.se1 seas_30.se1
 )
 
 mkdir -p "$EPHE_DIR"

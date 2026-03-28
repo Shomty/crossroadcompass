@@ -129,9 +129,12 @@ model BirthProfile {
   hdActiveGates      String? // JSON-encoded number[]
   hdInsights         String? // JSON-encoded Record<"type"|"strategy"|"authority"|"profile", {headline,body,practicalTip}>
 
-  // Vedic natal chart — external API (sections 16.1, 18.2)
-  // DECISION NEEDED: confirm typed columns once API response shape is confirmed with Milosh
-  chartDataVedic Json?
+  // Vedic natal chart — calculated locally via openastrology-library
+  chartDataVedic     Json?
+  vedicAscendantSign String? // e.g. "scorpio" — fast indexed access without JSON parsing
+  vedicSunSign       String? // e.g. "aries"
+  vedicMoonSign      String? // e.g. "cancer"
+  vedicMahaDasha     String? // current Maha Dasha planet e.g. "saturn"
 
   // Observation location — used for transit/planet position fetch
   // Null = fall back to birth location

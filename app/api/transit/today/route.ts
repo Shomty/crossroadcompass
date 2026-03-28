@@ -2,15 +2,13 @@
  * app/api/transit/today/route.ts
  * POST /api/transit/today
  *
- * Generates a Vedic birth chart for the current date/time and the user's
- * supplied location. Date and time are resolved server-side at request time.
+ * Generates a Vedic chart for the current date/time and the user's
+ * observation location. Date and time are resolved server-side at request time.
  *
- * Body: { location: string }  — e.g. "Skopje, North Macedonia"
+ * Body: { latitude: number, longitude: number, timezone: string }
  * Auth: session required.
  *
- * Caching: KV key `transit:chart:<location>:<YYYY-MM-DD>`, TTL 6h.
- * Prevents redundant Vedic API calls when the same location is requested
- * multiple times on the same day.
+ * Caching: KV key `transit:chart:<lat>:<lng>:<YYYY-MM-DD>`, TTL 6h.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -19,10 +17,12 @@ import { auth } from "@/lib/auth";
 import { fetchVedicNatalChart } from "@/lib/astro/vedicApiClient";
 import { kvGet, kvSet } from "@/lib/kv/helpers";
 
-const CACHE_TTL_SECONDS = 6 * 60 * 60; // 6 hours — positions change slowly intra-day
+const CACHE_TTL_SECONDS = 6 * 60 * 60; // 6 hours
 
 const bodySchema = z.object({
-  location: z.string().min(1, "Location is required"),
+  latitude:  z.number(),
+  longitude: z.number(),
+  timezone:  z.string().min(1),
 });
 
 function pad2(n: number) {
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { location } = parsed.data;
+  const { latitude, longitude, timezone } = parsed.data;
   const name = session.user.name ?? session.user.email?.split("@")[0] ?? "User";
 
   // Resolve current date and time server-side at moment of request
@@ -52,18 +52,18 @@ export async function POST(req: NextRequest) {
   const dateOfBirth = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
   const timeOfBirth = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
 
-  // Check KV cache — keyed by location + date (not userId, positions are location-specific)
-  // Prefix "transit:chart:" is distinct from "transit:<userId>:<date>" (reading cache)
-  const cacheKey = `transit:chart:${location}:${dateOfBirth}`;
+  // Cache keyed by coords (rounded to 2dp) + date — positions are location-specific
+  const latKey = latitude.toFixed(2);
+  const lngKey = longitude.toFixed(2);
+  const cacheKey = `transit:chart:${latKey}:${lngKey}:${dateOfBirth}`;
 
   type ChartResponse = {
     chart: { planets: unknown[]; ascendant: unknown; sunSign: string | null; moonSign: string | null; currentDasha: null };
-    meta: { name: string; dateOfBirth: string; timeOfBirth: string; location: string; generatedAt: string };
+    meta: { name: string; dateOfBirth: string; timeOfBirth: string; generatedAt: string };
   };
 
   const cached = await kvGet<ChartResponse>(cacheKey);
   if (cached) {
-    // Update name in cached response so it shows the requesting user's name
     return NextResponse.json({ ...cached, meta: { ...cached.meta, name, timeOfBirth } });
   }
 
@@ -71,8 +71,9 @@ export async function POST(req: NextRequest) {
     const chart = await fetchVedicNatalChart({
       dateOfBirth,
       timeOfBirth,
-      location,
-      isTimeApproximate: false,
+      latitude,
+      longitude,
+      timezone,
       gender: "male",
       name,
     });
@@ -93,20 +94,18 @@ export async function POST(req: NextRequest) {
         name,
         dateOfBirth,
         timeOfBirth,
-        location,
         generatedAt: now.toISOString(),
       },
     };
 
-    // Cache without user-specific fields (name/timeOfBirth are patched on cache hit above)
     await kvSet(cacheKey, payload, CACHE_TTL_SECONDS);
-
     return NextResponse.json(payload);
   } catch (err) {
-    console.error("[transit/today] Vedic API error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[transit/today] chart generation error:", msg, err);
     return NextResponse.json(
-      { error: "Chart generation failed. Please try again." },
-      { status: 502 }
+      { error: "Chart generation failed. Please try again.", detail: msg },
+      { status: 500 }
     );
   }
 }

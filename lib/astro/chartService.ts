@@ -171,8 +171,7 @@ export async function getOrCreateVedicChart(
     return chartData;
   }
 
-  // ── Layer 3: Vedic API (paid — only on true cache miss) ──────────────────
-  // Build payload matching VedicBirthChartRequest (types.ts)
+  // ── Layer 3: Local calculation via openastrology-library ─────────────────
   const d = new Date(birthProfile.birthDate);
   const dateOfBirth = [
     d.getUTCFullYear(),
@@ -182,7 +181,6 @@ export async function getOrCreateVedicChart(
   const hour = birthProfile.birthTimeKnown ? (birthProfile.birthHour ?? 12) : 12;
   const minute = birthProfile.birthTimeKnown ? (birthProfile.birthMinute ?? 0) : 0;
   const timeOfBirth = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-  const location = [birthProfile.birthCity, birthProfile.birthCountry].filter(Boolean).join(", ");
   const genderMap: Record<string, "male" | "female" | "other"> = {
     male: "male", female: "female", other: "other", prefer_not_to_say: "other",
   };
@@ -191,8 +189,9 @@ export async function getOrCreateVedicChart(
   const chart = await fetchVedicNatalChart({
     dateOfBirth,
     timeOfBirth,
-    location,
-    isTimeApproximate: !birthProfile.birthTimeKnown,
+    latitude: birthProfile.latitude,
+    longitude: birthProfile.longitude,
+    timezone: birthProfile.timezone,
     gender,
     name: birthProfile.birthName,
   });
@@ -203,11 +202,19 @@ export async function getOrCreateVedicChart(
   const chartData = chart as unknown as VedicChartData;
 
   // Persist to DB — survives KV eviction; only re-fetched when profileVersion changes
+  const vedicChart = chart as VedicChart;
+  const d1Planets = vedicChart.rawResponse.chartD1.planets;
+  const currentMaha = vedicChart.currentDasha?.planet ?? null;
+
   await db.birthProfile.update({
     where: { userId },
     data: {
       chartDataVedic: chartData as object,
       vedicProfileVersion: birthProfile.profileVersion,
+      vedicAscendantSign: vedicChart.ascendant?.sign ?? null,
+      vedicSunSign: d1Planets.find((p) => p.name === "sun")?.sign ?? null,
+      vedicMoonSign: d1Planets.find((p) => p.name === "moon")?.sign ?? null,
+      vedicMahaDasha: currentMaha,
     },
   });
 
