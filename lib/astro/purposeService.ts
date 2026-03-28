@@ -6,9 +6,10 @@
  */
 
 import type { BirthProfile } from "@prisma/client";
-import type { VedicChart, VedicPlanet, VedicHouse, VedicDivisionalChart } from "@/lib/astro/types";
+import type { VedicPlanet, VedicHouse, VedicDivisionalChart } from "@/lib/astro/types";
+import type { VedicChartCalculations } from "openastrology-library";
 import type { HDChartData, HDCenterName } from "@/types";
-import { getOrCreateVedicChart, getOrCreateHDChart } from "@/lib/astro/chartService";
+import { getOrCreateVedicChart, getOrCreateHDChart, getOrCreateDivisionalCharts } from "@/lib/astro/chartService";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -397,6 +398,60 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/**
+ * Convert VedicChartCalculations to a VedicDivisionalChart shape for existing analysis functions.
+ * The analysis functions expect arrays; VedicChartCalculations uses object dicts.
+ */
+function toDivisional(chart: VedicChartCalculations): VedicDivisionalChart {
+  const planets: VedicPlanet[] = Object.values(chart.planets).map((p) => ({
+    name: p.name,
+    longitude: p.longitude,
+    latitude: p.latitude ?? 0,
+    speed: p.speed ?? 0,
+    house: p.house,
+    sign: p.sign,
+    nakshatra: p.nakshatra,
+    pada: p.pada ?? 1,
+    degree: p.degree,
+    degreeDMSFormatted: p.degreeDMSFormatted ?? '',
+    isRetrograde: p.isRetrograde,
+    dignity: p.dignity ?? 'Neutral',
+    nakshatraPada: p.nakshatraPada ?? 1,
+    aspects: (p.aspects ?? []).map((a) => ({ house: a.house, aspect: a.aspect, planets: a.planets })),
+  }))
+  const houses: VedicHouse[] = Object.values(chart.houses ?? {}).map((h) => ({
+    number: h.number,
+    sign: h.sign,
+    cusp: h.cusp ?? 0,
+    lord: h.lord,
+    planets: h.planets ?? [],
+    planetsInHouse: h.planets ?? [],
+    strength: h.strength ?? 0,
+    significance: h.significance ?? [],
+  }))
+  return {
+    planets,
+    houses,
+    yogas: (chart.yogas ?? []).map((y) => ({
+      name: y.name,
+      type: y.type as VedicDivisionalChart['yogas'][0]['type'],
+      description: y.description,
+      planets: y.planets,
+      houses: y.houses,
+      strength: y.strength as VedicDivisionalChart['yogas'][0]['strength'],
+    })),
+    dashas: { vimshottari: { type: 'vimshottari', dashaPeriods: [] } },
+    ascendant: {
+      sign: chart.ascendant.sign,
+      degree: chart.ascendant.degree,
+      degreeDMSFormatted: chart.ascendant.degreeDMSFormatted ?? '',
+      nakshatra: chart.ascendant.nakshatra ?? '',
+      nakshatraPada: chart.ascendant.nakshatraPada ?? 1,
+    },
+    ayanamsa: chart.ayanamsa ?? 0,
+  }
+}
+
 // ─── Main Export ──────────────────────────────────────────────────────────
 
 /**
@@ -407,14 +462,24 @@ export async function analyzePurpose(
   userId: string,
   birthProfile: BirthProfile
 ): Promise<PurposeData> {
-  const [vedicChartRaw, hdChart] = await Promise.all([
-    getOrCreateVedicChart(userId, birthProfile).catch(() => null),
+  const [chart, hdChart] = await Promise.all([
+    getOrCreateVedicChart(userId, birthProfile).catch(() => null) as Promise<VedicChartCalculations | null>,
     getOrCreateHDChart(userId, birthProfile),
   ]);
-  
-  const vedicChart = vedicChartRaw as unknown as VedicChart | null;
-  const d1 = vedicChart?.rawResponse?.chartD1;
-  const d10 = vedicChart?.rawResponse?.chartD10;
+
+  const d1 = chart ? toDivisional(chart) : null;
+  // Get D10 from divisional charts
+  let d10: VedicDivisionalChart | undefined
+  if (chart) {
+    try {
+      const divisional = await getOrCreateDivisionalCharts(userId, birthProfile)
+      if (divisional['D10']) {
+        d10 = toDivisional(divisional['D10'] as VedicChartCalculations)
+      }
+    } catch {
+      // proceed without D10
+    }
+  }
   
   const defaultTenthHouse: TenthHouseAnalysis = {
     tenthHouseLord: "Unknown",
@@ -472,14 +537,13 @@ export async function getBasicPurposeData(
   incarnationCrossName: string;
   tenthHouseLord: string;
 }> {
-  const [vedicChartRaw, hdChart] = await Promise.all([
-    getOrCreateVedicChart(userId, birthProfile).catch(() => null),
+  const [chart, hdChart] = await Promise.all([
+    getOrCreateVedicChart(userId, birthProfile).catch(() => null) as Promise<VedicChartCalculations | null>,
     getOrCreateHDChart(userId, birthProfile),
   ]);
-  
-  const vedicChart = vedicChartRaw as unknown as VedicChart | null;
-  const d1 = vedicChart?.rawResponse?.chartD1;
-  
+
+  const d1 = chart ? toDivisional(chart) : null;
+
   let tenthHouseLord = "Unknown";
   if (d1) {
     const tenthHouse = d1.houses.find(h => h.number === 10);

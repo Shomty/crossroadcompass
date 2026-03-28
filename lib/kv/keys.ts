@@ -21,6 +21,10 @@ export const kvKeys = {
   specialPointsInsights: (userId: string) => `chart:specialpoints:insights:${userId}`,
   /** Extended Vedic special points (incl. Bhrigu Bindu, Varnada, Sphutas, Dhooma, Kaal Velas). v2 adds BB. */
   extendedSpecialPoints: (userId: string) => `chart:specialpoints:ext:v2:${userId}`,
+  /** Divisional charts (D2–D60) derived from natal D1 */
+  divisionalCharts: (userId: string) => `chart:divisional:${userId}`,
+  /** Current dasha derived from natal chart */
+  currentDasha:     (userId: string) => `chart:dasha:current:${userId}`,
 } as const;
 
 export const KV_TTL = {

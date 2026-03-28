@@ -6,7 +6,7 @@
  */
 
 import type { BirthProfile } from "@prisma/client";
-import type { VedicChart, VedicPlanet } from "@/lib/astro/types";
+import type { VedicChartCalculations } from "openastrology-library";
 import type { HDChartData } from "@/types";
 import { getOrCreateVedicChart, getOrCreateHDChart } from "@/lib/astro/chartService";
 
@@ -244,15 +244,12 @@ export async function calculateMuhurta(
   intention: IntentionCategory = "general",
   weeks: 1 | 2 = 1
 ): Promise<MuhurtaData> {
-  const [vedicChartRaw, hdChart] = await Promise.all([
-    getOrCreateVedicChart(userId, birthProfile).catch(() => null),
+  const [chart, hdChart] = await Promise.all([
+    getOrCreateVedicChart(userId, birthProfile).catch(() => null) as Promise<VedicChartCalculations | null>,
     getOrCreateHDChart(userId, birthProfile),
   ]);
-  
-  const vedicChart = vedicChartRaw as unknown as VedicChart | null;
-  const d1 = vedicChart?.rawResponse?.chartD1;
-  
-  const moonPlanet = d1?.planets?.find(p => p.name.toLowerCase() === "moon");
+
+  const moonPlanet = chart?.planets?.moon;
   const moonSign = moonPlanet?.sign ? capitalize(moonPlanet.sign) : null;
   const currentNakshatra = moonPlanet?.nakshatra?.replace(/_/g, " ") || null;
   

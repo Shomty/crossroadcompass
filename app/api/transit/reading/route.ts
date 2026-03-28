@@ -20,7 +20,7 @@ import { getTodayTransitChart } from "@/lib/astro/transitChartService";
 import { generateTransitReading, getCachedTransitReading } from "@/lib/ai/transitReadingService";
 import { kvDelete } from "@/lib/kv/helpers";
 import { kvKeys } from "@/lib/kv/keys";
-import type { VedicChart } from "@/lib/astro/types";
+import type { VedicChartCalculations } from "openastrology-library";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -64,10 +64,9 @@ export async function GET(req: NextRequest) {
   }
 
   // Load natal chart
-  let natalChart: VedicChart;
+  let natalChart: VedicChartCalculations;
   try {
-    const raw = await getOrCreateVedicChart(userId, profile);
-    natalChart = raw as unknown as VedicChart;
+    natalChart = await getOrCreateVedicChart(userId, profile);
   } catch {
     return NextResponse.json(
       { error: "Could not load your natal chart. Please try again." },

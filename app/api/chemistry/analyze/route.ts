@@ -13,7 +13,7 @@ import {
   generateGlimpseChemistry,
   type PartnerData,
 } from "@/lib/ai/chemistryInsightService";
-import type { VedicChart } from "@/lib/astro/types";
+import type { VedicChartCalculations } from "openastrology-library";
 
 export async function POST(req: Request) {
   try {
@@ -59,10 +59,8 @@ export async function POST(req: Request) {
       getOrCreateHDChart(userId, birthProfile),
     ]);
 
-    const vedicChart = vedicChartRaw as unknown as VedicChart | null;
-    const d1 = vedicChart?.rawResponse?.chartD1;
-    
-    const moonPlanet = d1?.planets?.find(p => p.name.toLowerCase() === "moon");
+    const chart = vedicChartRaw as VedicChartCalculations | null;
+    const moonPlanet = chart?.planets?.moon;
     const userNakshatra = moonPlanet?.nakshatra?.replace(/_/g, " ") || "Ashwini";
     const userRashi = moonPlanet?.sign || "Aries";
     const userName = birthProfile.birthName.split(" ")[0];

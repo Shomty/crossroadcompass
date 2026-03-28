@@ -1,19 +1,15 @@
-// STATUS: done | Task SP.15 (Mapper)
+// STATUS: done | Task SP.15 (Mapper), OA.8
 /**
  * lib/astro/vedicChartMapper.ts
- * Maps raw VedicChart (from Jyotish REST API) → the typed inputs that
- * calculateSpecialPoints() needs.
+ * Maps raw VedicChart (legacy rawResponse format) OR VedicChartCalculations
+ * (new library format) → the typed inputs that calculateSpecialPoints() needs.
  *
- * The API stores data as VedicChart.rawResponse (VedicBirthChartResponse).
- * Planet fields: name (lowercase), longitude (0-360), degree (0-30),
- *   degreeDMSFormatted ("DD:MM:SS"), sign (lowercase).
- * Ascendant: sign (lowercase).
- *
- * The "confirmed field names" in VedicChartData (lagnaSignNumber, planets,
- * sunriseData) may be present on charts that already have them set; this
- * mapper falls back to rawResponse when they are absent.
+ * Path 1: confirmed top-level fields (lagnaSignNumber, planets, sunriseData)
+ * Path 2: rawResponse.chartD1 (old VedicChart wrapper format)
+ * Path 3: VedicChartCalculations (new library format — planets as object dict)
  */
 
+import SunCalc from 'suncalc'
 import type { VedicChart, VedicPlanet } from '@/lib/astro/types'
 import type { NatalLagnaInfo, SignNumber, PlanetName, PlanetPosition } from '@/types'
 
@@ -54,15 +50,11 @@ export function mapVedicPlanet(p: VedicPlanet): PlanetPosition | null {
   }
 }
 
-// ─── Sunrise calculator ───────────────────────────────────────────────────
+// ─── Sunrise calculator (OA.8 — suncalc) ─────────────────────────────────
 
 /**
- * Approximate sunrise time (UTC decimal hours) using:
- *   - Spencer equation-of-time correction
- *   - Standard solar declination formula
- *   - Standard refraction horizon: -0.8333°
- *
- * Accurate to ~5 minutes for mid-latitudes.
+ * Accurate sunrise time (UTC decimal hours) using the suncalc library.
+ * Falls back to 6.0 for polar dates where sunrise is undefined.
  *
  * @param year / month / day  — birth date components in UTC
  * @param latDeg              — birth latitude (positive = North)
@@ -76,33 +68,32 @@ export function calcSunriseUTC(
   latDeg: number,
   lonDeg: number
 ): number {
-  // Day of year (1-365)
-  const daysInPrevMonths = [0,0,31,59,90,120,151,181,212,243,273,304,334]
-  const leapExtra = (month > 2 && year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 1 : 0
-  const N = daysInPrevMonths[month]! + day + leapExtra
+  const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+  const times = SunCalc.getTimes(date, latDeg, lonDeg)
+  const sunrise = times.sunrise
+  if (isNaN(sunrise.getTime())) return 6.0 // polar fallback
+  return sunrise.getUTCHours() + sunrise.getUTCMinutes() / 60 + sunrise.getUTCSeconds() / 3600
+}
 
-  // Solar declination (degrees)
-  const declDeg = -23.45 * Math.cos((2 * Math.PI / 365) * (N + 10))
-  const declRad  = declDeg * Math.PI / 180
-  const latRad   = latDeg  * Math.PI / 180
+// ─── Library format mapper (Path 3) ──────────────────────────────────────
 
-  // Hour angle at sunrise (horizon at -0.8333° for atmospheric refraction)
-  const cosHA = (Math.sin(-0.8333 * Math.PI / 180) - Math.sin(latRad) * Math.sin(declRad))
-              / (Math.cos(latRad) * Math.cos(declRad))
-
-  const HA_deg = (cosHA >= -1 && cosHA <= 1)
-    ? Math.acos(cosHA) * 180 / Math.PI
-    : 90   // polar fallback
-
-  // Equation of time correction (minutes, Spencer formula)
-  const B      = (2 * Math.PI / 365) * (N - 81)
-  const EoT    = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B)
-
-  // Solar noon in UTC (hours): noon = 12 - lon/15 - EoT/60
-  const solarNoonUTC = 12.0 - (lonDeg / 15) - (EoT / 60)
-
-  // Sunrise = solar noon − hour angle / 15
-  return solarNoonUTC - (HA_deg / 15)
+/** Map a single planet from VedicChartCalculations.planets dict to PlanetPosition. */
+function mapVedicPlanetFromLibrary(
+  key: string,
+  p: import('openastrology-library').PlanetPosition
+): PlanetPosition | null {
+  const planet = PLANET_NAME_MAP[key.toLowerCase()]
+  if (!planet) return null
+  const signNumber = SIGN_NUMBER[(p.sign ?? '').toLowerCase()]
+  if (!signNumber) return null
+  const { min, sec } = parseDMS(p.degreeDMSFormatted ?? '0:0:0')
+  return {
+    planet,
+    signNumber,
+    degreeInSign: Math.floor(p.degree ?? 0),
+    arcMinutes:   min,
+    arcSeconds:   sec,
+  }
 }
 
 // ─── Main mapper ──────────────────────────────────────────────────────────
@@ -150,6 +141,45 @@ export function extractSpecialPointsInputs(
       planets:                      raw.planets as PlanetPosition[],
       sunAbsoluteLongitudeAtSunrise: sd.sunAbsoluteLongitude as number,
       minutesSinceSunrise:          sd.minutesSinceSunrise   as number,
+    }
+  }
+
+  // ── Path 3: VedicChartCalculations (new library format) ──────────────
+  // Detect by: ascendant.sign is string AND planets is an object (not array) with no rawResponse
+  if (
+    typeof (raw.ascendant as Record<string, unknown>)?.sign === 'string' &&
+    raw.planets !== null &&
+    typeof raw.planets === 'object' &&
+    !Array.isArray(raw.planets) &&
+    raw.rawResponse == null
+  ) {
+    const chart = vedicChartRaw as import('openastrology-library').VedicChartCalculations
+    const lagnaSignNumber = SIGN_NUMBER[(chart.ascendant.sign ?? '').toLowerCase()]
+    if (!lagnaSignNumber) return null
+
+    const planets = Object.entries(chart.planets)
+      .map(([key, p]) => mapVedicPlanetFromLibrary(key, p))
+      .filter((p): p is PlanetPosition => p !== null)
+
+    const ckNames = new Set(['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu'])
+    const ckPlanets = planets.filter(p => ckNames.has(p.planet))
+    if (ckPlanets.length < 8) {
+      console.warn('[extractSpecialPointsInputs] Fewer than 8 CK planets found:', ckPlanets.length)
+      return null
+    }
+
+    const sunLongitude = chart.planets.sun?.longitude ?? 0
+    const sunriseUTC = calcSunriseUTC(birthYear, birthMonth, birthDay, birthLatDeg, birthLonDeg)
+    const birthTotalMin = birthHourUTC * 60 + birthMinuteUTC
+    const sunriseTotalMin = sunriseUTC * 60
+    const minutesSinceSunrise = Math.max(0, birthTotalMin - sunriseTotalMin)
+    const sunLonAtSunrise = sunLongitude - minutesSinceSunrise * 0.000694
+
+    return {
+      lagnaSignNumber,
+      planets,
+      sunAbsoluteLongitudeAtSunrise: ((sunLonAtSunrise % 360) + 360) % 360,
+      minutesSinceSunrise,
     }
   }
 
@@ -207,6 +237,26 @@ export function extractSpecialPointsInputs(
  */
 export function extractNatalLagnaInfo(vedicChartRaw: unknown): NatalLagnaInfo | null {
   const raw = vedicChartRaw as Record<string, unknown>
+
+  // Path 3: VedicChartCalculations format (ascendant at top level with .sign and .degree)
+  if (
+    typeof (raw.ascendant as Record<string, unknown>)?.sign === 'string' &&
+    typeof (raw.ascendant as Record<string, unknown>)?.degree === 'number' &&
+    raw.rawResponse == null
+  ) {
+    const asc = raw.ascendant as { sign: string; degree: number; degreeDMSFormatted?: string }
+    const signNumber = SIGN_NUMBER[asc.sign.toLowerCase()]
+    if (!signNumber) return null
+    const { min, sec } = parseDMS(asc.degreeDMSFormatted ?? '0:0:0')
+    return {
+      signNumber,
+      degreeInSign: Math.floor(asc.degree),
+      arcMinutes:   min,
+      arcSeconds:   sec,
+    }
+  }
+
+  // Path 1/2: rawResponse.chartD1 or top-level chartD1
   const rawResp = raw.rawResponse as Record<string, unknown> | undefined
   const d1 = (rawResp?.chartD1 ?? raw.chartD1) as { ascendant?: { sign: string; degree: number; degreeDMSFormatted: string } } | undefined
   const asc = d1?.ascendant

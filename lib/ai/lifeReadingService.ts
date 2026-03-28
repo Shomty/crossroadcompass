@@ -11,12 +11,11 @@
 import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
-import { getOrCreateHDChart, getOrCreateVedicChart } from "@/lib/astro/chartService";
+import { getOrCreateHDChart, getOrCreateVedicChart, getOrCreateDivisionalCharts } from "@/lib/astro/chartService";
 import { buildLifeReadingPrompt } from "@/lib/content/promptBuilder";
 import type { LifeReadingCtx } from "@/lib/ai/prompts/lifeReadingPrompts";
 import { InsightType, type BirthProfile } from "@prisma/client";
-import type { VedicChart } from "@/lib/astro/types";
-import type { VedicPlanet } from "@/lib/astro/types";
+import type { VedicChartCalculations } from "openastrology-library";
 
 // ─── Gemini singleton ─────────────────────────────────────────────────────────
 
@@ -74,11 +73,11 @@ export async function getLifeReading(
 
 // ─── Context builder ──────────────────────────────────────────────────────────
 
-function formatPlanets(planets: VedicPlanet[] | undefined): string {
-  if (!planets?.length) return "not available";
-  return planets
-    .map((p) => `${p.name}(${p.sign ?? "?"}/${p.house ?? "?"}H)${p.isRetrograde ? "R" : ""}`)
-    .join(" · ");
+function formatVedicPlanets(planets: VedicChartCalculations['planets'] | undefined): string {
+  if (!planets) return 'not available'
+  return Object.entries(planets)
+    .map(([name, p]) => `${name}(${p.sign ?? '?'}/${p.house ?? '?'}H)${p.isRetrograde ? 'R' : ''}`)
+    .join(' · ')
 }
 
 async function buildCtx(
@@ -90,18 +89,26 @@ async function buildCtx(
   // HD chart (always available — local calculation)
   const hd = await getOrCreateHDChart(userId, profile);
 
-  // Vedic chart (API, 3-layer cached)
-  let vedicChart: VedicChart | null = null;
+  // Vedic chart (3-layer cached, local calculation)
+  let chart: VedicChartCalculations | null = null;
   try {
-    const raw = await getOrCreateVedicChart(userId, profile);
-    vedicChart = raw as unknown as VedicChart;
+    chart = await getOrCreateVedicChart(userId, profile);
   } catch {
     // proceed without Vedic data — prompts will note "not available"
   }
 
-  const d1 = vedicChart?.rawResponse?.chartD1;
-  const d9 = vedicChart?.rawResponse?.chartD9;
-  const d10 = vedicChart?.rawResponse?.chartD10;
+  // Divisional charts for D9 (Navamsa) and D10 (Dasamsa)
+  let d9Planets: VedicChartCalculations['planets'] | undefined
+  let d10Planets: VedicChartCalculations['planets'] | undefined
+  if (chart) {
+    try {
+      const divisional = await getOrCreateDivisionalCharts(userId, profile)
+      if (divisional['D9']) d9Planets = (divisional['D9'] as VedicChartCalculations).planets
+      if (divisional['D10']) d10Planets = (divisional['D10'] as VedicChartCalculations).planets
+    } catch {
+      // proceed without divisional charts
+    }
+  }
 
   // Active dasha
   const [maha, antar] = await Promise.all([
@@ -124,9 +131,9 @@ async function buildCtx(
     hdAuthority: hd.authority,
     hdProfile:   hd.profile,
     hdCenters:   hd.definedCenters.join(", ") || "none",
-    d1Planets:   formatPlanets(d1?.planets),
-    d9Summary:   formatPlanets(d9?.planets),
-    d10Summary:  formatPlanets(d10?.planets),
+    d1Planets:   formatVedicPlanets(chart?.planets),
+    d9Summary:   formatVedicPlanets(d9Planets),
+    d10Summary:  formatVedicPlanets(d10Planets),
     dasha,
   };
 }

@@ -19,12 +19,6 @@ const optWithDefault = (schema: z.ZodString, fallback: string) =>
   );
 
 export const envSchema = z.object({
-  // Vedic Astrology — now calculated locally via openastrology-library (Swiss Ephemeris)
-  // VEDIC_API_URL and VEDIC_API_KEY are no longer required; kept as optional to avoid
-  // breaking existing .env files during the transition period.
-  VEDIC_API_URL: opt(z.string().url()),
-  VEDIC_API_KEY: opt(z.string().min(1)),
-
   // Swiss Ephemeris data files path — used by both openhumandesign-library and openastrology-library
   EPHE_PATH: z.string().default("./ephe"),
 

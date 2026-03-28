@@ -1,25 +1,26 @@
-// STATUS: done | Tasks 3.3, 3.4, 3.5, SP.11, SP.12
+// STATUS: done | Tasks 3.3, 3.4, 3.5, SP.11, SP.12, OA.3, OA.4
 /**
  * lib/astro/chartService.ts
  * Orchestrator: KV cache-check → calculate/fetch → store in KV → return.
  * All callers use the public functions below.
- * Nothing else calls the HD library or Vedic API directly.
+ * Nothing else calls the HD library or Vedic calculators directly.
  *
  * Caching:
  *   HD chart    — KV, no TTL, invalidated when birth data changes (3.3)
  *   Vedic chart — KV, no TTL, invalidated when birth data changes (3.3)
- *   Transits    — see transitService.ts (3.6)
+ *   Transits    — KV, 24h TTL (OA transit)
  */
 
 import { InsightType, type BirthProfile } from "@prisma/client";
 import { calculateHDChart } from "@/lib/astro/hdCalculator";
-import { fetchVedicNatalChart } from "@/lib/astro/vedicApiClient";
+import { getVedicCalculator } from "@/lib/astro/calculatorService";
+import { prismaProfileToBirthInfo } from "@/lib/astro/birthInfoMapper";
 import { storeDashasFromChart } from "@/lib/astro/dashaService";
 import { kvGet, kvSet, kvDeleteMany } from "@/lib/kv/helpers";
 import { kvKeys, KV_TTL } from "@/lib/kv/keys";
 import { db } from "@/lib/db";
-import type { BirthInfo, HDChartData, VedicChartData, SpecialPointsResult, ExtendedSpecialPointsResult, KaalVelaSetResult, SignNumber } from "@/types";
-import type { VedicChart } from "@/lib/astro/types";
+import type { BirthInfo, HDChartData, SpecialPointsResult, ExtendedSpecialPointsResult, KaalVelaSetResult, SignNumber } from "@/types";
+import type { VedicChartCalculations, PlanetDasha } from "openastrology-library";
 import {
   calculateSpecialPoints,
   calculateExtendedSpecialPoints,
@@ -51,6 +52,9 @@ function profileToBirthInfo(profile: BirthProfile): BirthInfo {
   };
 }
 
+/** Export PlanetDasha type for consumers */
+export type { PlanetDasha };
+
 // ─── Task 3.3 — Cache invalidation ───────────────────────────────────────
 
 /**
@@ -68,6 +72,8 @@ export async function invalidateChartCache(userId: string): Promise<void> {
       kvKeys.specialPoints(userId),
       kvKeys.specialPointsInsights(userId),
       kvKeys.extendedSpecialPoints(userId),
+      kvKeys.divisionalCharts(userId),
+      kvKeys.currentDasha(userId),
     ]),
     db.insight.deleteMany({
       where: { userId, type: InsightType.SPECIAL_POINTS },
@@ -123,35 +129,30 @@ export async function getOrCreateHDChart(
   return chart;
 }
 
-// ─── Task 3.5 — Vedic natal chart: get or fetch ──────────────────────────
+// ─── Task 3.5 / OA.3 — Vedic natal chart: get or calculate ──────────────
 
 /**
  * Returns the Vedic natal chart for a user, using KV cache when available.
- * Fetches from the paid external API on cache miss.
+ * Calculates locally via openastrology-library on cache miss.
  * birthProfile is passed in — this function does NOT query the DB itself.
  */
 export async function getOrCreateVedicChart(
   userId: string,
   birthProfile: BirthProfile
-): Promise<VedicChartData> {
+): Promise<VedicChartCalculations> {
   // ── Layer 1: KV hot cache ────────────────────────────────────────────────
-  const cached = await kvGet<VedicChartData>(kvKeys.vedicChart(userId));
+  const cached = await kvGet<VedicChartCalculations>(kvKeys.vedicChart(userId));
 
   if (cached !== null) {
-    // Chart is cached — but dashas may not have been stored yet (e.g. if a previous
-    // fire-and-forget store raced or failed). Check and backfill if needed.
+    // Chart is cached — but dashas may not have been stored yet.
     const dashaCount = await db.dasha.count({ where: { userId } });
     if (dashaCount === 0) {
-      const rawResponse = (cached as unknown as VedicChart).rawResponse;
-      if (rawResponse) {
-        await storeDashasFromChart(userId, rawResponse);
-      }
+      await storeDashasFromChart(userId, cached);
     }
     return cached;
   }
 
   // ── Layer 2: DB durable store ────────────────────────────────────────────
-  // Survives KV eviction; only re-fetched from the paid API when profileVersion changes.
   const dbProfile = await db.birthProfile.findUnique({
     where: { userId },
     select: { chartDataVedic: true, vedicProfileVersion: true, profileVersion: true },
@@ -161,65 +162,110 @@ export async function getOrCreateVedicChart(
     dbProfile?.chartDataVedic != null &&
     dbProfile.vedicProfileVersion === dbProfile.profileVersion
   ) {
-    const chartData = dbProfile.chartDataVedic as unknown as VedicChartData;
+    const chartData = dbProfile.chartDataVedic as unknown as VedicChartCalculations;
     await kvSet(kvKeys.vedicChart(userId), chartData, KV_TTL.NATAL_CHART);
     const dashaCount = await db.dasha.count({ where: { userId } });
     if (dashaCount === 0) {
-      const rawResponse = (chartData as unknown as VedicChart).rawResponse;
-      if (rawResponse) await storeDashasFromChart(userId, rawResponse);
+      await storeDashasFromChart(userId, chartData);
     }
     return chartData;
   }
 
-  // ── Layer 3: Local calculation via openastrology-library ─────────────────
-  const d = new Date(birthProfile.birthDate);
-  const dateOfBirth = [
-    d.getUTCFullYear(),
-    String(d.getUTCMonth() + 1).padStart(2, "0"),
-    String(d.getUTCDate()).padStart(2, "0"),
-  ].join("-");
-  const hour = birthProfile.birthTimeKnown ? (birthProfile.birthHour ?? 12) : 12;
-  const minute = birthProfile.birthTimeKnown ? (birthProfile.birthMinute ?? 0) : 0;
-  const timeOfBirth = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-  const genderMap: Record<string, "male" | "female" | "other"> = {
-    male: "male", female: "female", other: "other", prefer_not_to_say: "other",
-  };
-  const gender: "male" | "female" | "other" = genderMap[birthProfile.gender ?? ""] ?? "other";
-
-  const chart = await fetchVedicNatalChart({
-    dateOfBirth,
-    timeOfBirth,
-    latitude: birthProfile.latitude,
-    longitude: birthProfile.longitude,
-    timezone: birthProfile.timezone,
-    gender,
-    name: birthProfile.birthName,
-  });
+  // ── Layer 3: Calculate fresh using library ───────────────────────────────
+  const birthInfo = prismaProfileToBirthInfo(birthProfile);
+  const calculator = getVedicCalculator();
+  const chart = await calculator.calculateChart(birthInfo);
 
   // Await dasha storage — must complete before caller queries the dasha table
-  await storeDashasFromChart(userId, (chart as VedicChart).rawResponse);
+  await storeDashasFromChart(userId, chart);
 
-  const chartData = chart as unknown as VedicChartData;
-
-  // Persist to DB — survives KV eviction; only re-fetched when profileVersion changes
-  const vedicChart = chart as VedicChart;
-  const d1Planets = vedicChart.rawResponse.chartD1.planets;
-  const currentMaha = vedicChart.currentDasha?.planet ?? null;
-
+  // Persist to DB — survives KV eviction; only re-calculated when profileVersion changes
   await db.birthProfile.update({
     where: { userId },
     data: {
-      chartDataVedic: chartData as object,
+      chartDataVedic: chart as unknown as object,
       vedicProfileVersion: birthProfile.profileVersion,
-      vedicAscendantSign: vedicChart.ascendant?.sign ?? null,
-      vedicSunSign: d1Planets.find((p) => p.name === "sun")?.sign ?? null,
-      vedicMoonSign: d1Planets.find((p) => p.name === "moon")?.sign ?? null,
-      vedicMahaDasha: currentMaha,
+      vedicAscendantSign: chart.ascendant?.sign ?? null,
+      vedicSunSign: chart.planets.sun?.sign ?? null,
+      vedicMoonSign: chart.planets.moon?.sign ?? null,
+      vedicMahaDasha: null, // populated separately from dasha table
     },
   });
 
-  await kvSet(kvKeys.vedicChart(userId), chartData, KV_TTL.NATAL_CHART);
-  return chartData;
+  await kvSet(kvKeys.vedicChart(userId), chart, KV_TTL.NATAL_CHART);
+  return chart;
+}
+
+// ─── OA transit — Today's transit chart ─────────────────────────────────
+
+/**
+ * Returns today's transit chart for a user, using KV cache when available.
+ * "Today" is resolved in the user's timezone.
+ */
+export async function getOrCreateTodayTransits(
+  userId: string,
+  profile: BirthProfile,
+  latOverride?: number,
+  lngOverride?: number,
+  tzOverride?: string
+): Promise<VedicChartCalculations> {
+  const timezone = tzOverride ?? profile.timezone
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date())
+
+  const cacheKey = kvKeys.transit(userId, today)
+  const cached = await kvGet<VedicChartCalculations>(cacheKey)
+  if (cached !== null) return cached
+
+  const latitude  = latOverride ?? (profile.observationLatitude  ?? profile.latitude)
+  const longitude = lngOverride ?? (profile.observationLongitude ?? profile.longitude)
+
+  const transitBirthInfo = {
+    ...prismaProfileToBirthInfo(profile),
+    dateOfBirth: today,
+    timeOfBirth: '12:00',
+    latitude,
+    longitude,
+  }
+
+  const calculator = getVedicCalculator()
+  const transitChart = await calculator.calculateChart(transitBirthInfo)
+  await kvSet(cacheKey, transitChart, KV_TTL.TRANSIT_SECONDS)
+  return transitChart
+}
+
+// ─── OA.5 — Divisional charts ────────────────────────────────────────────
+
+/**
+ * Returns all divisional charts (D2–D60) for a user, derived from the natal D1 chart.
+ */
+export async function getOrCreateDivisionalCharts(
+  userId: string,
+  birthProfile: BirthProfile
+): Promise<Record<string, VedicChartCalculations>> {
+  const cacheKey = kvKeys.divisionalCharts(userId)
+  const cached = await kvGet<Record<string, VedicChartCalculations>>(cacheKey)
+  if (cached !== null) return cached
+
+  const natalChart = await getOrCreateVedicChart(userId, birthProfile)
+  const calculator = getVedicCalculator()
+  const divisionalCharts = calculator.calculateAllDivisionalCharts(natalChart)
+  await kvSet(cacheKey, divisionalCharts, KV_TTL.NATAL_CHART)
+  return divisionalCharts
+}
+
+// ─── OA.6 — Current dasha helper ─────────────────────────────────────────
+
+/**
+ * Returns the currently active Maha and Antardasha from a VedicChartCalculations.
+ */
+export function getChartCurrentDasha(chart: VedicChartCalculations): {
+  mahaDasha?: PlanetDasha
+  antarDasha?: PlanetDasha
+} {
+  return getVedicCalculator().getCurrentDasha(chart.dashas.vimshottari, new Date())
 }
 
 // ─── SP.11 — Derive special points from stored chart + birth profile ──────

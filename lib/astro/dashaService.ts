@@ -8,18 +8,18 @@
  */
 
 import { db } from "@/lib/db";
-import type { VedicBirthChartResponse } from "@/lib/astro/types";
+import type { VedicChartCalculations } from "openastrology-library";
 import { Dasha, DashaLevel } from "@prisma/client";
 
 /**
- * Persists dasha periods from a Vedic birth chart response into the DB.
+ * Persists dasha periods from a VedicChartCalculations into the DB.
  * Called once after chart generation. Replaces any existing rows for this user.
  */
 export async function storeDashasFromChart(
   userId: string,
-  chart: VedicBirthChartResponse
+  chart: VedicChartCalculations
 ): Promise<void> {
-  const periods = chart.chartD1?.dashas?.vimshottari?.dashaPeriods;
+  const periods = chart.dashas?.vimshottari?.dashaPeriods;
   if (!periods?.length) return;
 
   const rows: {
@@ -33,16 +33,16 @@ export async function storeDashasFromChart(
   for (const mahadasha of periods) {
     rows.push({
       userId,
-      startDate: new Date(mahadasha.startDate),
-      endDate: new Date(mahadasha.endDate),
+      startDate: mahadasha.startDate instanceof Date ? mahadasha.startDate : new Date(mahadasha.startDate),
+      endDate:   mahadasha.endDate   instanceof Date ? mahadasha.endDate   : new Date(mahadasha.endDate),
       planetName: mahadasha.planet,
       level: "MAHADASHA" as DashaLevel,
     });
     for (const antardasha of mahadasha.subPeriods ?? []) {
       rows.push({
         userId,
-        startDate: new Date(antardasha.startDate),
-        endDate: new Date(antardasha.endDate),
+        startDate: antardasha.startDate instanceof Date ? antardasha.startDate : new Date(antardasha.startDate),
+        endDate:   antardasha.endDate   instanceof Date ? antardasha.endDate   : new Date(antardasha.endDate),
         planetName: `${mahadasha.planet}/${antardasha.planet}`,
         level: "ANTARDASHA" as DashaLevel,
       });

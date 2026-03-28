@@ -12,7 +12,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/env";
-import type { VedicChart, VedicPlanet } from "@/lib/astro/types";
+import type { VedicChartCalculations } from "openastrology-library";
 import { kvGet, kvSet } from "@/lib/kv/helpers";
 import { kvKeys, KV_TTL } from "@/lib/kv/keys";
 import { buildTransitReadingPrompt } from "@/lib/content/promptBuilder";
@@ -53,28 +53,25 @@ export interface TransitReading {
   allPlanets: RawTransitPlanet[];
 }
 
-function formatPlanets(planets: VedicPlanet[] | undefined): string {
-  if (!planets?.length) return "unavailable";
-  return planets
-    .map((p) => `${p.name}: ${p.sign ?? "?"} house ${p.house ?? "?"}${p.isRetrograde ? " (R)" : ""}`)
-    .join(", ");
+function formatVedicPlanets(planets: VedicChartCalculations['planets'] | undefined): string {
+  if (!planets) return 'unavailable'
+  return Object.entries(planets)
+    .map(([name, p]) => `${name}: ${p.sign ?? '?'} house ${p.house ?? '?'}${p.isRetrograde ? ' (R)' : ''}`)
+    .join(', ')
 }
 
 function buildTransitPrompt(
-  natal: VedicChart,
-  transit: VedicChart,
+  natal: VedicChartCalculations,
+  transit: VedicChartCalculations,
   dashaLord: string | null,
   userName: string,
   today: string
 ): string {
-  const natalD1   = natal.rawResponse.chartD1;
-  const transitD1 = transit.rawResponse.chartD1;
-  const natalPlanets   = formatPlanets(natalD1.planets);
-  const transitPlanets = formatPlanets(transitD1.planets);
-  const moonPlanet = natalD1.planets.find(p => p.name === "moon");
-  const moonSign = moonPlanet?.sign ?? natalD1.ascendant?.sign ?? "unknown";
-  const ascendant = natalD1.ascendant
-    ? `${natalD1.ascendant.sign} ${natalD1.ascendant.degree?.toFixed(1) ?? ""}°`
+  const natalPlanets   = formatVedicPlanets(natal.planets);
+  const transitPlanets = formatVedicPlanets(transit.planets);
+  const moonSign = natal.planets?.moon?.sign ?? natal.ascendant?.sign ?? "unknown";
+  const ascendant = natal.ascendant
+    ? `${natal.ascendant.sign} ${natal.ascendant.degree?.toFixed(1) ?? ""}°`
     : "unknown";
 
   return `You are a Vedic astrologer trained in Parasara Hora Shastra. Generate a concise, practical transit reading.
@@ -120,8 +117,8 @@ Return ONLY valid JSON (no markdown fences):
 
 export async function generateTransitReading(
   userId: string,
-  natal: VedicChart,
-  transit: VedicChart,
+  natal: VedicChartCalculations,
+  transit: VedicChartCalculations,
   dashaLord: string | null,
   userName: string,
   location: string
@@ -134,9 +131,9 @@ export async function generateTransitReading(
   const cached = await kvGet<TransitReading>(cacheKey);
   if (cached) return cached;
 
-  // Build all-planets snapshot from raw transit chart
-  const allPlanets: RawTransitPlanet[] = (transit.rawResponse.chartD1.planets ?? []).map((p) => ({
-    name: p.name,
+  // Build all-planets snapshot from transit chart
+  const allPlanets: RawTransitPlanet[] = Object.entries(transit.planets ?? {}).map(([name, p]) => ({
+    name: p.name ?? name,
     sign: p.sign ?? "?",
     house: p.house ?? null,
     degree: p.degree ?? 0,
@@ -145,23 +142,20 @@ export async function generateTransitReading(
     isRetrograde: p.isRetrograde ?? false,
   }));
 
-  const natalD1Tmp   = natal.rawResponse.chartD1;
-  const transitD1Tmp = transit.rawResponse.chartD1;
-  const moonPlanetTmp = natalD1Tmp.planets.find((p: VedicPlanet) => p.name === "moon");
-  const moonSignVar = moonPlanetTmp?.sign ?? natalD1Tmp.ascendant?.sign ?? "unknown";
-  const ascendantVar = natalD1Tmp.ascendant
-    ? `${natalD1Tmp.ascendant.sign} ${natalD1Tmp.ascendant.degree?.toFixed(1) ?? ""}°`
+  const moonSignVar = natal.planets?.moon?.sign ?? natal.ascendant?.sign ?? "unknown";
+  const ascendantVar = natal.ascendant
+    ? `${natal.ascendant.sign} ${natal.ascendant.degree?.toFixed(1) ?? ""}°`
     : "unknown";
 
   const prompt = await buildTransitReadingPrompt(
     {
       userName,
       today,
-      ascendant:     ascendantVar,
-      moonSign:      moonSignVar,
-      dashaLord:     dashaLord ?? "unknown",
-      natalPlanets:  formatPlanets(natalD1Tmp.planets),
-      transitPlanets: formatPlanets(transitD1Tmp.planets),
+      ascendant:      ascendantVar,
+      moonSign:       moonSignVar,
+      dashaLord:      dashaLord ?? "unknown",
+      natalPlanets:   formatVedicPlanets(natal.planets),
+      transitPlanets: formatVedicPlanets(transit.planets),
     },
     () => buildTransitPrompt(natal, transit, dashaLord, userName, today)
   );

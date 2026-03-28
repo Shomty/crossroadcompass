@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { fetchVedicNatalChart } from "@/lib/astro/vedicApiClient";
+import { getVedicCalculator } from "@/lib/astro/calculatorService";
 import { kvGet, kvSet } from "@/lib/kv/helpers";
 
 const CACHE_TTL_SECONDS = 6 * 60 * 60; // 6 hours
@@ -68,26 +68,22 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const chart = await fetchVedicNatalChart({
+    const calculator = getVedicCalculator();
+    const chart = await calculator.calculateChart({
+      name,
       dateOfBirth,
       timeOfBirth,
       latitude,
       longitude,
       timezone,
-      gender: "male",
-      name,
     });
-
-    const d1 = chart.rawResponse.chartD1;
-    const sunPlanet  = d1.planets.find((p: { name: string }) => p.name === "sun");
-    const moonPlanet = d1.planets.find((p: { name: string }) => p.name === "moon");
 
     const payload: ChartResponse = {
       chart: {
-        planets:      d1.planets,
-        ascendant:    d1.ascendant,
-        sunSign:      sunPlanet?.sign  ?? null,
-        moonSign:     moonPlanet?.sign ?? null,
+        planets:      Object.values(chart.planets),
+        ascendant:    chart.ascendant,
+        sunSign:      chart.planets.sun?.sign  ?? null,
+        moonSign:     chart.planets.moon?.sign ?? null,
         currentDasha: null,
       },
       meta: {

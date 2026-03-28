@@ -14,18 +14,31 @@ vi.mock("@/lib/kv/helpers", () => ({
 
 vi.mock("@/lib/kv/keys", () => ({
   kvKeys: {
-    vedicChart: (userId: string) => `chart:vedic:${userId}`,
-    hdChart: (userId: string) => `chart:hd:${userId}`,
-    dashas: (userId: string) => `chart:dashas:${userId}`,
+    vedicChart:            (userId: string) => `chart:vedic:${userId}`,
+    hdChart:               (userId: string) => `chart:hd:${userId}`,
+    dashas:                (userId: string) => `chart:dashas:${userId}`,
+    specialPoints:         (userId: string) => `chart:specialpoints:${userId}`,
+    specialPointsInsights: (userId: string) => `chart:specialpoints:insights:${userId}`,
+    extendedSpecialPoints: (userId: string) => `chart:specialpoints:ext:v2:${userId}`,
+    divisionalCharts:      (userId: string) => `chart:divisional:${userId}`,
+    currentDasha:          (userId: string) => `chart:dasha:current:${userId}`,
   },
-  KV_TTL: { NATAL_CHART: undefined },
+  KV_TTL: { NATAL_CHART: undefined, TRANSIT_SECONDS: 86400 },
 }));
 
 const mockUpdate = vi.fn();
+const mockDashaCount = vi.fn().mockResolvedValue(1);
 vi.mock("@/lib/db", () => ({
   db: {
     birthProfile: {
+      findUnique: vi.fn().mockResolvedValue(null),
       update: (...args: unknown[]) => mockUpdate(...args),
+    },
+    dasha: {
+      count: (...args: unknown[]) => mockDashaCount(...args),
+    },
+    insight: {
+      deleteMany: vi.fn().mockResolvedValue({}),
     },
   },
 }));
@@ -35,14 +48,32 @@ vi.mock("@/lib/astro/hdCalculator", () => ({
   calculateHDChart: (...args: unknown[]) => mockCalculateHDChart(...args),
 }));
 
-const mockFetchVedicNatalChart = vi.fn();
-vi.mock("@/lib/astro/vedicApiClient", () => ({
-  fetchVedicNatalChart: (...args: unknown[]) => mockFetchVedicNatalChart(...args),
+const mockCalculateChart = vi.fn();
+const mockCalculateAllDivisionalCharts = vi.fn().mockReturnValue({});
+const mockGetCurrentDasha = vi.fn().mockReturnValue({});
+
+vi.mock("@/lib/astro/calculatorService", () => ({
+  getVedicCalculator: () => ({
+    calculateChart: (...args: unknown[]) => mockCalculateChart(...args),
+    calculateAllDivisionalCharts: mockCalculateAllDivisionalCharts,
+    getCurrentDasha: mockGetCurrentDasha,
+  }),
 }));
 
 const mockStoreDashasFromChart = vi.fn();
 vi.mock("@/lib/astro/dashaService", () => ({
   storeDashasFromChart: (...args: unknown[]) => mockStoreDashasFromChart(...args),
+}));
+
+vi.mock("@/lib/astro/birthInfoMapper", () => ({
+  prismaProfileToBirthInfo: vi.fn().mockReturnValue({
+    name: "Test",
+    dateOfBirth: "1990-01-15",
+    timeOfBirth: "12:00",
+    latitude: 44.8,
+    longitude: 20.5,
+    timezone: "Europe/Belgrade",
+  }),
 }));
 
 describe("chartService", () => {
@@ -107,14 +138,18 @@ describe("chartService", () => {
   } as BirthProfile;
 
   describe("invalidateChartCache", () => {
-    it("calls kvDeleteMany with vedic, hd, and dashas keys for the user", async () => {
+    it("calls kvDeleteMany with all chart cache keys for the user", async () => {
       const { invalidateChartCache } = await import("./chartService");
       await invalidateChartCache("user1");
-      expect(mockKvDeleteMany).toHaveBeenCalledWith([
-        "chart:vedic:user1",
-        "chart:hd:user1",
-        "chart:dashas:user1",
-      ]);
+      expect(mockKvDeleteMany).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          "chart:vedic:user1",
+          "chart:hd:user1",
+          "chart:dashas:user1",
+          "chart:divisional:user1",
+          "chart:dasha:current:user1",
+        ])
+      );
     });
   });
 
@@ -165,18 +200,29 @@ describe("chartService", () => {
 
   describe("getOrCreateVedicChart", () => {
     it("returns cached chart from KV when present", async () => {
-      const vedicChart = { planets: [] };
+      const vedicChart = {
+        ascendant: { sign: 'aries', degree: 15 },
+        planets: { sun: { sign: 'aries', house: 1 }, moon: { sign: 'taurus', house: 2 } },
+        dashas: { vimshottari: { dashaPeriods: [] } },
+        yogas: [],
+      };
       mockKvGet.mockResolvedValueOnce(vedicChart);
+      mockDashaCount.mockResolvedValueOnce(1);
       const { getOrCreateVedicChart } = await import("./chartService");
       const result = await getOrCreateVedicChart("user1", baseProfile);
       expect(result).toEqual(vedicChart);
-      expect(mockFetchVedicNatalChart).not.toHaveBeenCalled();
+      expect(mockCalculateChart).not.toHaveBeenCalled();
     });
 
-    it("fetches from API when KV and DB miss", async () => {
+    it("calculates when KV and DB miss", async () => {
       mockKvGet.mockResolvedValueOnce(null);
-      const vedicChart = { rawResponse: {}, planets: [] };
-      mockFetchVedicNatalChart.mockResolvedValueOnce(vedicChart);
+      const vedicChart = {
+        ascendant: { sign: 'aries', degree: 15 },
+        planets: { sun: { sign: 'aries', house: 1 }, moon: { sign: 'taurus', house: 2 } },
+        dashas: { vimshottari: { dashaPeriods: [] } },
+        yogas: [],
+      };
+      mockCalculateChart.mockResolvedValueOnce(vedicChart);
       mockKvSet.mockResolvedValue(undefined);
       mockUpdate.mockResolvedValue(undefined);
       mockStoreDashasFromChart.mockResolvedValue(undefined);
@@ -184,9 +230,9 @@ describe("chartService", () => {
       const { getOrCreateVedicChart } = await import("./chartService");
       const result = await getOrCreateVedicChart("user1", baseProfile);
 
-      expect(mockFetchVedicNatalChart).toHaveBeenCalledTimes(1);
+      expect(mockCalculateChart).toHaveBeenCalledTimes(1);
       expect(result).toEqual(vedicChart);
-      expect(mockStoreDashasFromChart).toHaveBeenCalledWith("user1", {});
+      expect(mockStoreDashasFromChart).toHaveBeenCalledWith("user1", vedicChart);
     });
   });
 });
