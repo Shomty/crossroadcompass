@@ -15,16 +15,22 @@ export const kvKeys = {
   transitPrefix:  (userId: string) => `transit:${userId}:`,
   /** Gemini AI reading cache (one per user per day) — date must be YYYY-MM-DD */
   transitReading: (userId: string, date: string) => `transit-reading:${userId}:${date}`,
-  /** Vedic special points — permanent, invalidated only when birth profile changes */
-  specialPoints:  (userId: string) => `chart:specialpoints:${userId}`,
+  /** Vedic special points (V2 formulas) — permanent, invalidated when birth profile changes */
+  specialPoints:  (userId: string) => `chart:specialpointsv2:${userId}`,
+  /** @deprecated Pre–Mar 2026; swept in invalidateChartCache — remove after 2026-06-01 */
+  specialPointsLegacy: (userId: string) => `chart:specialpoints:${userId}`,
   /** AI-generated insights for Vedic special points — permanent, invalidated with birth profile changes */
   specialPointsInsights: (userId: string) => `chart:specialpoints:insights:${userId}`,
-  /** Extended Vedic special points (incl. Bhrigu Bindu, Varnada, Sphutas, Dhooma, Kaal Velas). v2 adds BB. */
-  extendedSpecialPoints: (userId: string) => `chart:specialpoints:ext:v2:${userId}`,
+  /** Extended Vedic special points — bumped for V2 Prāṇapada / Kaal Velas / GL night branch */
+  extendedSpecialPoints: (userId: string) => `chart:specialpoints:ext:v3:${userId}`,
+  /** @deprecated Pre–Mar 2026 extended payload */
+  extendedSpecialPointsLegacy: (userId: string) => `chart:specialpoints:ext:v2:${userId}`,
   /** Divisional charts (D2–D60) derived from natal D1 */
   divisionalCharts: (userId: string) => `chart:divisional:${userId}`,
   /** Current dasha derived from natal chart */
   currentDasha:     (userId: string) => `chart:dasha:current:${userId}`,
+  /** Parashara yoga detection (invalidated with chart / birth profile) */
+  yogas:            (userId: string) => `chart:yogas:${userId}`,
 } as const;
 
 export const KV_TTL = {

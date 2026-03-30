@@ -19,7 +19,7 @@ export default async function OnboardingPage() {
     where: { userId: session.user.id },
     select: { id: true },
   });
-  if (existing) redirect("/report");
+  if (existing) redirect("/chart");
 
   return (
     <>
@@ -38,7 +38,7 @@ export default async function OnboardingPage() {
         {/* Page header */}
         <div style={{ textAlign: "center", marginBottom: "3rem", maxWidth: 480 }}>
           <p className="eyebrow" style={{ marginBottom: "1rem" }}>
-            Your Human Design
+            Your Jyotish chart
           </p>
           <h1
             style={{
@@ -50,11 +50,10 @@ export default async function OnboardingPage() {
               marginBottom: "0.75rem",
             }}
           >
-            {"Let's build your "}
-            <em>chart</em>
+            Let&apos;s generate your personal <em>Jyotish chart</em>
           </h1>
           <p style={{ fontSize: "0.9rem", color: "var(--mist)", lineHeight: 1.75 }}>
-            We need your birth data to calculate your Human Design chart. This takes about 2 minutes.
+            We need your birth data for Vedic calculations (and your Human Design report). This takes about 2 minutes.
           </p>
         </div>
 

@@ -75,6 +75,28 @@ export const REPORT_TEMPLATE_VARIABLE_KEYS = [
   "sp_trisphuta_longitude",
   "sp_dhooma_chain_json",
   "sp_kaal_velas_json",
+
+  // Granular Vedic planet vars (sign, degree, retrograde per planet)
+  "vedic_sun_sign", "vedic_sun_degree", "vedic_sun_retro",
+  "vedic_moon_sign", "vedic_moon_degree", "vedic_moon_retro",
+  "vedic_mars_sign", "vedic_mars_degree", "vedic_mars_retro",
+  "vedic_mercury_sign", "vedic_mercury_degree", "vedic_mercury_retro",
+  "vedic_jupiter_sign", "vedic_jupiter_degree", "vedic_jupiter_retro",
+  "vedic_venus_sign", "vedic_venus_degree", "vedic_venus_retro",
+  "vedic_saturn_sign", "vedic_saturn_degree", "vedic_saturn_retro",
+  "vedic_rahu_sign", "vedic_rahu_degree",
+  "vedic_ketu_sign", "vedic_ketu_degree",
+  "vedic_lagna_degree",
+
+  // House cusp signs (1-12)
+  "vedic_house_1_sign", "vedic_house_2_sign", "vedic_house_3_sign",
+  "vedic_house_4_sign", "vedic_house_5_sign", "vedic_house_6_sign",
+  "vedic_house_7_sign", "vedic_house_8_sign", "vedic_house_9_sign",
+  "vedic_house_10_sign", "vedic_house_11_sign", "vedic_house_12_sign",
+
+  // Dasha period dates
+  "dasha_mahadasha_start", "dasha_mahadasha_end",
+  "dasha_antardasha_start", "dasha_antardasha_end",
 ] as const;
 
 export type ReportTemplateVariableKey =

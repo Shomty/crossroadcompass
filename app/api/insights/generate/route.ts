@@ -38,7 +38,7 @@ export async function POST() {
     }
 
     const chart = await getOrCreateHDChart(userId, profile);
-    const insight = await generateDailyInsight(userId, chart, profile.birthName);
+    const insight = await generateDailyInsight(userId, chart, profile.birthName, profile);
 
     // Send daily email for freshly generated insights (fire-and-forget)
     const user = await db.user.findUnique({ where: { id: userId }, select: { email: true } });

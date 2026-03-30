@@ -1,5 +1,6 @@
 // STATUS: done | Task R.10
 import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -18,10 +19,10 @@ export default async function ReportReaderPage({
 }: {
   params: { purchaseId: string };
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
-  const userId = session.user.id;
+  const userId = ctx.userId;
   const purchaseId = params?.purchaseId;
 
   if (typeof purchaseId !== "string" || purchaseId.length === 0) {
@@ -62,9 +63,12 @@ export default async function ReportReaderPage({
   if (!purchase) redirect("/reports");
 
   const isOwner = purchase.user.id === userId;
-  const isAdmin = session.user.role === "ADMIN";
+  const rawSession = await auth();
+  const isRealAdmin =
+    rawSession?.user?.role === "ADMIN" ||
+    rawSession?.user?.isAdmin === true;
 
-  if (!isOwner && !isAdmin) {
+  if (!isOwner && !isRealAdmin) {
     redirect("/reports");
   }
 
@@ -124,7 +128,7 @@ export default async function ReportReaderPage({
             </div>
 
             {/* Admin Controls */}
-            {isAdmin && status !== "COMPLETE" && (
+            {isRealAdmin && status !== "COMPLETE" && (
               <div className="glass-card border border-amber-400/30 rounded-xl p-5">
                 <p className="cc-body text-amber-200">
                   Admin: report status is <strong>{status}</strong>. Trigger generation below.

@@ -1,19 +1,7 @@
 // STATUS: done | Task Admin-2
 import { requireAdminSession } from "@/lib/admin/requireAdmin";
-import Link from "next/link";
+import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
 import "@/styles/v2.css";
-
-const NAV_LINKS = [
-  { href: "/admin/review", label: "Review Queue", icon: "◎" },
-  { href: "/admin/prompts", label: "Prompts", icon: "✦" },
-  { href: "/admin/users", label: "Users", icon: "⊙" },
-  { href: "/admin/insights", label: "Quality", icon: "◈" },
-  { href: "/admin/cron", label: "Cron Jobs", icon: "⟳" },
-  { href: "/admin/config", label: "Config", icon: "⚙" },
-  { href: "/admin/audit", label: "Audit Log", icon: "▤" },
-  { href: "/admin/report-products", label: "Report Catalog", icon: "▣" },
-  { href: "/admin/reports", label: "Report Builder", icon: "◧" },
-];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAdminSession();
@@ -40,30 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </div>
 
-        {/* Nav Links */}
-        <nav style={{ flex: 1, padding: "16px 0" }}>
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 20px",
-                fontFamily: "var(--font-mono, 'DM Mono')",
-                fontSize: 12,
-                color: "#a0a8c0",
-                textDecoration: "none",
-                transition: "color 0.15s, background 0.15s",
-                letterSpacing: "0.05em",
-              }}
-            >
-              <span style={{ color: "#c8873a", width: 16, textAlign: "center" }}>{link.icon}</span>
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <AdminSidebarNav />
 
         {/* Admin Identity */}
         <div style={{

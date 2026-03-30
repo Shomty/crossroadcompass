@@ -17,21 +17,25 @@ vi.mock("@/lib/kv/keys", () => ({
     vedicChart:            (userId: string) => `chart:vedic:${userId}`,
     hdChart:               (userId: string) => `chart:hd:${userId}`,
     dashas:                (userId: string) => `chart:dashas:${userId}`,
-    specialPoints:         (userId: string) => `chart:specialpoints:${userId}`,
-    specialPointsInsights: (userId: string) => `chart:specialpoints:insights:${userId}`,
-    extendedSpecialPoints: (userId: string) => `chart:specialpoints:ext:v2:${userId}`,
+    specialPoints:               (userId: string) => `chart:specialpointsv2:${userId}`,
+    specialPointsLegacy:         (userId: string) => `chart:specialpoints:${userId}`,
+    specialPointsInsights:       (userId: string) => `chart:specialpoints:insights:${userId}`,
+    extendedSpecialPoints:       (userId: string) => `chart:specialpoints:ext:v3:${userId}`,
+    extendedSpecialPointsLegacy: (userId: string) => `chart:specialpoints:ext:v2:${userId}`,
     divisionalCharts:      (userId: string) => `chart:divisional:${userId}`,
     currentDasha:          (userId: string) => `chart:dasha:current:${userId}`,
+    yogas:                 (userId: string) => `chart:yogas:${userId}`,
   },
   KV_TTL: { NATAL_CHART: undefined, TRANSIT_SECONDS: 86400 },
 }));
 
+const mockBirthProfileFindUnique = vi.fn().mockResolvedValue(null);
 const mockUpdate = vi.fn();
 const mockDashaCount = vi.fn().mockResolvedValue(1);
 vi.mock("@/lib/db", () => ({
   db: {
     birthProfile: {
-      findUnique: vi.fn().mockResolvedValue(null),
+      findUnique: (...args: unknown[]) => mockBirthProfileFindUnique(...args),
       update: (...args: unknown[]) => mockUpdate(...args),
     },
     dasha: {
@@ -163,8 +167,13 @@ describe("chartService", () => {
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 
-    it("returns chart from DB when KV misses but profile has chartDataHumanDesign", async () => {
+    it("returns chart from DB when KV misses but DB row has matching HD snapshot", async () => {
       mockKvGet.mockResolvedValueOnce(null);
+      mockBirthProfileFindUnique.mockResolvedValueOnce({
+        chartDataHumanDesign: fakeHDChart as unknown as object,
+        hdProfileVersion: 1,
+        profileVersion: 1,
+      });
       const profileWithChart = {
         ...baseProfile,
         chartDataHumanDesign: fakeHDChart as unknown as object,

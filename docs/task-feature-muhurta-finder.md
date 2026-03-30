@@ -36,15 +36,15 @@ using three Jyotish filters and return ranked results per intention
 category (Career, Relationships, Health, Finance, New Project).
 
 **Upstream dependencies:**
-- `lib/astro/vedicApiClient.ts` — authenticated Vedic API client
-- `lib/astro/chartService.ts` — natal chart retrieval from KV cache
+- `lib/astro/calculatorService.ts` / `openastrology-library` — local Vedic chart calculation (no REST API)
+- `lib/astro/chartService.ts` — natal chart retrieval from KV cache / DB
 - `lib/kv/helpers.ts` — KV get/set helpers
 - `lib/kv/keys.ts` — KV key builders
-- `types/index.ts` — shared types including `VedicChartData`, `BirthProfile`
+- `types/index.ts` — shared types; natal Vedic data shape is `VedicChartCalculations` from `openastrology-library`
 - `lib/auth/helpers.ts` — `getRequiredSession`, `requireTier`
 
-**Stack:** Next.js 14 App Router, TypeScript strict mode, Prisma,
-Upstash Redis, Vedic REST API at `env.VEDIC_API_URL`.
+**Stack:** Next.js App Router, TypeScript strict mode, Prisma,
+Upstash Redis, Swiss Ephemeris files via `env.EPHE_PATH`.
 
 ---
 

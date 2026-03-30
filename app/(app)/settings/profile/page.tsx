@@ -7,14 +7,11 @@
  */
 
 import { useEffect, useState } from "react";
-import { BirthDataForm, BirthDataValues } from "@/components/onboarding/BirthDataForm";
-
-interface ProfileData extends BirthDataValues {
-  cityLabel: string;
-}
+import { BirthProfileForm } from "@/components/profile/BirthProfileForm";
+import type { BirthProfileFormValues } from "@/components/profile/BirthProfileForm";
 
 export default function ProfileSettingsPage() {
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profile, setProfile] = useState<BirthProfileFormValues | null>(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -50,6 +47,7 @@ export default function ProfileSettingsPage() {
         longitude: p.longitude ?? 0,
         timezone: p.timezone ?? "",
         cityLabel: [p.birthCity, p.birthCountry].filter(Boolean).join(", "),
+        hasVedicChart: p.hasVedicChart ?? false,
       });
       setObservationCity(p.observationCity ?? null);
     } catch {
@@ -161,11 +159,7 @@ export default function ProfileSettingsPage() {
               ))}
             </div>
           ) : (
-            <BirthDataForm
-              initialValues={profile ?? undefined}
-              isEdit={profile !== null}
-              onSuccess={handleSuccess}
-            />
+            <BirthProfileForm existing={profile} onSuccess={handleSuccess} />
           )}
         </div>
       </div>

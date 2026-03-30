@@ -1,14 +1,6 @@
 // STATUS: done | Task R.7
 import { db } from "@/lib/db";
-import { getOrCreateHDChart } from "@/lib/astro/chartService";
-import { buildUserReportContext } from "./contextBuilder";
-import { interpolateReportTemplate } from "./interpolateReportTemplate";
-import { buildReportTemplateVars } from "./reportTemplateVars";
-import { loadReportTemplateSources } from "@/lib/admin/loadReportTemplateSources";
-import {
-  generateReportWithGemini,
-  GeminiGenerationError,
-} from "@/lib/gemini/client";
+import { runMarketplaceReportGeneration } from "./marketplaceReportRunner";
 export async function generateReportForPurchase(
   purchaseId: string
 ): Promise<{ success: boolean; error?: string }> {
@@ -25,10 +17,10 @@ export async function generateReportForPurchase(
     return { success: false, error: "Purchase not found" };
   }
 
-  if (purchase.status !== "PAID") {
+  if (!["PAID", "COMPLETE", "FAILED"].includes(purchase.status)) {
     return {
       success: false,
-      error: `Purchase is in status ${purchase.status}, expected PAID`,
+      error: `Purchase is in status ${purchase.status}, cannot generate`,
     };
   }
 
@@ -40,46 +32,65 @@ export async function generateReportForPurchase(
 
   try {
     const userId = purchase.user.id;
+    const email = purchase.user.email ?? "";
 
-    // 3. Birth profile is required by chartService for HD calculation
     const birthProfile = await db.birthProfile.findUnique({
       where: { userId },
     });
-
     if (!birthProfile) {
       throw new Error("No birth profile for user");
     }
 
-    // 4. Load chart data for interpolation
-    const hdChart = await getOrCreateHDChart(userId, birthProfile);
-
-    const templateSources = await loadReportTemplateSources(userId);
-    const vars = buildReportTemplateVars({
-      ...templateSources,
-      hdData: hdChart,
-      userEmail: purchase.user.email ?? templateSources.userEmail,
+    await db.generatedReport.upsert({
+      where: { purchaseId },
+      create: {
+        purchaseId,
+        status: "GENERATING",
+        content: "",
+        wordCount: 0,
+        geminiModel: "",
+      },
+      update: {
+        status: "GENERATING",
+        errorMsg: null,
+      },
     });
 
-    const systemPrompt = interpolateReportTemplate(
+    const result = await runMarketplaceReportGeneration(
+      userId,
       purchase.reportProduct.geminiPrompt,
-      vars
+      email
     );
 
-    // 5. Build user data context (includes structured chart data)
-    const userContext = await buildUserReportContext(userId);
+    if (!result.ok) {
+      await db.$transaction([
+        db.generatedReport.update({
+          where: { purchaseId },
+          data: {
+            status: "FAILED",
+            errorMsg: result.error,
+            content: "",
+            wordCount: 0,
+          },
+        }),
+        db.reportPurchase.update({
+          where: { id: purchaseId },
+          data: { status: "FAILED" },
+        }),
+      ]);
+      return { success: false, error: result.error };
+    }
 
-    // 6. Call Gemini
-    const result = await generateReportWithGemini(systemPrompt, userContext);
-
-    // 7. Save generated report + mark purchase COMPLETE
     await db.$transaction([
-      db.generatedReport.create({
+      db.generatedReport.update({
+        where: { purchaseId },
         data: {
-          purchaseId,
+          status: "DONE",
           content: result.text,
           wordCount: result.wordCount,
           geminiModel: result.model,
           generationTimeMs: result.durationMs,
+          errorMsg: null,
         },
       }),
       db.reportPurchase.update({
@@ -98,11 +109,16 @@ export async function generateReportForPurchase(
     });
 
     const msg =
-      error instanceof GeminiGenerationError
-        ? error.message
-        : error instanceof Error
-          ? error.message
-          : "Unknown error";
+      error instanceof Error ? error.message : "Unknown error";
+
+    try {
+      await db.generatedReport.update({
+        where: { purchaseId },
+        data: { status: "FAILED", errorMsg: msg },
+      });
+    } catch {
+      /* ignore */
+    }
 
     return { success: false, error: msg };
   }

@@ -30,7 +30,7 @@ export async function POST(
 
   if (type === "DAILY") {
     const chart = user.birthProfile.chartDataHumanDesign as unknown as HDChartData;
-    await generateDailyInsight(userId, chart, user.name);
+    await generateDailyInsight(userId, chart, user.name, user.birthProfile);
 
     await writeAuditLog({
       adminEmail: session!.user.email ?? "",

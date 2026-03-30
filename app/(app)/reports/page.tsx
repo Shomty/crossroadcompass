@@ -1,5 +1,5 @@
 // STATUS: done | Task R.9
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -11,9 +11,9 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
-  const userId = session.user.id;
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
+  const userId = ctx.userId;
 
   const params = await searchParams;
   const activeCategory = (params.category ?? "ALL") as string;

@@ -61,14 +61,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       // Refresh role at sign-in and recover it for JWTs created outside the normal callback path.
-      if (userId && (user || !token.role)) {
+      if (userId && (user || !token.role || token.isAdmin === undefined)) {
         const dbUser = await db.user.findUnique({
           where: { id: userId },
-          select: { role: true },
+          select: { role: true, isAdmin: true },
         });
         token.role = dbUser?.role ?? "USER";
+        token.isAdmin = Boolean(dbUser?.isAdmin);
       } else if (!token.role) {
         token.role = "USER";
+      }
+      if (token.isAdmin === undefined) {
+        token.isAdmin = token.role === "ADMIN";
       }
 
       return token;
@@ -77,6 +81,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Expose user id and role from JWT token to session consumers
       session.user.id = (token.id ?? token.sub ?? "") as string;
       session.user.role = typeof token.role === "string" ? token.role : "USER";
+      session.user.isAdmin =
+        token.isAdmin === true || session.user.role === "ADMIN";
       return session;
     },
   },

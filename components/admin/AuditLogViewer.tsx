@@ -34,6 +34,42 @@ const ACTION_COLORS: Record<string, string> = {
   CRON_MANUALLY_TRIGGERED: "#a0a8c0",
 };
 
+function downloadAuditCsv(logs: AuditEntry[]) {
+  const headers = [
+    "id",
+    "timestamp",
+    "adminEmail",
+    "actionType",
+    "targetType",
+    "targetId",
+    "notes",
+  ];
+  const escape = (v: string | null) => {
+    const s = v ?? "";
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+  const rows = logs.map((l) =>
+    [
+      l.id,
+      l.timestamp,
+      l.adminEmail,
+      l.actionType,
+      l.targetType ?? "",
+      l.targetId ?? "",
+      l.notes ?? "",
+    ].map((c) => escape(c)).join(",")
+  );
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function AuditLogViewer({ logs, nextCursor }: Props) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -56,6 +92,25 @@ export function AuditLogViewer({ logs, nextCursor }: Props) {
 
   return (
     <div>
+      <div style={{ marginBottom: 12, textAlign: "right" }}>
+        <button
+          type="button"
+          onClick={() => downloadAuditCsv(logs)}
+          style={{
+            fontFamily: "var(--font-mono, 'DM Mono')",
+            fontSize: 11,
+            padding: "6px 14px",
+            borderRadius: 6,
+            border: "1px solid rgba(200,135,58,0.35)",
+            background: "rgba(200,135,58,0.12)",
+            color: "#e8b96a",
+            cursor: "pointer",
+            letterSpacing: "0.06em",
+          }}
+        >
+          Export loaded rows as CSV
+        </button>
+      </div>
       <div style={{
         background: "rgba(28,35,64,0.4)",
         border: "1px solid rgba(200,135,58,0.1)",

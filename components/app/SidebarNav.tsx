@@ -10,11 +10,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, X, Compass, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight, Clock, BookOpen, Zap, Target, Sparkles, Timer, Heart, Telescope } from "lucide-react";
+import { LogOut, Menu, X, Compass, LayoutGrid, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight, Clock, BookOpen, Zap, Target, Sparkles, Timer, Heart, Telescope } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const NAV_ITEMS = [
   { href: "/dashboard",         label: "Dashboard",       Icon: Compass },
+  { href: "/chart",             label: "Jyotish Chart",   Icon: LayoutGrid },
   { href: "/reports",           label: "My Reports",      Icon: Moon },
   { href: "/transit",           label: "Transits",        Icon: Globe },
   { href: "/karma-timeline",    label: "Karma Timeline",  Icon: Clock },

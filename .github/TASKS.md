@@ -81,7 +81,7 @@ Group F — Human Design library:
 - Create `/lib/env.ts` using Zod to parse and export all required env vars
 - Required vars:
   ```
-  VEDIC_API_URL, VEDIC_API_KEY, EPHE_PATH,
+  EPHE_PATH,
   DATABASE_URL,
   NEXTAUTH_SECRET, NEXTAUTH_URL,
   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
@@ -258,16 +258,7 @@ Consultation
 ## PHASE 3 — CHART SERVICE
 
 ### Task 3.1 — Vedic API client
-**Do:**
-- Create `/lib/astro/vedicApiClient.ts`
-- Implement `vedicFetch<T>(path: string, body: unknown): Promise<T>`
-- Auth header: `X-Api-Key` from `env.VEDIC_API_KEY`
-- Base URL from `env.VEDIC_API_URL`
-- Custom error class: `VedicApiError(statusCode: number, message: string)`
-- Log errors server-side only — never expose key or raw response body to client
-- Add `// DECISION NEEDED: confirm all endpoint paths and request/response schemas with Milosh before calling any endpoint` at the top of the file
-
-**Done when:** client compiles. Do NOT call any endpoint yet.
+**Superceded (2026-03):** Vedic charts use **`openastrology-library`** + `EPHE_PATH` locally (`lib/astro/calculatorService.ts`, `chartService.ts`). There is no `vedicApiClient` or `VEDIC_API_*` env vars.
 
 ---
 
@@ -414,18 +405,7 @@ Consultation
 ---
 
 ### Task 5.2 — Chart generation API route
-**Do:**
-- Create `/app/api/onboarding/chart/route.ts`
-- POST handler:
-  1. Validate body with `birthDataSchema`
-  2. Capture and store email if provided
-  3. Create `User` + `BirthProfile` in DB (Prisma transaction)
-  4. Trigger HD chart calculation (call `getOrCreateHDChart`)
-  5. Return `{ userId, hdChart }` — Vedic chart deferred until endpoint confirmed
-- This route does NOT require authentication (public onboarding)
-- Must complete within 3 seconds — add a timeout guard and return 504 if exceeded
-
-**Done when:** POST with valid birth data creates DB records and returns HD chart data.
+**Superceded (2026-03):** Birth data is saved via **`POST /api/birth-profile`** (`app/api/birth-profile/route.ts`) after sign-in. Vedic charts are computed lazily through `chartService` (openastrology-library), not a separate onboarding chart route.
 
 ---
 
@@ -434,7 +414,7 @@ Consultation
 - Create `/components/onboarding/BirthDataForm.tsx`
 - Fields: date picker, time input (with "I don't know my birth time" checkbox), location text input with timezone selector
 - Client-side validation using Zod schema (import from Task 5.1)
-- On submit: POST to `/api/onboarding/chart`
+- On submit: POST to **`/api/birth-profile`** (authenticated)
 - Show loading state during submission
 - On success: redirect to `/dashboard` or report preview
 - If birth time is unknown: show a message explaining which features will be limited

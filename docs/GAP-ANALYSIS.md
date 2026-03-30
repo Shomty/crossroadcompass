@@ -19,7 +19,7 @@ The project is significantly further along than the task index (which marks ever
 | 1 | Prisma schema | ✅ Done | `prisma/schema.prisma` — full schema with all models |
 | 1 | Migration run | ✅ Done | DB is live (SQLite) |
 | 1 | KV client + key schema | ✅ Done | `lib/kv/` — `// STATUS: done | Task 2.2` |
-| 2 | Vedic API client | ✅ Done | `lib/astro/vedicApiClient.ts` — advanced, with real endpoint `/birth-charts` |
+| 2 | Vedic calculation (local) | ✅ Done | `openastrology-library` via `lib/astro/calculatorService.ts` + `chartService.ts` (no REST client) |
 | 2 | HD calculator wrapper | ✅ Done | `lib/astro/hdCalculator.ts` |
 | 2 | Chart service (cache) | ✅ Done | `lib/astro/chartService.ts` — `// STATUS: done | Tasks 3.3, 3.4, 3.5` |
 | 2 | Transit service | ✅ Done | `lib/astro/transitService.ts` |
@@ -350,11 +350,7 @@ Options: (a) Now — provision Railway DB, run migration immediately
          (b) When ready to deploy to staging (recommended)
 Status: OPEN
 
-DECISION NEEDED — Phase 2 (from original task index)
-Question: Confirm all Jyotish API endpoint paths and request/response schemas
-Blocking: Full chart generation, transit fetching
-Current state: vedicApiClient.ts uses /birth-charts — needs validation
-Status: OPEN
+RESOLVED — Phase 2 (2026-03): Jyotish data comes from **`openastrology-library`** (no external Vedic HTTP API).
 
 DECISION NEEDED — Phase 2 (from original task index)
 Question: Swiss Ephemeris commercial license (AGPL-3.0 vs LGPL-3.0)
@@ -399,7 +395,7 @@ app/globals.css                   → Add glimpse-glow-pulse animation
 ```
 lib/kv/keys.ts                    → KV schema matches instructions
 lib/astro/chartService.ts         → Chart caching matches architecture
-lib/astro/vedicApiClient.ts       → API client is ahead of task spec
+lib/astro/calculatorService.ts    → Local Vedic + Western calculators (replaces legacy REST client)
 lib/env.ts                        → Env validation is complete
 types/index.ts                    → Types match instructions
 prisma/schema.prisma              → All core models exist (only GlimpseEvent missing)

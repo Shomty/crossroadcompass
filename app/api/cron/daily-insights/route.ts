@@ -7,6 +7,9 @@
  *   2. Generate the daily insight via Gemini.
  *   3. Send the daily insight email (fire-and-forget; errors are logged, not thrown).
  *
+ * Design (OA.12 / OA.13): HD chart + Prisma dasha rows + sidereal transit summary
+ * (`getOrCreateTodayTransits` → prompt; see `lib/ai/dailyInsightService.ts`).
+ *
  * Security: Vercel sends `Authorization: Bearer <CRON_SECRET>` with every invocation.
  * Unauthorised requests are rejected with 401.
  */
@@ -68,7 +71,7 @@ export async function GET(req: NextRequest) {
 
       // Generate insight
       const chart = await getOrCreateHDChart(idx.userId, profile);
-      const insight = await generateDailyInsight(idx.userId, chart, profile.birthName);
+      const insight = await generateDailyInsight(idx.userId, chart, profile.birthName, profile);
 
       // Find the newly created DB row so we have its ID for email rating links
       const row = await getTodaysInsightRow(idx.userId);

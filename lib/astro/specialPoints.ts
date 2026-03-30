@@ -31,6 +31,17 @@ const SIGN_LORDS: Record<SignNumber, PlanetName | [PlanetName, PlanetName]> = {
   12: 'Jupiter',
 }
 
+/** Sign lord(s) per Parashara — dual-lord signs return a tuple */
+export function getSignLord(sign: SignNumber): PlanetName | [PlanetName, PlanetName] {
+  return SIGN_LORDS[sign]
+}
+
+/** Primary lord for yoga rules (Scorpio → Mars, Aquarius → Saturn) */
+export function getPrimaryLord(sign: SignNumber): PlanetName {
+  const L = SIGN_LORDS[sign]
+  return Array.isArray(L) ? L[0] : L
+}
+
 type SignNature = 'movable' | 'fixed' | 'dual'
 
 const SIGN_NATURE: Record<SignNumber, SignNature> = {
@@ -38,6 +49,12 @@ const SIGN_NATURE: Record<SignNumber, SignNature> = {
   4: 'movable', 5: 'fixed',   6: 'dual',
   7: 'movable', 8: 'fixed',   9: 'dual',
   10: 'movable', 11: 'fixed', 12: 'dual',
+}
+
+export type { SignNature }
+
+export function getSignNature(sign: SignNumber): SignNature {
+  return SIGN_NATURE[sign]
 }
 
 const EXALTATION_SIGN: Partial<Record<PlanetName, SignNumber>> = {
@@ -105,6 +122,10 @@ export function longitudeToSignAndDegree(longitude: number): {
     sign:   (Math.floor(n / DEGREES_PER_SIGN) + 1) as SignNumber,
     degree: n % DEGREES_PER_SIGN,
   }
+}
+
+export function wrapLongitude(longitude: number): number {
+  return ((longitude % 360) + 360) % 360
 }
 
 // ─── SP.4 Dual-Lord Tiebreaker ────────────────────────────────────────────
@@ -196,26 +217,34 @@ export function calculateArudhaLagna(
 
 // ─── SP.6 Ghati Lagna Calculator ──────────────────────────────────────────
 
+function resolveIsDayBirth(
+  isNightBirth: boolean | null,
+  isDayBirth: boolean | null | undefined
+): boolean {
+  if (isDayBirth === true || isDayBirth === false) return isDayBirth
+  if (isNightBirth === true) return false
+  if (isNightBirth === false) return true
+  return true
+}
+
 export function calculateGhatiLagna(
   sunAbsoluteLongitudeAtSunrise: number,
   minutesSinceSunrise: number,
   isNightBirth: boolean | null = null,
-  udayaLagnaLongitude: number | null = null
+  udayaLagnaLongitude: number | null = null,
+  isDayBirthOpt: boolean | null = null
 ): GhatiLagnaResult {
   if (minutesSinceSunrise < 0)
     throw new Error('[calculateGhatiLagna] minutesSinceSunrise must be >= 0')
 
-  // DECISION [1]: OPEN — night branch when API provides isNightBirth + udayaLagnaLongitude
+  const isDayBirth = resolveIsDayBirth(isNightBirth, isDayBirthOpt)
   let baseLongitude: number
-  let nightBirthApplied: boolean
-  if (isNightBirth === true && udayaLagnaLongitude !== null) {
+  if (!isDayBirth && udayaLagnaLongitude !== null) {
     baseLongitude = udayaLagnaLongitude
-    nightBirthApplied = true
   } else {
-    if (isNightBirth === true)
+    if (!isDayBirth)
       console.warn('[calculateGhatiLagna] Night birth but udayaLagnaLongitude is null. Using day fallback.')
     baseLongitude = sunAbsoluteLongitudeAtSunrise
-    nightBirthApplied = false
   }
 
   // 1 Ghati = 24 minutes (traditional Vedic time unit)
@@ -234,8 +263,9 @@ export function calculateGhatiLagna(
     fullGhatikasSinceSunrise: full,
     vighatikasFraction:       Math.round(vigh * 100) / 100,
     sunLongitudeAtSunrise:    sunAbsoluteLongitudeAtSunrise,
-    isNightBirth:             nightBirthApplied,
+    isDayBirth,
     baseLongitudeUsed:        baseLongitude,
+    isNightBirth:             !isDayBirth,
   }
 }
 
@@ -245,23 +275,23 @@ export function calculateBhavaLagna(
   sunAbsoluteLongitudeAtSunrise: number,
   minutesSinceSunrise: number,
   isNightBirth: boolean | null = null,
-  udayaLagnaLongitude: number | null = null
+  udayaLagnaLongitude: number | null = null,
+  isDayBirthOpt: boolean | null = null
 ): BhavaLagnaResult {
   if (minutesSinceSunrise < 0)
     throw new Error('[calculateBhavaLagna] minutesSinceSunrise must be >= 0')
 
+  const isDayBirth = resolveIsDayBirth(isNightBirth, isDayBirthOpt)
   let baseLongitude: number
-  let nightBirthApplied: boolean
-  if (isNightBirth === true && udayaLagnaLongitude !== null) {
+  if (!isDayBirth && udayaLagnaLongitude !== null) {
     baseLongitude = udayaLagnaLongitude
-    nightBirthApplied = true
   } else {
-    if (isNightBirth === true)
+    if (!isDayBirth)
       console.warn('[calculateBhavaLagna] Night birth but udayaLagnaLongitude is null. Using day fallback.')
     baseLongitude = sunAbsoluteLongitudeAtSunrise
-    nightBirthApplied = false
   }
 
+  // VERIFY [BL-1]: 5 Ghatikas/sign ↔ 120 min/sign — confirm against BPHS source used in product.
   const GHATIKAS_PER_SIGN = 5  // 1 sign per 5 Ghatikas = 1 sign per 120 min
 
   const totalGhatikas  = minutesSinceSunrise / MINUTES_PER_GHATI
@@ -277,8 +307,9 @@ export function calculateBhavaLagna(
     bhavaLagnaDegree:          Math.round(degree * 1000) / 1000,
     totalGhatikasSinceSunrise: Math.round(totalGhatikas * 1000) / 1000,
     sunLongitudeAtSunrise:     sunAbsoluteLongitudeAtSunrise,
-    isNightBirth:              nightBirthApplied,
+    isDayBirth,
     baseLongitudeUsed:         baseLongitude,
+    isNightBirth:              !isDayBirth,
   }
 }
 
@@ -288,23 +319,23 @@ export function calculateHoraLagna(
   sunAbsoluteLongitudeAtSunrise: number,
   minutesSinceSunrise: number,
   isNightBirth: boolean | null = null,
-  udayaLagnaLongitude: number | null = null
+  udayaLagnaLongitude: number | null = null,
+  isDayBirthOpt: boolean | null = null
 ): HoraLagnaResult {
   if (minutesSinceSunrise < 0)
     throw new Error('[calculateHoraLagna] minutesSinceSunrise must be >= 0')
 
+  const isDayBirth = resolveIsDayBirth(isNightBirth, isDayBirthOpt)
   let baseLongitude: number
-  let nightBirthApplied: boolean
-  if (isNightBirth === true && udayaLagnaLongitude !== null) {
+  if (!isDayBirth && udayaLagnaLongitude !== null) {
     baseLongitude = udayaLagnaLongitude
-    nightBirthApplied = true
   } else {
-    if (isNightBirth === true)
+    if (!isDayBirth)
       console.warn('[calculateHoraLagna] Night birth but udayaLagnaLongitude is null. Using day fallback.')
     baseLongitude = sunAbsoluteLongitudeAtSunrise
-    nightBirthApplied = false
   }
 
+  // VERIFY [BL-1]: 2.5 Ghatikas/sign ↔ 60 min/sign — confirm against BPHS / HL convention.
   const GHATIKAS_PER_SIGN = 2.5  // 1 sign per 2.5 Ghatikas = 1 sign per 60 min
 
   const totalGhatikas  = minutesSinceSunrise / MINUTES_PER_GHATI
@@ -320,8 +351,9 @@ export function calculateHoraLagna(
     horaLagnaDegree:           Math.round(degree * 1000) / 1000,
     totalGhatikasSinceSunrise: Math.round(totalGhatikas * 1000) / 1000,
     sunLongitudeAtSunrise:     sunAbsoluteLongitudeAtSunrise,
-    isNightBirth:              nightBirthApplied,
+    isDayBirth,
     baseLongitudeUsed:         baseLongitude,
+    isNightBirth:              !isDayBirth,
   }
 }
 
@@ -518,9 +550,10 @@ export function calculateCharakarakas(
 
 // ─── SP.10 Main Aggregator ────────────────────────────────────────────────
 
-/** Optional inputs for GL/BL/HL when DECISION [1] fields exist on the chart. */
+/** Optional inputs for GL/BL/HL — V2 prefers isDayBirth + udayaLagnaLongitude from mapper. */
 export interface TimeLagnaOptions {
   isNightBirth?: boolean | null
+  isDayBirth?: boolean | null
   udayaLagnaLongitude?: number | null
 }
 
@@ -537,11 +570,12 @@ export function calculateSpecialPoints(
 ): SpecialPointsResult {
   const ib = timeLagnaOpts?.isNightBirth ?? null
   const ul = timeLagnaOpts?.udayaLagnaLongitude ?? null
+  const idb = timeLagnaOpts?.isDayBirth ?? null
   return {
     arudhaLagna:  calculateArudhaLagna(lagnaSignNumber, planets),
-    ghatiLagna:   calculateGhatiLagna(sunAbsoluteLongitudeAtSunrise, minutesSinceSunrise, ib, ul),
-    bhavaLagna:   calculateBhavaLagna(sunAbsoluteLongitudeAtSunrise, minutesSinceSunrise, ib, ul),
-    horaLagna:    calculateHoraLagna(sunAbsoluteLongitudeAtSunrise, minutesSinceSunrise, ib, ul),
+    ghatiLagna:   calculateGhatiLagna(sunAbsoluteLongitudeAtSunrise, minutesSinceSunrise, ib, ul, idb),
+    bhavaLagna:   calculateBhavaLagna(sunAbsoluteLongitudeAtSunrise, minutesSinceSunrise, ib, ul, idb),
+    horaLagna:    calculateHoraLagna(sunAbsoluteLongitudeAtSunrise, minutesSinceSunrise, ib, ul, idb),
     charakarakas: calculateCharakarakas(planets),
   }
 }
@@ -549,7 +583,7 @@ export function calculateSpecialPoints(
 // ─── SP-EXT Extended Set ──────────────────────────────────────────────────
 
 import type {
-  VarnadaLagnaResult, PranapadalagnaResult, UpapadaLagnaResult,
+  VarnadaLagnaResult, PranapadalagnaResult, PranapadaStartingRule, UpapadaLagnaResult,
   SreeLagnaResult, BhriguBinduResult, BeejaSphutaResult, KsheetraSphutaResult,
   TriSphutaResult, DhoomaChainResult, KaalVelaPlanet,
   KaalVelaResult, KaalVelaSetResult, ExtendedSpecialPointsResult,
@@ -572,46 +606,51 @@ export function calculateVarnadaLagna(
   return { varnadaLagnaSignNumber, lagnaIsOdd, horaLagnaIsOdd, countFromAries: countA, countFromHoraLagna: countB }
 }
 
-// SP-EXT.3 — Pranapada Lagna (DECISION [7]: Movable/Fixed/Dual starting sign + time offset)
+// SP-EXT.3 — Prāṇapada (Special Points V2): Sun absolute λ + modality offset; fortunate houses from Lagna
+const PRANAPADA_FORTUNATE_HOUSES = new Set([2, 4, 5, 9, 10, 11])
+
 export function calculatePranapada(
   sunAbsoluteLongitudeAtSunrise: number,
-  minutesSinceSunrise: number
+  minutesSinceSunrise: number,
+  lagnaSignNumber: SignNumber
 ): PranapadalagnaResult {
-  const vighatikas    = minutesSinceSunrise * 2.5
-  const offsetDegrees = vighatikas / 15
+  const vighatikas = minutesSinceSunrise * 2.5
+  const baseOffsetDegrees = vighatikas / 15
 
   const { sign: sunSign } = longitudeToSignAndDegree(sunAbsoluteLongitudeAtSunrise)
+  const nature = SIGN_NATURE[sunSign]
+  let modalityOffsetDeg = 0
+  if (nature === 'fixed') modalityOffsetDeg = 240
+  else if (nature === 'dual') modalityOffsetDeg = 120
+
+  const startingLongitude = wrapLongitude(sunAbsoluteLongitudeAtSunrise + modalityOffsetDeg)
+  const { sign: ppSign, degree } = longitudeToSignAndDegree(startingLongitude + baseOffsetDegrees)
+  const houseFromLagna = countSignsBetween(lagnaSignNumber, ppSign)
+  const isFortunate = PRANAPADA_FORTUNATE_HOUSES.has(houseFromLagna)
 
   const MOVABLE = new Set<SignNumber>([1, 4, 7, 10])
-  const FIXED   = new Set<SignNumber>([2, 5, 8, 11])
-  let startingSignNumber: SignNumber
-  let startingRule: PranapadalagnaResult['startingRule']
-
-  if (MOVABLE.has(sunSign)) {
-    startingSignNumber = sunSign
-    startingRule = 'from_sun'
-  } else if (FIXED.has(sunSign)) {
-    startingSignNumber = advanceSigns(sunSign, 9)
-    startingRule = 'from_9th_from_sun'
-  } else {
-    startingSignNumber = advanceSigns(sunSign, 5)
-    startingRule = 'from_5th_from_sun'
-  }
-
-  const startingLongitude = (startingSignNumber - 1) * DEGREES_PER_SIGN
-  const { sign, degree } = longitudeToSignAndDegree(startingLongitude + offsetDegrees)
-  const off = Math.round(offsetDegrees * 1000) / 1000
+  const FIXED = new Set<SignNumber>([2, 5, 8, 11])
+  let startingRule: PranapadaStartingRule
+  if (MOVABLE.has(sunSign)) startingRule = 'from_sun'
+  else if (FIXED.has(sunSign)) startingRule = 'from_9th_from_sun'
+  else startingRule = 'from_5th_from_sun'
+  const startingSignNumber = longitudeToSignAndDegree(startingLongitude).sign
+  const off = Math.round(baseOffsetDegrees * 1000) / 1000
 
   return {
-    pranapadalagnaSignNumber: sign,
+    pranapadalagnaSignNumber: ppSign,
     pranapadalagnaDegree:     Math.round(degree * 1000) / 1000,
+    sunSignNature:            nature,
+    startingLongitude,
+    vighatisSinceSunrise:     Math.round(vighatikas * 100) / 100,
+    baseOffsetDegrees:        off,
+    isFortunate,
+    houseFromLagna,
+    sunLongitudeAtSunrise:    sunAbsoluteLongitudeAtSunrise,
     sunSignAtSunrise:         sunSign,
     startingRule,
     startingSignNumber,
-    sunLongitudeAtSunrise:    sunAbsoluteLongitudeAtSunrise,
-    vighatisSinceSunrise:     Math.round(vighatikas * 100) / 100,
     offsetDegrees:            off,
-    baseOffsetDegrees:        off,
   }
 }
 
@@ -683,14 +722,21 @@ export function planetAbsoluteLongitude(p: PlanetPosition): number {
     p.arcSeconds / 3600
   return ((raw % 360) + 360) % 360
 }
-function wrapLongitude(longitude: number): number {
-  return ((longitude % 360) + 360) % 360
-}
 
 /**
- * Bhrigu Bindu — DECISION [8]: arithmetic mean (Moon + Rahu) / 2 on the ecliptic.
+ * Bhrigu Bindu — short-arc midpoint (V2-06); Rahu uses chart longitude (no CK inversion).
  * Rahu uses chart longitude (no Charakaraka retrograde inversion).
  */
+/** Smallest signed difference λB − λA in (−180, 180]. */
+function shortestLongitudeDeltaDeg(lambdaA: number, lambdaB: number): number {
+  const a = wrapLongitude(lambdaA)
+  const b = wrapLongitude(lambdaB)
+  let d = b - a
+  if (d > 180) d -= 360
+  if (d < -180) d += 360
+  return d
+}
+
 export function calculateBhriguBindu(planets: PlanetPosition[]): BhriguBinduResult {
   const moon = planets.find(p => p.planet === 'Moon')
   const rahu = planets.find(p => p.planet === 'Rahu')
@@ -698,7 +744,7 @@ export function calculateBhriguBindu(planets: PlanetPosition[]): BhriguBinduResu
   if (!rahu) throw new Error('[calculateBhriguBindu] Rahu not found')
   const λMoon = planetAbsoluteLongitude(moon)
   const λRahu = planetAbsoluteLongitude(rahu)
-  const longitude = wrapLongitude((λMoon + λRahu) / 2)
+  const longitude = wrapLongitude(λMoon + shortestLongitudeDeltaDeg(λMoon, λRahu) / 2)
   return {
     bhriguBinduLongitude: longitude,
     bhriguBinduSign:      (Math.floor(longitude / 30) + 1) as SignNumber,
@@ -743,38 +789,38 @@ export function calculateTrisphuta(
   return { triSphutaLongitude: longitude, triSphutaSign: (Math.floor(longitude / 30) + 1) as SignNumber, triSphutaDegree: longitude % 30, gulikaLongitudeUsed: gulikaLongitude }
 }
 
-// SP-EXT.7 — Kaal Vela Calculator
+// SP-EXT.7 — Kaal Velas (V2-05): Lagna + 0.25°/min from sunrise; Gulika = Saturn eighth start, Maandi = mid
 
 const WEEKDAY_LORDS: PlanetName[] = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn']
 const PLANET_TO_SATELLITE: Partial<Record<PlanetName, KaalVelaPlanet>> = {
   Sun: 'Kaala', Mars: 'Mrityu', Mercury: 'Ardhaprahara', Jupiter: 'Yamaghantaka', Saturn: 'Gulika',
 }
 
-/** Ecliptic longitude at a clock-time offset from sunrise (30° per 24h). */
-function kaalVelaLongitudeFromMinutes(
-  sunAbsoluteLongitudeAtSunrise: number,
-  minutesFromSunrise: number
-): number {
-  return wrapLongitude(sunAbsoluteLongitudeAtSunrise + (minutesFromSunrise / 24) * 30)
+const KAAL_RISING_DEG_PER_MIN = 0.25
+
+function kaalRisingLongitude(lagnaAbsoluteLongitude: number, minutesFromSunrise: number): number {
+  return wrapLongitude(lagnaAbsoluteLongitude + minutesFromSunrise * KAAL_RISING_DEG_PER_MIN)
 }
 
 export function calculateKaalVelas(
-  sunAbsoluteLongitudeAtSunrise: number,
+  lagnaAbsoluteLongitude: number,
   dayDurationMinutes: number,
-  weekdayIndex: number  // 0=Sunday … 6=Saturday
-): KaalVelaSetResult {
+  weekdayIndex: number  // 0=Sunday … 6=Saturday ([KV-2] align with profile local weekday)
+): KaalVelaSetResult | null {
+  if (dayDurationMinutes <= 0) return null
   const portionMinutes = dayDurationMinutes / 8
   const results: Partial<Record<KaalVelaPlanet, KaalVelaResult>> = {}
   for (let i = 0; i < 7; i++) {
-    const lord     = WEEKDAY_LORDS[(weekdayIndex + i) % 7]
+    const lord = WEEKDAY_LORDS[(weekdayIndex + i) % 7]
     const satellite = PLANET_TO_SATELLITE[lord]
     if (!satellite) continue
-    const startMinutes    = i * portionMinutes
-    const endMinutes      = startMinutes + portionMinutes
+    const startMinutes = i * portionMinutes
+    const endMinutes = startMinutes + portionMinutes
     const midpointMinutes = startMinutes + portionMinutes / 2
     const makeEntry = (
       planet: KaalVelaPlanet,
-      refLon: number
+      refLon: number,
+      anchorMin?: number
     ): KaalVelaResult => {
       const lon = Math.round(refLon * 1000) / 1000
       return {
@@ -785,25 +831,24 @@ export function calculateKaalVelas(
         referenceLongitude:      lon,
         midpointLongitude:       lon,
         signNumber:              (Math.floor(lon / 30) + 1) as SignNumber,
+        portionAnchorMin:        anchorMin,
       }
     }
     if (satellite === 'Gulika') {
-      // DECISION [9]: Gulika = start of Saturn's eighth; Maandi = midpoint of that eighth
-      const gulikaLon = kaalVelaLongitudeFromMinutes(sunAbsoluteLongitudeAtSunrise, startMinutes)
-      const maandiLon = kaalVelaLongitudeFromMinutes(sunAbsoluteLongitudeAtSunrise, midpointMinutes)
-      results.Gulika = makeEntry('Gulika', gulikaLon)
-      results.Maandi = makeEntry('Maandi', maandiLon)
+      const gulikaLon = kaalRisingLongitude(lagnaAbsoluteLongitude, startMinutes)
+      const maandiLon = kaalRisingLongitude(lagnaAbsoluteLongitude, midpointMinutes)
+      results.Gulika = makeEntry('Gulika', gulikaLon, startMinutes)
+      results.Maandi = makeEntry('Maandi', maandiLon, midpointMinutes)
     } else {
-      const lon = kaalVelaLongitudeFromMinutes(sunAbsoluteLongitudeAtSunrise, midpointMinutes)
-      results[satellite] = makeEntry(satellite, lon)
+      const lon = kaalRisingLongitude(lagnaAbsoluteLongitude, startMinutes)
+      results[satellite] = makeEntry(satellite, lon, startMinutes)
     }
   }
   const required: KaalVelaPlanet[] = ['Gulika', 'Maandi', 'Kaala', 'Mrityu', 'Ardhaprahara', 'Yamaghantaka']
   for (const r of required) {
-    if (!results[r]) throw new Error(`[calculateKaalVelas] ${r} not assigned`)
+    if (!results[r]) return null
   }
   const byPlanet = results as Record<KaalVelaPlanet, KaalVelaResult>
-  // KaalVelaSetResult uses camelCase keys; internal map uses KaalVelaPlanet (PascalCase) keys
   return {
     gulika: byPlanet.Gulika,
     maandi: byPlanet.Maandi,
@@ -839,7 +884,7 @@ export function calculateExtendedSpecialPoints(
 ): ExtendedSpecialPointsResult {
   return {
     varnadaLagna: calculateVarnadaLagna(lagnaSignNumber, horaLagnaSignNumber),
-    pranapada:    calculatePranapada(sunAbsoluteLongitudeAtSunrise, minutesSinceSunrise),
+    pranapada:    calculatePranapada(sunAbsoluteLongitudeAtSunrise, minutesSinceSunrise, lagnaSignNumber),
     upapadaLagna: calculateUpapadaLagna(lagnaSignNumber, planets),
     sreeLagna:    calculateSreeLagna(lagnaSignNumber, planets),
     bhriguBindu:  calculateBhriguBindu(planets),

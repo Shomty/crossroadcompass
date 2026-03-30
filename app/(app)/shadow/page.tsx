@@ -10,7 +10,7 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { GlimpseBlur, GlimpseCTA, ShadowHeadline } from "@/components/glimpse";
@@ -25,10 +25,10 @@ import { getBasicShadowData } from "@/lib/astro/shadowService";
 import type { SubscriptionTier } from "@/types";
 
 export default async function ShadowPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
-  const userId = session.user.id;
+  const userId = ctx.userId;
 
   // ── Get birth profile ───────────────────────────────────────────────────
   const birthProfile = await db.birthProfile.findUnique({
@@ -45,7 +45,7 @@ export default async function ShadowPage() {
     select: { tier: true },
   });
   const tier = subscription?.tier ?? "FREE";
-  const isAdmin = session.user.role === "ADMIN";
+  const isAdmin = ctx.isAdmin;
   const effectiveTier: SubscriptionTier = isAdmin ? "VIP" : (tier as SubscriptionTier);
   const isPremium = effectiveTier === "CORE" || effectiveTier === "VIP";
 

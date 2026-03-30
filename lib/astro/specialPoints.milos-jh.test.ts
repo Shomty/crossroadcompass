@@ -42,8 +42,17 @@ function bhavaLagnaAbsoluteLongitude(result: {
   return ((result.bhavaLagnaSignNumber - 1) * 30 + result.bhavaLagnaDegree + 360) % 360;
 }
 
+function shortArcMidpointDeg(lam: number, lar: number): number {
+  const a = ((lam % 360) + 360) % 360;
+  const b = ((lar % 360) + 360) % 360;
+  let d = b - a;
+  if (d > 180) d -= 360;
+  if (d < -180) d += 360;
+  return ((a + d / 2) % 360 + 360) % 360;
+}
+
 describe("Milos / Jagannatha Hora PDF — Bhrigu Bindu (pure)", () => {
-  it("calculateBhriguBindu — DECISION [8] arithmetic mean (Moon + Rahu) / 2 with DMS", () => {
+  it("calculateBhriguBindu — short-arc midpoint with DMS", () => {
     const planets = milosPdfPlanetPositions();
     const bb = calculateBhriguBindu(planets);
     const moon = planets.find((p) => p.planet === "Moon")!;
@@ -52,7 +61,7 @@ describe("Milos / Jagannatha Hora PDF — Bhrigu Bindu (pure)", () => {
     const lar = planetAbsoluteLongitude(rahu);
     expect(lam).toBeCloseTo(MILOS_JH_ABSOLUTE_LONGITUDE.moon, 2);
     expect(lar).toBeCloseTo(MILOS_JH_ABSOLUTE_LONGITUDE.rahu, 2);
-    const expected = ((lam + lar) / 2 + 360) % 360;
+    const expected = shortArcMidpointDeg(lam, lar);
     expect(bb.bhriguBinduLongitude).toBeCloseTo(expected, 4);
     expect(bb.moonLongitudeUsed).toBeCloseTo(lam, 4);
     expect(bb.rahuLongitudeUsed).toBeCloseTo(lar, 4);
@@ -79,7 +88,11 @@ describe("Milos — time-based lagnas vs JH (pipeline tolerance)", () => {
       inputs!.lagnaSignNumber,
       inputs!.planets,
       inputs!.sunAbsoluteLongitudeAtSunrise,
-      inputs!.minutesSinceSunrise
+      inputs!.minutesSinceSunrise,
+      {
+        isDayBirth: inputs!.isDayBirth,
+        udayaLagnaLongitude: inputs!.lagnaAbsoluteLongitude,
+      }
     );
 
     const jh = MILOS_JH_ABSOLUTE_LONGITUDE;
@@ -94,30 +107,32 @@ describe("Milos — time-based lagnas vs JH (pipeline tolerance)", () => {
   });
 });
 
-describe("Kaal Vela — DECISION [9]", () => {
+describe("Kaal Vela — V2 (Lagna + 0.25°/min)", () => {
   it("Gulika uses Saturn eighth start, Maandi uses that eighth midpoint", () => {
     const dayMinutes = 12 * 60;
-    const sun = 15;
-    const r = calculateKaalVelas(sun, dayMinutes, 0);
+    const lagna = 15;
+    const r = calculateKaalVelas(lagna, dayMinutes, 0);
+    expect(r).not.toBeNull();
     const portion = dayMinutes / 8;
     const startM = 6 * portion;
     const midM = startM + portion / 2;
     const wrap = (n: number) => ((n % 360) + 360) % 360;
-    const gul = wrap(sun + (startM / 24) * 30);
-    const man = wrap(sun + (midM / 24) * 30);
-    expect(r.gulika.referenceLongitude).toBeCloseTo(gul, 3);
-    expect(r.maandi.referenceLongitude).toBeCloseTo(man, 3);
-    expect(r.gulika.referenceLongitude).not.toBeCloseTo(r.maandi.referenceLongitude, 2);
+    const gul = wrap(lagna + startM * 0.25);
+    const man = wrap(lagna + midM * 0.25);
+    expect(r!.gulika.referenceLongitude).toBeCloseTo(gul, 3);
+    expect(r!.maandi.referenceLongitude).toBeCloseTo(man, 3);
+    expect(r!.gulika.referenceLongitude).not.toBeCloseTo(r!.maandi.referenceLongitude, 2);
   });
 });
 
-describe("Pranapada — DECISION [7]", () => {
-  it("movable Sun: starts from Sun sign cusp + offset", () => {
+describe("Pranapada — V2 (Sun λ + modality)", () => {
+  it("movable Sun: base = Sun longitude + time offset", () => {
     const sunLon = 15;
-    const pp = calculatePranapada(sunLon, 0);
-    expect(pp.startingRule).toBe("from_sun");
+    const pp = calculatePranapada(sunLon, 0, 1);
+    expect(pp.sunSignNature).toBe("movable");
+    expect(pp.startingLongitude).toBeCloseTo(15, 4);
     expect(pp.sunSignAtSunrise).toBe(1);
     expect(pp.pranapadalagnaSignNumber).toBe(1);
-    expect(pp.pranapadalagnaDegree).toBeCloseTo(0, 3);
+    expect(pp.pranapadalagnaDegree).toBeCloseTo(15, 3);
   });
 });

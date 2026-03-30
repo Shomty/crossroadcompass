@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { DailyInsightFeedback } from "@/components/dashboard/DailyInsightFeedback";
 
 interface InsightContent {
   summary?: string;
@@ -26,6 +27,9 @@ interface Props {
     id: string;
     content: string;
     accuracyRating: number | null;
+    /** YYYY-MM-DD (UTC) — for POST /api/insights/feedback */
+    feedbackDate?: string;
+    insightFeedback?: string | null;
   } | null;
 }
 
@@ -183,6 +187,16 @@ export function CosmicGuidanceCard({ initialInsight }: Props) {
           )}
 
           <StarRating insightId={state.id} initial={state.accuracyRating} />
+          {state && (
+            <DailyInsightFeedback
+              dateStr={initialInsight?.feedbackDate ?? new Date().toISOString().slice(0, 10)}
+              initial={
+                initialInsight?.insightFeedback === "positive" || initialInsight?.insightFeedback === "negative"
+                  ? initialInsight.insightFeedback
+                  : null
+              }
+            />
+          )}
         </>
       ) : (
         <div className="dash-empty">

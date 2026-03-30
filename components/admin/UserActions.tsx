@@ -8,9 +8,11 @@ interface Props {
   userId: string;
   userEmail: string;
   currentTier: string;
+  /** When true, hide impersonation (admins cannot impersonate admins). */
+  isAdminUser?: boolean;
 }
 
-export function UserActions({ userId, userEmail, currentTier }: Props) {
+export function UserActions({ userId, userEmail, currentTier, isAdminUser }: Props) {
   const router = useRouter();
   const [tierModal, setTierModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
@@ -53,6 +55,22 @@ export function UserActions({ userId, userEmail, currentTier }: Props) {
     }
   };
 
+  const handleImpersonate = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/impersonate`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Failed");
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setMessage({ type: "error", text: "Impersonation failed" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleTriggerInsight = async () => {
     setLoading(true);
     try {
@@ -90,6 +108,15 @@ export function UserActions({ userId, userEmail, currentTier }: Props) {
         <button style={{ ...btnStyle, color: "#e8b96a", borderColor: "rgba(232,185,106,0.3)" }} onClick={() => setTierModal(true)}>
           Change Tier
         </button>
+        {!isAdminUser ? (
+          <button
+            style={{ ...btnStyle, color: "#e8b96a", borderColor: "rgba(232,185,106,0.25)" }}
+            onClick={() => void handleImpersonate()}
+            disabled={loading}
+          >
+            Login As
+          </button>
+        ) : null}
         <button style={btnStyle} onClick={handleInvalidateCache} disabled={loading}>
           Invalidate Cache
         </button>

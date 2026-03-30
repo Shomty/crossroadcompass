@@ -2,6 +2,7 @@
 import { requireAdminSession } from "@/lib/admin/requireAdmin";
 import { db } from "@/lib/db";
 import Link from "next/link";
+import { ImpersonateUserButton } from "@/components/admin/ImpersonateUserButton";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +90,7 @@ export default async function UsersPage({
         {/* Header */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "1fr 100px 90px 90px 80px 100px",
+          gridTemplateColumns: "1fr 100px 90px 90px 80px 100px 90px",
           padding: "10px 16px",
           borderBottom: "1px solid rgba(200,135,58,0.15)",
           fontFamily: "var(--font-mono, 'DM Mono')",
@@ -104,24 +105,35 @@ export default async function UsersPage({
           <div>Joined</div>
           <div>Chart</div>
           <div>Insights</div>
+          <div>Actions</div>
         </div>
 
         {users.map((u, i) => (
-          <Link
+          <div
             key={u.id}
-            href={`/admin/users/${u.id}`}
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 100px 90px 90px 80px 100px",
+              gridTemplateColumns: "1fr 100px 90px 90px 80px 100px 90px",
               padding: "10px 16px",
               borderTop: i > 0 ? "1px solid rgba(255,255,255,0.04)" : "none",
-              textDecoration: "none",
+              alignItems: "center",
               transition: "background 0.1s",
             }}
           >
-            <div style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 12, color: "#c8d0e8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <Link
+              href={`/admin/users/${u.id}`}
+              style={{
+                fontFamily: "var(--font-mono, 'DM Mono')",
+                fontSize: 12,
+                color: "#c8d0e8",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                textDecoration: "none",
+              }}
+            >
               {u.email}
-            </div>
+            </Link>
             <div style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 11, color: TIER_COLORS[u.subscription?.tier ?? "FREE"] ?? "#606880" }}>
               {u.subscription?.tier ?? "FREE"}
             </div>
@@ -137,7 +149,12 @@ export default async function UsersPage({
             <div style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 11, color: "#606880" }}>
               {u._count.insights}
             </div>
-          </Link>
+            <div>
+              {u.role === "ADMIN" || u.isAdmin ? null : (
+                <ImpersonateUserButton userId={u.id} />
+              )}
+            </div>
+          </div>
         ))}
       </div>
 

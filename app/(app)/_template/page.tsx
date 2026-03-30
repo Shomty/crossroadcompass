@@ -42,7 +42,7 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { V4GlassCard } from "@/components/v4/V4GlassCard";
 
@@ -50,14 +50,14 @@ export default async function TemplatePage() {
   // ── Auth guard ─────────────────────────────────────────────────────────────
   // The app shell redirects unauthenticated users, but this guard keeps each
   // page self-contained and type-safe for data fetching below.
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
   // ── TODO: fetch page data here ─────────────────────────────────────────────
-  // const data = await db.something.findUnique({ where: { userId: session.user.id } });
+  // const data = await db.something.findUnique({ where: { userId: ctx.userId } });
 
   // ── TODO: derive display values ────────────────────────────────────────────
-  // const firstName = session.user?.name?.split(" ")[0] ?? "Traveler";
+  // const firstName = ctx.name?.split(" ")[0] ?? "Traveler";
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (

@@ -9,48 +9,18 @@
 
 ## 16. EXTERNAL INTEGRATIONS — SOURCES OF TRUTH
 
-Two external sources power all chart data. Understand the distinction
-before touching any calculation or API code.
+Chart data comes from **local npm libraries** plus Swiss Ephemeris files on disk.
+There is **no** Vedic HTTP API in this stack.
 
-### 16.1 Vedic Astrology — External API
+### 16.1 Vedic Astrology — Local Library
 
-- **Base URL:** `http://144.76.78.183:9000/api/v1/`
-- **Auth:** `X-Api-Key: <value>` request header
-- **Key stored as:** `VEDIC_API_KEY` environment variable
-- **Never hardcode the key.** Never log it. Never expose it client-side.
+- **Package:** `openastrology-library` (npm; same ecosystem as `openhumandesign-library`)
+- **Entry point:** `lib/astro/calculatorService.ts` — only this file may construct `VedicAstrologyCalculator` / `WesternAstrologyCalculator` (singletons; call `disposeCalculators` on shutdown).
+- **Orchestration / cache:** `lib/astro/chartService.ts` — KV + DB; no `VEDIC_API_URL` or `VEDIC_API_KEY` (removed).
+- **Ephemeris:** Same `EPHE_PATH` as Human Design — `.se1` files are **not** bundled in npm; download per deployment (see `npm run download-ephe`).
+- **Output type:** `VedicChartCalculations` from the package — use it end-to-end instead of legacy REST-shaped types.
 
-This is a paid, rate-limited external service. Every unnecessary call
-costs money and risks hitting rate limits. The caching rules in
-section 18 are non-negotiable.
-
-All calls to this API must go through `/lib/astro/vedicApiClient.ts`.
-No other file may call this API directly.
-```typescript
-// /lib/astro/vedicApiClient.ts — shape every request here
-const VEDIC_API_BASE = process.env.VEDIC_API_URL!;
-const VEDIC_API_KEY  = process.env.VEDIC_API_KEY!;
-
-async function vedicFetch<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${VEDIC_API_BASE}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Api-Key': VEDIC_API_KEY,
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    // log server-side only, never surface key or raw body to client
-    throw new VedicApiError(res.status, await res.text());
-  }
-  return res.json() as Promise<T>;
-}
-```
-
-The exact endpoint paths and request/response shapes for this API are
-not yet confirmed. Before calling any endpoint, add a
-`// DECISION NEEDED: confirm endpoint path and payload schema` comment
-and surface it to Milosh.
+Caching rules in section 18 still apply (KV hot path, invalidate on birth-data change).
 
 ### 16.2 Human Design — Local Library
 
@@ -229,9 +199,9 @@ Regenerate dasha data only when birth data changes (profileVersion bump).
 | Data type | Source | Cache strategy | Recalculate when |
 |---|---|---|---|
 | HD chart | Local library | DB, permanent | Birth data changes |
-| Vedic natal chart | Vedic API | DB, permanent | Birth data changes |
-| Daily transits | Vedic API | DB, 1 row per user per day | Row missing for today |
-| Dasha timeline | Vedic API | DB, covers 12+ months | Birth data changes |
+| Vedic natal chart | openastrology-library | DB + KV, permanent | Birth data changes |
+| Daily transits | openastrology-library | KV, 24h TTL | Date rollover / miss |
+| Dasha timeline | Library → Prisma `dasha` | DB, covers full vimshottari | Birth data changes |
 
 ---
 
@@ -241,12 +211,13 @@ All chart computation and retrieval is centralized in `/lib/astro/`.
 No other part of the codebase calls external APIs or the HD library directly.
 ```
 /lib/astro/
-  vedicApiClient.ts     - Raw HTTP client for Vedic API (section 16.1)
+  calculatorService.ts  - Singleton Vedic + Western calculators (section 16.1)
   hdCalculator.ts       - Wrapper around openhumandesign-library
-  chartService.ts       - Orchestrator: cache-check → fetch → store → return
-  transitService.ts     - Daily transit fetch with DB cache layer
-  dashaService.ts       - Dasha fetch with DB cache layer
-  types.ts              - Shared TypeScript types for all chart data
+  chartService.ts       - Orchestrator: cache-check → calculate → store → return
+  transitChartService.ts / transitService.ts — transit helpers (see repo)
+  dashaService.ts       - Persist dasha rows from Vedic chart
+  vedicChartMapper.ts   - Library chart → special-points inputs
+  types.ts              - Shared TypeScript types for chart layers
 ```
 
 ### chartService.ts responsibilities
@@ -284,11 +255,7 @@ as a background job so the user gets an immediate response.
 
 ## 20. ENVIRONMENT VARIABLES REFERENCE
 ```bash
-# Vedic Astrology API
-VEDIC_API_URL=http://144.76.78.183:9000/api/v1
-VEDIC_API_KEY=<secret — never commit>
-
-# Human Design ephemeris files
+# Swiss Ephemeris data (Human Design + Vedic — local libraries)
 EPHE_PATH=./ephe
 
 # Database
@@ -315,13 +282,11 @@ set in Vercel environment variables before any deployment. The app
 must throw a clear startup error (not a runtime crash) if any required
 variable is missing.
 
-Add a `/lib/env.ts` validation file using Zod that runs at startup:
+Add a `/lib/env.ts` validation file using Zod that runs at startup (see repo for current schema — **no** `VEDIC_*` keys):
 ```typescript
 import { z } from 'zod';
 
 const envSchema = z.object({
-  VEDIC_API_URL: z.string().url(),
-  VEDIC_API_KEY: z.string().min(1),
   EPHE_PATH: z.string().default('./ephe'),
   DATABASE_URL: z.string().min(1),
   // ... all others

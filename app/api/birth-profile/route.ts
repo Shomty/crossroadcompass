@@ -22,6 +22,7 @@ import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { invalidateChartCache } from "@/lib/astro/chartService";
+import { buildProfileOnlySnapshot } from "@/lib/astro/snapshotFromChart";
 
 // ─── Validation schema ─────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ export async function GET() {
       longitude: true,
       timezone: true,
       observationCity: true,
+      chartDataVedic: true,
     },
   });
 
@@ -81,7 +83,13 @@ export async function GET() {
     return NextResponse.json({ error: "No birth profile found" }, { status: 404 });
   }
 
-  return NextResponse.json({ profile });
+  const { chartDataVedic, ...rest } = profile;
+  return NextResponse.json({
+    profile: {
+      ...rest,
+      hasVedicChart: chartDataVedic != null,
+    },
+  });
 }
 
 // ─── POST — create birth profile ──────────────────────────────────────────
@@ -134,6 +142,15 @@ export async function POST(req: NextRequest) {
 
   // TODO: queue background job to pre-calculate HD + Vedic charts
   // Do not calculate inline — user gets an immediate response (section 19, step 5)
+
+  await db.userAstroSnapshot.upsert({
+    where: { userId: session.user.id },
+    create: {
+      userId: session.user.id,
+      ...buildProfileOnlySnapshot(profile, false),
+    },
+    update: buildProfileOnlySnapshot(profile, false),
+  });
 
   return NextResponse.json({ profileId: profile.id }, { status: 201 });
 }
@@ -198,6 +215,16 @@ export async function PATCH(req: NextRequest) {
 
   // Invalidate KV cache keys (separate from DB tx — KV is not transactional)
   await invalidateChartCache(userId);
+
+  const updatedProfile = await db.birthProfile.findUniqueOrThrow({ where: { userId } });
+  await db.userAstroSnapshot.upsert({
+    where: { userId },
+    create: {
+      userId,
+      ...buildProfileOnlySnapshot(updatedProfile, true),
+    },
+    update: buildProfileOnlySnapshot(updatedProfile, true),
+  });
 
   // AC-04: notify user that past insights were based on prior birth data
   return NextResponse.json({

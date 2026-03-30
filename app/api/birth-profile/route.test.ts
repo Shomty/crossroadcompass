@@ -6,17 +6,23 @@ const mockAuth = vi.fn();
 vi.mock("@/lib/auth", () => ({ auth: () => mockAuth() }));
 
 const mockFindUnique = vi.fn();
+const mockFindUniqueOrThrow = vi.fn();
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockTransaction = vi.fn();
 const mockDeleteMany = vi.fn();
+const mockSnapshotUpsert = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   db: {
     birthProfile: {
       findUnique: (...args: unknown[]) => mockFindUnique(...args),
+      findUniqueOrThrow: (...args: unknown[]) => mockFindUniqueOrThrow(...args),
       create: (...args: unknown[]) => mockCreate(...args),
       update: (...args: unknown[]) => mockUpdate(...args),
+    },
+    userAstroSnapshot: {
+      upsert: (...args: unknown[]) => mockSnapshotUpsert(...args),
     },
     $transaction: (fn: (tx: unknown) => Promise<unknown>) => mockTransaction(fn),
   },
@@ -34,6 +40,7 @@ describe("POST /api/birth-profile", () => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "user1" } });
     mockFindUnique.mockResolvedValue(null); // no existing profile by default
+    mockSnapshotUpsert.mockResolvedValue(undefined);
   });
 
   it("returns 401 when not authenticated", async () => {
@@ -70,7 +77,18 @@ describe("POST /api/birth-profile", () => {
   });
 
   it("returns 201 and creates profile with valid body", async () => {
-    mockCreate.mockResolvedValueOnce({ id: "bp1", userId: "user1" });
+    mockCreate.mockResolvedValueOnce({
+      id: "bp1",
+      userId: "user1",
+      birthDate: new Date("1990-01-15T00:00:00.000Z"),
+      birthCity: "Belgrade",
+      birthCountry: "Serbia",
+      latitude: 44.8,
+      longitude: 20.5,
+      timezone: "Europe/Belgrade",
+      birthTimeKnown: true,
+      updatedAt: new Date("2020-01-01"),
+    });
     const req = new NextRequest("http://localhost/api/birth-profile", {
       method: "POST",
       body: JSON.stringify(validBody()),
@@ -103,6 +121,19 @@ describe("PATCH /api/birth-profile", () => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue({ user: { id: "user1" } });
     mockFindUnique.mockResolvedValue(null);
+    mockSnapshotUpsert.mockResolvedValue(undefined);
+    mockFindUniqueOrThrow.mockResolvedValue({
+      id: "bp1",
+      userId: "user1",
+      birthDate: new Date("1990-01-15T00:00:00.000Z"),
+      birthCity: "Belgrade",
+      birthCountry: "Serbia",
+      latitude: 44.8,
+      longitude: 20.5,
+      timezone: "Europe/Belgrade",
+      birthTimeKnown: true,
+      updatedAt: new Date("2020-01-01"),
+    });
   });
 
   it("returns 401 when not authenticated", async () => {
@@ -197,6 +228,7 @@ describe("GET /api/birth-profile", () => {
       longitude: 20.5,
       timezone: "Europe/Belgrade",
       profileVersion: 1,
+      chartDataVedic: null,
     };
     mockFindUnique.mockResolvedValue(profile);
     const res = await GET();

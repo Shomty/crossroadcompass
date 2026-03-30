@@ -28,12 +28,27 @@ describe("env", () => {
     expect(result.NODE_ENV).toBe("development");
   });
 
-  it("parseEnv throws when required var is missing", () => {
-    const missing = { ...minimalValid };
-    delete (missing as Record<string, string>).GEMINI_API_KEY;
-    expect(() => parseEnv(missing as NodeJS.ProcessEnv)).toThrow(
-      /Invalid environment configuration/
-    );
+  it("parseEnv throws in production runtime when GEMINI_API_KEY is missing", () => {
+    const prod = {
+      NODE_ENV: "production" as const,
+      DATABASE_URL: "postgresql://localhost/db",
+      AUTH_SECRET: "test-secret-test-secret-test-secret",
+      NEXTAUTH_URL: "http://localhost:3000",
+      ADMIN_EMAIL: "admin@example.com",
+    };
+    expect(() => parseEnv(prod as NodeJS.ProcessEnv)).toThrow(/GEMINI_API_KEY/);
+  });
+
+  it("parseEnv skips prod-only checks during Next production build phase", () => {
+    const build = {
+      ...minimalValid,
+      NODE_ENV: "production" as const,
+      NEXT_PHASE: "phase-production-build",
+    };
+    delete (build as Record<string, string>).GEMINI_API_KEY;
+    delete (build as Record<string, string>).ADMIN_EMAIL;
+    const result = parseEnv(build as NodeJS.ProcessEnv);
+    expect(result.NODE_ENV).toBe("production");
   });
 
   it("parseEnv throws when DATABASE_URL is empty", () => {

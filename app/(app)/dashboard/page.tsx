@@ -17,7 +17,7 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import Link from "next/link";
 import { Settings } from "lucide-react";
@@ -27,7 +27,9 @@ import { ForecastCard } from "@/components/dashboard/ForecastCard";
 import { DashaCard } from "@/components/dashboard/DashaCard";
 import { TransitCard } from "@/components/dashboard/TransitCard";
 import { CosmicGuidanceCard } from "@/components/dashboard/CosmicGuidanceCard";
-import { getOrCreateHDChart, getOrCreateVedicChart } from "@/lib/astro/chartService";
+import { DashboardTransitsSection } from "@/components/dashboard/DashboardTransitsSection";
+import { getOrCreateHDChart, getOrCreateTodayTransits, getOrCreateVedicChart } from "@/lib/astro/chartService";
+import { serializeVedicChart } from "@/lib/astro/serializeVedicChart";
 import {
   getThisWeeksForecast,
   getThisMonthsForecast,
@@ -43,12 +45,12 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ rated?: string; subscribed?: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
-  const userId = session.user.id;
+  const userId = ctx.userId;
   const params = await searchParams;
-  const userName = session.user?.name ?? session.user?.email?.split("@")[0] ?? "Traveler";
+  const userName = ctx.name?.trim() || ctx.email?.split("@")[0] || "Traveler";
   const firstName = userName.split(" ")[0];
 
   // ── Subscription ────────────────────────────────────────────────────────────
@@ -57,7 +59,7 @@ export default async function DashboardPage({
     select: { tier: true },
   });
   const tier        = subscription?.tier ?? "FREE";
-  const isAdmin     = session.user.role === "ADMIN";
+  const isAdmin     = ctx.isAdmin;
   const isPaid      = isAdmin || tier === "CORE" || tier === "VIP";
   const isVip       = isAdmin || tier === "VIP";
   // Admin sees all features as VIP — used for component-level tier props
@@ -70,6 +72,7 @@ export default async function DashboardPage({
   let hdStrategy:  string | null = null;
   let hdAuthority: string | null = null;
   let hdProfile:   string | null = null;
+  let transitChartJson: unknown = null;
   if (birthProfile) {
     try {
       const hdChart = await getOrCreateHDChart(userId, birthProfile);
@@ -82,14 +85,27 @@ export default async function DashboardPage({
     try {
       await getOrCreateVedicChart(userId, birthProfile);
     } catch { /* fail silently — dasha card shows empty if API unavailable */ }
+    try {
+      const t = await getOrCreateTodayTransits(userId, birthProfile);
+      transitChartJson = serializeVedicChart(t);
+    } catch { /* transits optional on dashboard */ }
   }
 
-  // ── Today's insight ─────────────────────────────────────────────────────────
-  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-  const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
+  // ── Today's insight (UTC day — matches dailyInsightService upsert) ───────────
+  const todayUtc = new Date();
+  todayUtc.setUTCHours(0, 0, 0, 0);
+  const tomorrowUtc = new Date(todayUtc);
+  tomorrowUtc.setUTCDate(tomorrowUtc.getUTCDate() + 1);
   const dailyInsightRow = await db.insight.findFirst({
-    where: { userId, type: "DAILY", periodDate: { gte: todayStart, lte: todayEnd } },
+    where: { userId, type: "DAILY", periodDate: { gte: todayUtc, lt: tomorrowUtc } },
     orderBy: { generatedAt: "desc" },
+    select: {
+      id: true,
+      content: true,
+      accuracyRating: true,
+      insightFeedback: true,
+      periodDate: true,
+    },
   });
 
   // ── Forecasts ───────────────────────────────────────────────────────────────
@@ -176,6 +192,18 @@ export default async function DashboardPage({
                 Life Blueprint
               </Link>
 
+              {/* Jyotish grid */}
+              <Link href="/chart" className="dash-chart-btn" style={{ background: "rgba(99,102,241,0.08)", borderColor: "rgba(99,102,241,0.35)", color: "#a5b4fc" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                </svg>
+                Jyotish Chart
+              </Link>
+
               {/* Full Chart CTA */}
               <Link href="/report" className="dash-chart-btn">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -199,15 +227,30 @@ export default async function DashboardPage({
             />
           </div>
 
+          {/* ── Transit Moon Widget (1/3 width) ──────────────────────────── */}
+          <div className="dash-grid-12 dash-mb">
+            <div className="dash-col-4">
+              <DashboardTransitsSection transitJson={transitChartJson} />
+            </div>
+          </div>
+
           {/* ── ROW 1: Cosmic Guidance (8) + Current Period / Dasha (4) ─────── */}
           <div className="dash-grid-12 dash-mb dash-row-hero">
 
             {/* Cosmic Guidance — 8 cols */}
-            <CosmicGuidanceCard initialInsight={dailyInsightRow ? {
-              id: dailyInsightRow.id,
-              content: dailyInsightRow.content as string,
-              accuracyRating: dailyInsightRow.accuracyRating,
-            } : null} />
+            <CosmicGuidanceCard
+              initialInsight={
+                dailyInsightRow
+                  ? {
+                      id: dailyInsightRow.id,
+                      content: dailyInsightRow.content as string,
+                      accuracyRating: dailyInsightRow.accuracyRating,
+                      feedbackDate: dailyInsightRow.periodDate.toISOString().slice(0, 10),
+                      insightFeedback: dailyInsightRow.insightFeedback,
+                    }
+                  : null
+              }
+            />
 
             {/* Current Period (Dasha) — 4 cols */}
             <div className="glass-card glass-card-dasha dash-col-4 animate-enter animate-enter-2">

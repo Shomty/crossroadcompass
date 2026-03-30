@@ -1,0 +1,2 @@
+# All houses filled
+http://localhost:3000/api/v1/draw?h1=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h2=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h3=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h4=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h5=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h6=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h7=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h8=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h9=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h10=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h11=Su,Mo,Sa(R),Ju(RC),Ve,Ra&h12=Su,Mo,Sa(R),Ju(RC),Ve,Ra&w=640&h=500

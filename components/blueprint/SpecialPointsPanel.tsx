@@ -12,8 +12,10 @@ import type {
   SpecialPointsResult, SpecialPointsInsights, SignNumber, Charakaraka,
   CharakarakaResult, SthiraKarakaDeficit, SubscriptionTier,
   ExtendedSpecialPointsResult,
+  VedicPointPlacement,
 } from '@/types'
 import { ExtendedSpecialPointsSection } from '@/components/blueprint/ExtendedSpecialPointsSection'
+import { formatPlacementLine } from '@/lib/astro/vedicPointPlacementFormat'
 
 // ─── Lookup tables ─────────────────────────────────────────────────────────
 
@@ -133,6 +135,8 @@ interface LagnaRow {
   min?: number
   sec?: number
   note?: string
+  /** H·rāśi·nakṣatra·pada (whole sign from Lagna) */
+  placementLine?: string
 }
 
 function LagnasTable({
@@ -181,6 +185,20 @@ function LagnasTable({
                       marginTop: 1,
                     }}>
                       {r.note}
+                    </div>
+                  )}
+                  {r.placementLine && (
+                    <div
+                      title="Whole sign from Lagna; equal-division nakṣatra. Sign-only lagnas use 0° of the sign for nakṣatra/pada."
+                      style={{
+                        fontFamily: 'DM Mono, monospace',
+                        fontSize: 9,
+                        color: 'rgba(255,255,255,0.32)',
+                        marginTop: 5,
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      {r.placementLine}
                     </div>
                   )}
                 </td>
@@ -232,10 +250,12 @@ function CharakarakasTable({
   karakas,
   deficit,
   insights,
+  ckPlacements,
 }: {
   karakas: CharakarakaResult[]
   deficit: SthiraKarakaDeficit | null
   insights?: SpecialPointsInsights['charakarakas'] | null
+  ckPlacements?: Partial<Record<Charakaraka, VedicPointPlacement>>
 }) {
   return (
     <>
@@ -313,6 +333,20 @@ function CharakarakasTable({
                         ↺
                       </span>
                     )}
+                    {ckPlacements?.[k.rank] && (
+                      <div
+                        title="Planet’s chart longitude (not CK ranking tuple)."
+                        style={{
+                          fontFamily: 'DM Mono, monospace',
+                          fontSize: 9,
+                          color: 'rgba(255,255,255,0.28)',
+                          marginTop: 5,
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {formatPlacementLine(ckPlacements[k.rank]!)}
+                      </div>
+                    )}
                   </td>
                   <td style={{ ...tdBase, paddingRight: 0 }}>
                     <DegreeCell
@@ -381,11 +415,14 @@ interface Props {
   extendedPoints?: ExtendedSpecialPointsResult | null
   insights?: SpecialPointsInsights | null
   userTier?: SubscriptionTier
+  /** Optional: show V2 cache / migration note (Life Blueprint admin) */
+  isAdmin?: boolean
 }
 
-export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, userTier }: Props) {
+export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, userTier, isAdmin }: Props) {
   const { arudhaLagna, ghatiLagna, bhavaLagna, horaLagna, charakarakas } = specialPoints
   const isPaid = userTier === 'CORE' || userTier === 'VIP'
+  const pl = specialPoints.placements
 
   const natal = specialPoints.natalLagna ?? { signNumber: arudhaLagna.lagnaSignNumber }
 
@@ -398,6 +435,7 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
       deg:     natal.degreeInSign,
       min:     natal.arcMinutes,
       sec:     natal.arcSeconds,
+      placementLine: pl?.natalLagna ? formatPlacementLine(pl.natalLagna) : undefined,
     },
     {
       abbr:    'AL',
@@ -410,6 +448,7 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
                  : arudhaLagna.exceptionApplied === 'use_4th'
                    ? '4th-house rule applied (AL = 7th)'
                    : undefined,
+      placementLine: pl?.arudhaLagna ? formatPlacementLine(pl.arudhaLagna) : undefined,
     },
     {
       abbr:    'GL',
@@ -418,6 +457,8 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
       sign:    ghatiLagna.ghatiLagnaSignNumber,
       deg:     Math.floor(ghatiLagna.ghatiLagnaDegree),
       min:     Math.round((ghatiLagna.ghatiLagnaDegree % 1) * 60),
+      note:    `Base λ ${ghatiLagna.baseLongitudeUsed.toFixed(2)}° · ${ghatiLagna.isDayBirth ? 'day birth (Sun @ sunrise)' : 'night birth (Udaya Lagna)'}`,
+      placementLine: pl?.ghatiLagna ? formatPlacementLine(pl.ghatiLagna) : undefined,
     },
     {
       abbr:    'HL',
@@ -426,6 +467,8 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
       sign:    horaLagna.horaLagnaSignNumber,
       deg:     Math.floor(horaLagna.horaLagnaDegree),
       min:     Math.round((horaLagna.horaLagnaDegree % 1) * 60),
+      note:    `Base λ ${horaLagna.baseLongitudeUsed.toFixed(2)}° · ${horaLagna.isDayBirth ? 'day birth (Sun @ sunrise)' : 'night birth (Udaya Lagna)'}`,
+      placementLine: pl?.horaLagna ? formatPlacementLine(pl.horaLagna) : undefined,
     },
     {
       abbr:    'BL',
@@ -434,6 +477,8 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
       sign:    bhavaLagna.bhavaLagnaSignNumber,
       deg:     Math.floor(bhavaLagna.bhavaLagnaDegree),
       min:     Math.round((bhavaLagna.bhavaLagnaDegree % 1) * 60),
+      note:    `Base λ ${bhavaLagna.baseLongitudeUsed.toFixed(2)}° · ${bhavaLagna.isDayBirth ? 'day birth (Sun @ sunrise)' : 'night birth (Udaya Lagna)'}`,
+      placementLine: pl?.bhavaLagna ? formatPlacementLine(pl.bhavaLagna) : undefined,
     },
   ]
 
@@ -462,7 +507,7 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
 
       {/* ── Lagnas card ── */}
       <div style={card}>
-        <div style={sectionTitle}>Special Lagnas</div>
+        <div style={sectionTitle}>5.1 · Special Lagnas</div>
         <div style={{ overflowX: 'auto' }}>
           <LagnasTable rows={lagnaRows} insights={insights?.lagnas} />
         </div>
@@ -488,7 +533,7 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
       {/* ── Charakarakas card ── */}
       <div style={card}>
         <div style={sectionTitle}>
-          Charakarakas — Soul Role Assignments
+          5.2 · Charakarakas — Soul Role Assignments
           {charakarakas.deficit && (
             <span style={{
               marginLeft: 10,
@@ -510,6 +555,7 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
             karakas={charakarakas.karakas}
             deficit={charakarakas.deficit}
             insights={insights?.charakarakas}
+            ckPlacements={pl?.charakarakas}
           />
         </div>
         {!isPaid && (
@@ -530,6 +576,24 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
           </div>
         )}
       </div>
+
+      {isAdmin && (
+        <div style={{
+          padding: '10px 14px',
+          borderRadius: 10,
+          background: 'rgba(200,135,58,0.06)',
+          border: '1px solid rgba(200,135,58,0.12)',
+          fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+          fontSize: 10,
+          color: 'rgba(240,220,160,0.45)',
+          lineHeight: 1.55,
+        }}>
+          <span style={{ color: 'rgba(200,135,58,0.75)', fontWeight: 600 }}>5.5 · Admin</span>
+          {' '}Special Points V2 is active. Cached keys: <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 9 }}>chart:specialpointsv2</span> and{' '}
+          <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 9 }}>chart:specialpoints:ext:v3</span>.
+          Legacy <span style={{ fontFamily: 'DM Mono, monospace', fontSize: 9 }}>chart:specialpoints:*</span> entries are removed when birth data changes.
+        </div>
+      )}
 
       <ExtendedSpecialPointsSection extended={extendedPoints ?? null} />
 

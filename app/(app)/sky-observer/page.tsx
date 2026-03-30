@@ -6,7 +6,7 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { SkyObserver } from "@/components/sky/SkyObserver";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -18,11 +18,11 @@ export const metadata = {
 };
 
 export default async function SkyObserverPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
   const birthProfile = await db.birthProfile.findUnique({
-    where: { userId: session.user.id },
+    where: { userId: ctx.userId },
     select: {
       latitude: true,
       longitude: true,

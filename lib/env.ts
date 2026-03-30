@@ -52,9 +52,21 @@ export const envSchema = z.object({
   // Cron authentication (required in deployment; route fails closed when missing)
   CRON_SECRET: opt(z.string().min(1)),
 
-  // Gemini AI — optional locally; AI features degrade gracefully when absent
+  // Gemini AI — required in production (admin reports / generation)
   GEMINI_API_KEY: opt(z.string().min(1)),
   GEMINI_MODEL: optWithDefault(z.string().min(1), "gemini-2.5-flash"),
+
+  /// Bypass purchase check on POST /api/reports/generate when session email matches
+  ADMIN_EMAIL: opt(z.string().email()),
+
+  /// Bank transfer details (admin payments — email only; optional until used)
+  BANK_ACCOUNT_NAME: opt(z.string().min(1)),
+  BANK_IBAN: opt(z.string().min(1)),
+  BANK_BIC: opt(z.string().min(1)),
+  BANK_REFERENCE_PREFIX: z.preprocess(
+    (v) => (v === "" || v === undefined ? "CC" : v),
+    z.string().min(1).default("CC")
+  ),
 
   // App URL — defaults to NEXTAUTH_URL when absent
   APP_URL: z.string().url().optional(),
@@ -66,19 +78,40 @@ export const envSchema = z.object({
 });
 
 export function parseEnv(source: NodeJS.ProcessEnv) {
-  const parsed = envSchema.safeParse(source);
+  const base = envSchema.safeParse(source);
 
-  if (!parsed.success) {
+  if (!base.success) {
     console.error(
       "❌  Missing or invalid environment variables:\n",
-      parsed.error.flatten().fieldErrors
+      base.error.flatten().fieldErrors
     );
     throw new Error(
       "Invalid environment configuration — check your .env.local file."
     );
   }
 
-  return parsed.data;
+  const data = base.data;
+  // `next build` sets NODE_ENV=production but should not fail CI/local builds
+  // when deploy-only secrets are absent; enforce at runtime (`next start` / server).
+  // Use `source` (not only process.env) so tests and isolated parses behave correctly.
+  const isNextProductionBuild =
+    source.NEXT_PHASE === "phase-production-build";
+  if (data.NODE_ENV === "production" && !isNextProductionBuild) {
+    const prodIssues: string[] = [];
+    if (!data.GEMINI_API_KEY) prodIssues.push("GEMINI_API_KEY");
+    if (!data.ADMIN_EMAIL) prodIssues.push("ADMIN_EMAIL");
+    if (prodIssues.length) {
+      console.error(
+        "❌  Production requires:\n",
+        prodIssues.join(", ")
+      );
+      throw new Error(
+        `Invalid environment configuration — missing: ${prodIssues.join(", ")}`
+      );
+    }
+  }
+
+  return data;
 }
 
 export const env = parseEnv(process.env);

@@ -8,18 +8,18 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { TodaysTransitForm } from "@/components/transit/TodaysTransitForm";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 export default async function TodaysTransitPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
-  const userId = session.user.id;
-  const userName = session.user?.name ?? session.user?.email?.split("@")[0] ?? "Traveler";
+  const userId = ctx.userId;
+  const userName = ctx.name?.trim() || ctx.email?.split("@")[0] || "Traveler";
 
   // Load saved observation location (null-safe — first visit will have no profile)
   const profile = await db.birthProfile.findUnique({

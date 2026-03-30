@@ -12,16 +12,17 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import Link from "next/link";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ChapterCard } from "@/components/blueprint/ChapterCard";
 import { GlimpseCTA } from "@/components/glimpse";
 import { getLatestHDReport } from "@/lib/ai/hdReportService";
-import { getOrCreateSpecialPoints, getOrCreateExtendedSpecialPoints } from "@/lib/astro/chartService";
+import { getOrCreateSpecialPoints, getOrCreateExtendedSpecialPoints, getOrCreateYogas } from "@/lib/astro/chartService";
 import { getOrCreateSpecialPointsInsights } from "@/lib/ai/specialPointsInsightService";
 import { SpecialPointsPanel } from "@/components/blueprint/SpecialPointsPanel";
+import { YogaGrid } from "@/components/chart/YogaGrid";
 import type { SubscriptionTier } from "@/types";
 
 // Maps the 7 HD report sections → 6 Life Blueprint chapters
@@ -47,10 +48,10 @@ const CHAPTER_TITLES = [
 ];
 
 export default async function LifeBlueprintPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
-  const userId = session.user.id;
+  const userId = ctx.userId;
 
   // ── Subscription ──────────────────────────────────────────────────────────
   const subscription = await db.subscription.findUnique({
@@ -58,14 +59,15 @@ export default async function LifeBlueprintPage() {
     select: { tier: true },
   });
   const tier = subscription?.tier ?? "FREE";
-  const isAdmin = session.user.role === "ADMIN";
+  const isAdmin = ctx.isAdmin;
   const effectiveTier: SubscriptionTier = isAdmin ? "VIP" : (tier as SubscriptionTier);
   const isPaid = effectiveTier === "CORE" || effectiveTier === "VIP";
 
   // ── Load latest HD report + special points ────────────────────────────────
-  const [report, specialPoints] = await Promise.all([
+  const [report, specialPoints, yogaData] = await Promise.all([
     getLatestHDReport(userId),
     getOrCreateSpecialPoints(userId),
+    getOrCreateYogas(userId),
   ]);
 
   const extendedPoints = specialPoints
@@ -73,7 +75,7 @@ export default async function LifeBlueprintPage() {
     : null;
 
   // ── Load AI insights for special points (CORE+ only) ─────────────────────
-  const userName = session.user.name ?? session.user.email?.split("@")[0] ?? "the native";
+  const userName = ctx.name?.trim() || ctx.email?.split("@")[0] || "the native";
   const specialPointsInsights = (isPaid && specialPoints)
     ? await getOrCreateSpecialPointsInsights(userId, specialPoints, userName)
     : null;
@@ -156,6 +158,7 @@ export default async function LifeBlueprintPage() {
               extendedPoints={extendedPoints}
               insights={specialPointsInsights}
               userTier={effectiveTier}
+              isAdmin={isAdmin}
             />
           )}
           {hasReport && !specialPoints && (
@@ -193,6 +196,14 @@ export default async function LifeBlueprintPage() {
                   chart report
                 </Link>{" "}
                 to trigger chart generation.
+              </p>
+            </div>
+          )}
+          {yogaData && <YogaGrid data={yogaData} />}
+          {hasReport && !yogaData && (
+            <div className="mt-12 text-center">
+              <p className="font-mono text-xs text-[rgba(240,232,216,0.4)]">
+                Yoga analysis will appear once your Vedic chart is ready.
               </p>
             </div>
           )}

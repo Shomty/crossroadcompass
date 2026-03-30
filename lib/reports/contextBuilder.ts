@@ -4,7 +4,8 @@ import { getOrCreateHDChart } from "@/lib/astro/chartService";
 import { kvGet } from "@/lib/kv/helpers";
 import { kvKeys } from "@/lib/kv/keys";
 import type { BirthProfile } from "@prisma/client";
-import type { HDChartData, VedicChartData } from "@/types";
+import type { HDChartData } from "@/types";
+import type { VedicChartCalculations } from "openastrology-library";
 
 function formatBirthTime(profile: BirthProfile): string {
   if (!profile.birthTimeKnown) return "Unknown";
@@ -36,9 +37,9 @@ export async function buildUserReportContext(userId: string): Promise<string> {
   const hdChart = await getOrCreateHDChart(userId, birthProfile);
 
   // 3. Fetch Vedic chart from KV (may be null — handle gracefully)
-  const vedicChart = (await kvGet<VedicChartData>(
+  const vedicChart = await kvGet<VedicChartCalculations>(
     kvKeys.vedicChart(userId)
-  )) as VedicChartData | null;
+  );
 
   // 4. Fetch dasha data:
   // - Try KV first (spec expectation)
@@ -92,19 +93,17 @@ export async function buildUserReportContext(userId: string): Promise<string> {
 
   if (vedicChart) {
     lines.push("--- VEDIC ASTROLOGY ---");
-    lines.push(`Lagna (Ascendant): ${safeString((vedicChart as Record<string, unknown>).lagna)}`);
-    lines.push(`Sun Sign: ${safeString((vedicChart as Record<string, unknown>).sunSign)}`);
-    lines.push(`Moon Sign: ${safeString((vedicChart as Record<string, unknown>).moonSign)}`);
     lines.push(
-      `Planetary Positions: ${JSON.stringify(
-        (vedicChart as Record<string, unknown>).planets ?? {}
-      )}`
+      `Lagna (Ascendant): ${vedicChart.ascendant.sign} ${vedicChart.ascendant.degreeDMSFormatted}`
     );
     lines.push(
-      `House Cusps: ${JSON.stringify(
-        (vedicChart as Record<string, unknown>).houses ?? {}
-      )}`
+      `Sun: ${vedicChart.planets.sun.sign} ${vedicChart.planets.sun.degreeDMSFormatted}`
     );
+    lines.push(
+      `Moon: ${vedicChart.planets.moon.sign} ${vedicChart.planets.moon.degreeDMSFormatted} (${vedicChart.planets.moon.nakshatra})`
+    );
+    lines.push(`Planetary positions: ${JSON.stringify(vedicChart.planets)}`);
+    lines.push(`Houses: ${JSON.stringify(vedicChart.houses)}`);
     lines.push("");
   } else {
     lines.push("--- VEDIC ASTROLOGY ---");

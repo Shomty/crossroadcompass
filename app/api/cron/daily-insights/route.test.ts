@@ -128,6 +128,6 @@ describe("GET /api/cron/daily-insights", () => {
     expect(data.total).toBe(1);
     expect(data.generated).toBe(1);
     expect(data.errors).toBe(0);
-    expect(mockGenerateDailyInsight).toHaveBeenCalledWith("user1", fakeChart, "Test");
+    expect(mockGenerateDailyInsight).toHaveBeenCalledWith("user1", fakeChart, "Test", fullProfile);
   });
 });

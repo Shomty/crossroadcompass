@@ -10,6 +10,9 @@ interface AuditLogParams {
   before?: unknown;
   after?: unknown;
   notes?: string;
+  actionLabel?: string;
+  detail?: string;
+  ip?: string;
 }
 
 /**
@@ -26,6 +29,9 @@ export async function writeAuditLog(params: AuditLogParams): Promise<void> {
         before: params.before !== undefined ? JSON.stringify(params.before) : undefined,
         after: params.after !== undefined ? JSON.stringify(params.after) : undefined,
         notes: params.notes,
+        actionLabel: params.actionLabel,
+        detail: params.detail,
+        ip: params.ip,
       },
     });
   } catch (err) {

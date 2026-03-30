@@ -175,6 +175,56 @@ export interface PlanetPosition {
   degreeInSign: number        // 0-29 whole degrees within the sign
   arcMinutes: number          // 0-59 minutes of arc (for precise CK tiebreaking)
   arcSeconds: number          // 0-59 seconds of arc (for precise CK tiebreaking)
+  /** From openastrology-library when mapped from Path 3 */
+  isCombust?: boolean
+  isRetrograde?: boolean
+  /** Optional whole-sign house from D1 lagna (denormalized) */
+  houseNumber?: number
+}
+
+/** Parashara yoga engine input — whole-sign, derived from stored Vedic chart */
+export interface YogaChartInput {
+  lagnaSignNumber: SignNumber
+  planets: PlanetPosition[]
+}
+
+/** App-facing strength (lowercase) — distinct from openastrology-library Yoga.strength */
+export type YogaStrength = 'strong' | 'moderate' | 'weak'
+
+export type YogaCategory =
+  | 'raj'
+  | 'dhana'
+  | 'daridra'
+  | 'nabhasha'
+  | 'pancha_mahapurusha'
+  | 'lunar'
+  | 'solar'
+  | 'auspicious'
+  | 'neechabhanga'
+  | 'vipareeta_raj'
+  | 'arishta'
+  | 'other'
+
+export interface YogaResult {
+  name: string
+  category: YogaCategory
+  strength: YogaStrength
+  bphsReference: string
+  planetsInvolved: PlanetName[]
+  housesInvolved: number[]
+  plainDescription: string
+  isActive: boolean
+  shortTitle: string
+  icon: string
+  dashaActivated: boolean
+}
+
+export interface YogaDetectionResult {
+  yogas: YogaResult[]
+  activeCount: number
+  strongCount: number
+  dominantCategory: YogaCategory
+  detectedAt: string
 }
 
 export interface ArudhaLagnaResult {
@@ -192,10 +242,12 @@ export interface GhatiLagnaResult {
   fullGhatikasSinceSunrise: number
   vighatikasFraction: number         // 0-59.99
   sunLongitudeAtSunrise: number
-  /** True when night branch used (udaya lagna base). DECISION [1]: OPEN — requires API fields. */
-  isNightBirth?: boolean
+  /** BPHS: true = Sun @ sunrise base; false = Udaya Lagna base (night birth). */
+  isDayBirth: boolean
   /** Base ecliptic longitude used for accumulation (sunrise or udaya lagna). */
-  baseLongitudeUsed?: number
+  baseLongitudeUsed: number
+  /** @deprecated Use !isDayBirth */
+  isNightBirth?: boolean
 }
 
 export interface BhavaLagnaResult {
@@ -203,8 +255,9 @@ export interface BhavaLagnaResult {
   bhavaLagnaDegree: number
   totalGhatikasSinceSunrise: number
   sunLongitudeAtSunrise: number
+  isDayBirth: boolean
+  baseLongitudeUsed: number
   isNightBirth?: boolean
-  baseLongitudeUsed?: number
 }
 
 export interface HoraLagnaResult {
@@ -212,8 +265,9 @@ export interface HoraLagnaResult {
   horaLagnaDegree: number
   totalGhatikasSinceSunrise: number
   sunLongitudeAtSunrise: number
+  isDayBirth: boolean
+  baseLongitudeUsed: number
   isNightBirth?: boolean
-  baseLongitudeUsed?: number
 }
 
 export interface CharakarakaResult {
@@ -245,6 +299,52 @@ export interface NatalLagnaInfo {
   arcSeconds?: number
 }
 
+/** Whole-sign house from Lagna + rāśi + equal-division nakṣatra/pada (see vedicPointPlacement). */
+export interface VedicPointPlacement {
+  houseFromLagna: number
+  rasiSignNumber: SignNumber
+  rasiName: string
+  nakshatra: string
+  pada: number
+}
+
+/** Server-filled display metadata; absent on older KV until recomputed. */
+export interface FoundationSpecialPointsPlacements {
+  natalLagna?: VedicPointPlacement
+  arudhaLagna: VedicPointPlacement
+  ghatiLagna: VedicPointPlacement
+  bhavaLagna: VedicPointPlacement
+  horaLagna: VedicPointPlacement
+  /** One entry per karaka row; a planet missing from the input array is omitted. */
+  charakarakas: Partial<Record<Charakaraka, VedicPointPlacement>>
+}
+
+export interface ExtendedSpecialPointsPlacements {
+  varnadaLagna: VedicPointPlacement
+  pranapada: VedicPointPlacement
+  upapadaLagna: VedicPointPlacement
+  sreeLagna: VedicPointPlacement
+  bhriguBindu: VedicPointPlacement
+  beejaSphuta: VedicPointPlacement
+  kshetraSphuta: VedicPointPlacement
+  trisphuta: VedicPointPlacement | null
+  dhoomaChain: {
+    dhooma: VedicPointPlacement
+    vyatipata: VedicPointPlacement
+    parivesha: VedicPointPlacement
+    indraChapa: VedicPointPlacement
+    upaketu: VedicPointPlacement
+  }
+  kaalVelas: {
+    gulika: VedicPointPlacement
+    maandi: VedicPointPlacement
+    kaala: VedicPointPlacement
+    mrityu: VedicPointPlacement
+    ardhaprahara: VedicPointPlacement
+    yamaghantaka: VedicPointPlacement
+  } | null
+}
+
 export interface SpecialPointsResult {
   /** Natal Lagna (D1); may be absent on older KV cache — use arudhaLagna.lagnaSignNumber as fallback */
   natalLagna?: NatalLagnaInfo
@@ -253,6 +353,7 @@ export interface SpecialPointsResult {
   bhavaLagna:   BhavaLagnaResult
   horaLagna:    HoraLagnaResult
   charakarakas: CharakarakaSetResult
+  placements?: FoundationSpecialPointsPlacements
 }
 
 // ─── Extended Special Points (SP-EXT) ────────────────────────────────────
@@ -267,17 +368,26 @@ export interface VarnadaLagnaResult {
 
 export type PranapadaStartingRule = 'from_sun' | 'from_9th_from_sun' | 'from_5th_from_sun'
 
+export type SunSignModality = 'movable' | 'fixed' | 'dual'
+
+/** BPHS Prāṇapada — Sun modality sets starting longitude; offset always additive (Special Points V2). */
 export interface PranapadalagnaResult {
   pranapadalagnaSignNumber: SignNumber
   pranapadalagnaDegree: number
-  sunSignAtSunrise: SignNumber
-  startingRule: PranapadaStartingRule
-  startingSignNumber: SignNumber
-  sunLongitudeAtSunrise: number
+  sunSignNature: SunSignModality
+  /** Normalised 0–360° — base longitude before time offset (Sun or Sun+120/+240). */
+  startingLongitude: number
   vighatisSinceSunrise: number
-  offsetDegrees: number
-  /** @deprecated Use offsetDegrees — kept for older KV payloads */
-  baseOffsetDegrees?: number
+  baseOffsetDegrees: number
+  /** True when Prāṇapada falls in 2/4/5/9/10/11 from Lagna. */
+  isFortunate: boolean
+  houseFromLagna: number
+  sunLongitudeAtSunrise: number
+  /** @deprecated V1 — use sunSignNature / startingLongitude */
+  sunSignAtSunrise?: SignNumber
+  startingRule?: PranapadaStartingRule
+  startingSignNumber?: SignNumber
+  offsetDegrees?: number
 }
 
 export interface UpapadaLagnaResult {
@@ -296,7 +406,7 @@ export interface SreeLagnaResult {
   remainder: number
 }
 
-/** Bhrigu Bindu — DECISION [8]: arithmetic mean (Moon + Rahu) / 2 on the ecliptic; Rahu uses chart longitude (no CK inversion). */
+/** Bhrigu Bindu — short-arc midpoint between Moon and Rahu on the ecliptic (V2-06); Rahu uses chart longitude (no CK inversion). */
 export interface BhriguBinduResult {
   bhriguBinduLongitude: number
   bhriguBinduSign: SignNumber
@@ -345,11 +455,13 @@ export interface KaalVelaResult {
   portionNumber: number
   startMinutesFromSunrise: number
   endMinutesFromSunrise: number
-  /** Canonical longitude: Gulika=start of portion, Maandi=midpoint of Saturn eighth, others=portion midpoint. */
+  /** Canonical longitude — V2: rising from Lagna at portion rules (Gulika=start, Maandi=Saturn mid, others=start). */
   referenceLongitude: number
   /** Same as referenceLongitude (legacy name for cached payloads). */
   midpointLongitude: number
   signNumber: SignNumber
+  /** Gulika: Saturn portion start (min from sunrise). Maandi: Saturn portion midpoint. */
+  portionAnchorMin?: number
 }
 
 export interface KaalVelaSetResult {
@@ -372,6 +484,7 @@ export interface ExtendedSpecialPointsResult {
   trisphuta: TriSphutaResult | null
   dhoomaChain: DhoomaChainResult
   kaalVelas: KaalVelaSetResult | null
+  placements?: ExtendedSpecialPointsPlacements
 }
 
 export interface SpecialPointsInsights {
@@ -394,16 +507,8 @@ export interface SpecialPointsInsights {
   generatedAt: string
 }
 
-/** Vedic natal chart data. Field names confirmed 2026-03-25 from Jyotish REST API. */
-export interface VedicChartData {
-  lagnaSignNumber: SignNumber
-  planets: PlanetPosition[]
-  sunriseData: {
-    sunAbsoluteLongitude: number
-    minutesSinceSunrise: number
-  }
-  [key: string]: unknown   // open for other Vedic API fields
-}
+/** Re-export — canonical natal chart shape from local Swiss Ephemeris calculation. */
+export type { VedicChartCalculations } from 'openastrology-library'
 
 // ─── Custom Report Builder ────────────────────────────────────────────────
 
@@ -441,7 +546,8 @@ export interface CustomReportOutput {
 export interface ReportData {
   user: { email: string };
   hdChart: HDChartData;
-  vedicChart: VedicChartData | null; // null until Vedic API endpoint confirmed
+  /** Natal D1 from openastrology-library; null if not yet computed. */
+  vedicChart: import('openastrology-library').VedicChartCalculations | null;
   birthProfile: {
     birthDate: Date;
     birthTime: string | null;

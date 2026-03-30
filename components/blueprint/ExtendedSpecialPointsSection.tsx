@@ -13,6 +13,7 @@ import type {
   KaalVelaSetResult,
   SignNumber,
 } from "@/types";
+import { formatPlacementLine } from "@/lib/astro/vedicPointPlacementFormat";
 
 const SIGN_NAMES: Record<SignNumber, string> = {
   1: "Aries", 2: "Taurus", 3: "Gemini", 4: "Cancer",
@@ -25,9 +26,9 @@ const SIGN_GLYPHS: Record<SignNumber, string> = {
   7: "♎", 8: "♏", 9: "♐", 10: "♑", 11: "♒", 12: "♓",
 };
 
-/** Shown next to Bhrigu Bindu — matches calculateBhriguBindu in lib/astro/specialPoints.ts */
+/** Shown next to Bhrigu Bindu — matches calculateBhriguBindu (short-arc midpoint, V2). */
 const BHRIGU_BINDU_HELP =
-  "Sidereal longitude; Moon–Rahu vector midpoint; not house-corrected.";
+  "Sidereal longitude; Moon–Rahu midpoint along the shorter ecliptic arc; not house-corrected.";
 
 const card: React.CSSProperties = {
   background: "rgba(13,18,32,0.55)",
@@ -71,6 +72,22 @@ const tdBase: React.CSSProperties = {
   borderBottom: "1px solid rgba(255,255,255,0.04)",
   verticalAlign: "top" as const,
 };
+
+const placementMuted: React.CSSProperties = {
+  fontFamily: "DM Mono, monospace",
+  fontSize: 9,
+  color: "rgba(255,255,255,0.28)",
+  marginTop: 5,
+  lineHeight: 1.45,
+};
+
+function PlacementMuted({ line }: { line: string }) {
+  return (
+    <div title="Whole sign from Lagna; equal-division nakṣatra." style={placementMuted}>
+      {line}
+    </div>
+  );
+}
 
 function wrapLon(n: number): number {
   const x = n % 360;
@@ -164,7 +181,7 @@ function kaalVelaEntry(
   return legacy[LEGACY_KAAL_KEY[k]];
 }
 
-function KaalVelaRow({ label, v }: { label: string; v: KaalVelaResult }) {
+function KaalVelaRow({ label, v, placementLine }: { label: string; v: KaalVelaResult; placementLine?: string }) {
   return (
     <tr>
       <td style={tdBase}>
@@ -182,6 +199,7 @@ function KaalVelaRow({ label, v }: { label: string; v: KaalVelaResult }) {
         }}>
           Portion {v.portionNumber} · {Math.round(v.startMinutesFromSunrise)}–{Math.round(v.endMinutesFromSunrise)} min from sunrise
         </span>
+        {placementLine ? <PlacementMuted line={placementLine} /> : null}
       </td>
       <td style={tdBase}>
         <SignCell sign={v.signNumber} />
@@ -211,20 +229,22 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
     dhoomaChain,
     kaalVelas,
   } = extended;
+  const pl = extended.placements;
+  const dh = pl?.dhoomaChain;
 
-  const dhoomaRows: { key: string; label: string; lon: number; sign: SignNumber }[] = [
-    { key: "dh", label: "Dhooma", lon: dhoomaChain.dhooma, sign: dhoomaChain.dhoomaSign },
-    { key: "vy", label: "Vyatipāta", lon: dhoomaChain.vyatipata, sign: dhoomaChain.vyatipataSign },
-    { key: "pa", label: "Pariveṣha", lon: dhoomaChain.parivesha, sign: dhoomaChain.pariveshaSign },
-    { key: "ic", label: "Indra Chāpa", lon: dhoomaChain.indraChapa, sign: dhoomaChain.indraChapSign },
-    { key: "up", label: "Upaketu", lon: dhoomaChain.upaketu, sign: dhoomaChain.upaKetuSign },
+  const dhoomaRows: { key: string; label: string; lon: number; sign: SignNumber; placementLine?: string }[] = [
+    { key: "dh", label: "Dhooma", lon: dhoomaChain.dhooma, sign: dhoomaChain.dhoomaSign, placementLine: dh ? formatPlacementLine(dh.dhooma) : undefined },
+    { key: "vy", label: "Vyatipāta", lon: dhoomaChain.vyatipata, sign: dhoomaChain.vyatipataSign, placementLine: dh ? formatPlacementLine(dh.vyatipata) : undefined },
+    { key: "pa", label: "Pariveṣha", lon: dhoomaChain.parivesha, sign: dhoomaChain.pariveshaSign, placementLine: dh ? formatPlacementLine(dh.parivesha) : undefined },
+    { key: "ic", label: "Indra Chāpa", lon: dhoomaChain.indraChapa, sign: dhoomaChain.indraChapSign, placementLine: dh ? formatPlacementLine(dh.indraChapa) : undefined },
+    { key: "up", label: "Upaketu", lon: dhoomaChain.upaketu, sign: dhoomaChain.upaKetuSign, placementLine: dh ? formatPlacementLine(dh.upaketu) : undefined },
   ];
 
   return (
     <>
       {/* Extended Lagnas */}
       <div style={card}>
-        <div style={sectionTitle}>Extended Lagnas</div>
+        <div style={sectionTitle}>5.3 · Extended Lagnas</div>
         <div style={{ overflowX: "auto" }}>
           <table style={tableCss}>
             <thead>
@@ -247,6 +267,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                   <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
                     Lagna {varnadaLagna.lagnaIsOdd ? "odd" : "even"} · Hora {varnadaLagna.horaLagnaIsOdd ? "odd" : "even"} · from Aries {varnadaLagna.countFromAries} · from HL {varnadaLagna.countFromHoraLagna}
                   </span>
+                  {pl?.varnadaLagna ? <PlacementMuted line={formatPlacementLine(pl.varnadaLagna)} /> : null}
                 </td>
                 <td style={tdBase}><SignCell sign={varnadaLagna.varnadaLagnaSignNumber} /></td>
                 <td style={{ ...tdBase, paddingRight: 0 }}>—</td>
@@ -259,8 +280,9 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                 </td>
                 <td style={tdBase}>
                   <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
-                    Vighatis {pranapada.vighatisSinceSunrise.toFixed(1)} · offset {(pranapada.offsetDegrees ?? pranapada.baseOffsetDegrees ?? 0).toFixed(2)}° · start {pranapada.startingRule?.replace(/_/g, " ") ?? "—"} · Sun @ sunrise λ {pranapada.sunLongitudeAtSunrise.toFixed(2)}°
+                    {pranapada.sunSignNature} Sun · start λ {pranapada.startingLongitude.toFixed(2)}° · vighatis {pranapada.vighatisSinceSunrise.toFixed(1)} · offset {pranapada.baseOffsetDegrees.toFixed(2)}° · house {pranapada.houseFromLagna} {pranapada.isFortunate ? "· fortunate" : ""} · Sun @ sunrise λ {pranapada.sunLongitudeAtSunrise.toFixed(2)}°
                   </span>
+                  {pl?.pranapada ? <PlacementMuted line={formatPlacementLine(pl.pranapada)} /> : null}
                 </td>
                 <td style={tdBase}><SignCell sign={pranapada.pranapadalagnaSignNumber} /></td>
                 <td style={{ ...tdBase, paddingRight: 0 }}>—</td>
@@ -278,6 +300,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                       <span> · {upapadaExceptionLabel(upapadaLagna.exceptionApplied)}</span>
                     )}
                   </span>
+                  {pl?.upapadaLagna ? <PlacementMuted line={formatPlacementLine(pl.upapadaLagna)} /> : null}
                 </td>
                 <td style={tdBase}><SignCell sign={upapadaLagna.upapadaSignNumber} /></td>
                 <td style={{ ...tdBase, paddingRight: 0 }}>—</td>
@@ -292,6 +315,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                   <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
                     9th-from-Lagna kālas {sreeLagna.ninthLordFromLagnaKalas} · 9th-from-Moon {sreeLagna.ninthLordFromMoonKalas} · total {sreeLagna.totalKalas} · rem {sreeLagna.remainder}
                   </span>
+                  {pl?.sreeLagna ? <PlacementMuted line={formatPlacementLine(pl.sreeLagna)} /> : null}
                 </td>
                 <td style={tdBase}><SignCell sign={sreeLagna.sreeLagnaSignNumber} /></td>
                 <td style={{ ...tdBase, paddingRight: 0 }}>—</td>
@@ -310,8 +334,9 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                 </td>
                 <td style={tdBase}>
                   <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>
-                    Rahu–Moon ecliptic midpoint (vector mean on the circle)
+                    Rahu–Moon short-arc ecliptic midpoint
                   </span>
+                  {pl?.bhriguBindu ? <PlacementMuted line={formatPlacementLine(pl.bhriguBindu)} /> : null}
                 </td>
                 <td style={tdBase}><SignCell sign={bhriguBindu.bhriguBinduSign} /></td>
                 <td style={{ ...tdBase, paddingRight: 0 }}>
@@ -325,7 +350,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
 
       {/* Sphuta */}
       <div style={card}>
-        <div style={sectionTitle}>Sphuta · Combined Longitudes</div>
+        <div style={sectionTitle}>5.4 · Sphuta · Dhooma · Kaal Velas</div>
         <div style={{ overflowX: "auto" }}>
           <table style={tableCss}>
             <thead>
@@ -344,8 +369,9 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                   >
                     Bhrigu Bindu
                   </span>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Rahu–Moon midpoint (ecliptic)</div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Rahu–Moon short-arc midpoint</div>
                   <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", marginTop: 5, lineHeight: 1.45 }}>{BHRIGU_BINDU_HELP}</div>
+                  {pl?.bhriguBindu ? <PlacementMuted line={formatPlacementLine(pl.bhriguBindu)} /> : null}
                 </td>
                 <td style={tdBase}><SignCell sign={bhriguBindu.bhriguBinduSign} /></td>
                 <td style={{ ...tdBase, paddingRight: 0 }}><AbsLongCell lon={bhriguBindu.bhriguBinduLongitude} /></td>
@@ -353,6 +379,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
               <tr>
                 <td style={tdBase}>
                   <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.85)" }}>Vijaya (Beeja) Sphuta</span>
+                  {pl?.beejaSphuta ? <PlacementMuted line={formatPlacementLine(pl.beejaSphuta)} /> : null}
                 </td>
                 <td style={tdBase}><SignCell sign={beejaSphuata.beejaSphutaSign} /></td>
                 <td style={{ ...tdBase, paddingRight: 0 }}><AbsLongCell lon={beejaSphuata.beejaSphutaLongitude} /></td>
@@ -360,6 +387,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
               <tr>
                 <td style={tdBase}>
                   <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.85)" }}>Kṣetra Sphuta</span>
+                  {pl?.kshetraSphuta ? <PlacementMuted line={formatPlacementLine(pl.kshetraSphuta)} /> : null}
                 </td>
                 <td style={tdBase}><SignCell sign={kshetraSphuata.kshetraSphutaSign} /></td>
                 <td style={{ ...tdBase, paddingRight: 0 }}><AbsLongCell lon={kshetraSphuata.kshetraSphutaLongitude} /></td>
@@ -367,6 +395,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
               <tr>
                 <td style={tdBase}>
                   <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.85)" }}>Tri-Sphuta</span>
+                  {pl?.trisphuta ? <PlacementMuted line={formatPlacementLine(pl.trisphuta)} /> : null}
                 </td>
                 <td style={tdBase}>
                   {trisphuta ? <SignCell sign={trisphuta.triSphutaSign} /> : (
@@ -416,6 +445,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                 <tr key={r.key}>
                   <td style={tdBase}>
                     <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.85)" }}>{r.label}</span>
+                    {r.placementLine ? <PlacementMuted line={r.placementLine} /> : null}
                   </td>
                   <td style={tdBase}><SignCell sign={r.sign} /></td>
                   <td style={{ ...tdBase, paddingRight: 0 }}><AbsLongCell lon={r.lon} /></td>
@@ -437,7 +467,7 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                   <th style={th}>Velā</th>
                   <th style={th}>Window</th>
                   <th style={th}>Sign</th>
-                  <th style={{ ...th, paddingRight: 0 }}>Midpoint λ</th>
+                  <th style={{ ...th, paddingRight: 0 }}>Reference λ</th>
                 </tr>
               </thead>
               <tbody>
@@ -452,8 +482,14 @@ function ExtendedSpecialPointsTables({ extended }: { extended: ExtendedSpecialPo
                   };
                   const v = kaalVelaEntry(kaalVelas, k);
                   if (!v) return null;
+                  const kp = pl?.kaalVelas?.[k];
                   return (
-                    <KaalVelaRow key={k} label={labels[k]} v={v} />
+                    <KaalVelaRow
+                      key={k}
+                      label={labels[k]}
+                      v={v}
+                      placementLine={kp ? formatPlacementLine(kp) : undefined}
+                    />
                   );
                 })}
               </tbody>

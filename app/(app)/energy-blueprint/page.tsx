@@ -11,7 +11,7 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { getOrCreateHDChart } from "@/lib/astro/chartService";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -22,10 +22,10 @@ import { GATE_MAPPING, getGateInfo } from "@/lib/humandesign/gateMapping";
 import type { SubscriptionTier } from "@/types";
 
 export default async function EnergyBlueprintPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
-  const userId = session.user.id;
+  const userId = ctx.userId;
 
   // ── Subscription ──────────────────────────────────────────────────────────
   const subscription = await db.subscription.findUnique({
@@ -33,7 +33,7 @@ export default async function EnergyBlueprintPage() {
     select: { tier: true },
   });
   const tier = subscription?.tier ?? "FREE";
-  const isAdmin = session.user.role === "ADMIN";
+  const isAdmin = ctx.isAdmin;
   const effectiveTier: SubscriptionTier = isAdmin ? "VIP" : (tier as SubscriptionTier);
   const isPaid = effectiveTier === "CORE" || effectiveTier === "VIP";
 

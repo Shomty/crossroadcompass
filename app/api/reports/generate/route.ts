@@ -1,62 +1,95 @@
-// STATUS: done | Task R.8c
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { requireAdminApi } from "@/lib/admin/requireAdmin";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import { generateReportForPurchase } from "@/lib/reports/reportGenerationService";
 
-const GenerateReportSchema = z.object({
-  purchaseId: z.string().min(1),
-});
+const SEVEN_DAYS_MS = 7 * 86_400_000;
 
 export async function POST(request: Request) {
-  const { error } = await requireAdminApi(request);
-  if (error) return error;
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const parsed = GenerateReportSchema.safeParse(body);
-  if (!parsed.success) {
+  let body: { reportProductId?: string };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const reportProductId = body.reportProductId;
+  if (typeof reportProductId !== "string" || !reportProductId) {
     return NextResponse.json(
-      { error: "Validation failed", details: parsed.error.issues },
+      { error: "reportProductId required" },
       { status: 400 }
     );
   }
 
-  const { purchaseId } = parsed.data;
+  const userId = session.user.id;
+  const adminBypass =
+    !!env.ADMIN_EMAIL &&
+    session.user.email?.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
 
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Report generation timed out")), 25_000)
-  );
+  let purchase = await db.reportPurchase.findFirst({
+    where: { userId, reportProductId },
+    include: { generatedReport: true },
+    orderBy: { purchasedAt: "desc" },
+  });
 
-  try {
-    const result = await Promise.race([
-      generateReportForPurchase(purchaseId),
-      timeoutPromise,
-    ]);
-
-    if (!result.success) {
-      return NextResponse.json({ error: result.error ?? "Generation failed" }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    const isTimeout =
-      err instanceof Error && err.message.toLowerCase().includes("timed out");
-
-    if (isTimeout) {
-      return NextResponse.json(
-        { error: "Report generation timed out. Try again later." },
-        { status: 504 }
-      );
-    }
-
-    console.error("[api/reports/generate] failed:", err);
-    return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
+  if (!purchase && adminBypass) {
+    purchase = await db.reportPurchase.upsert({
+      where: {
+        userId_reportProductId: { userId, reportProductId },
+      },
+      create: {
+        userId,
+        reportProductId,
+        amountPaidUsd: 0,
+        status: "PAID",
+      },
+      update: {
+        status: "PAID",
+      },
+      include: { generatedReport: true },
+    });
   }
-}
 
+  if (!purchase) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const gr = purchase.generatedReport;
+  if (gr?.status === "DONE" && gr.content.length > 0) {
+    const ref = gr.regeneratedAt ?? gr.generatedAt;
+    if (Date.now() - ref.getTime() < SEVEN_DAYS_MS) {
+      return NextResponse.json({
+        reportId: gr.id,
+        status: "DONE",
+        cached: true,
+      });
+    }
+  }
+
+  const result = await generateReportForPurchase(purchase.id);
+  const updated = await db.generatedReport.findUnique({
+    where: { purchaseId: purchase.id },
+  });
+
+  if (!result.success) {
+    return NextResponse.json(
+      {
+        reportId: updated?.id ?? null,
+        status: updated?.status ?? "FAILED",
+        error: result.error,
+      },
+      { status: 200 }
+    );
+  }
+
+  return NextResponse.json({
+    reportId: updated?.id ?? null,
+    status: updated?.status ?? "DONE",
+  });
+}

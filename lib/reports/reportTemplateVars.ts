@@ -49,6 +49,11 @@ function safeJson(value: unknown, max = JSON_MAX): string {
   }
 }
 
+function capitalize(s: string): string {
+  if (!s) return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function safeString(value: unknown, fallback = ""): string {
   if (value === null || value === undefined) return fallback;
   return typeof value === "string" ? value : String(value);
@@ -92,6 +97,138 @@ function deriveCurrentMahadasha(dashas: unknown): string {
     }
   }
   return "";
+}
+
+const VEDIC_PLANETS = [
+  "sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu",
+] as const;
+type VedicPlanet = (typeof VEDIC_PLANETS)[number];
+
+function extractGranularVedicVars(
+  vedicData: Record<string, unknown>,
+  vars: Record<ReportTemplateVariableKey, string>
+): void {
+  const planets = vedicData.planets;
+  const planetsIsDict =
+    planets != null && typeof planets === "object" && !Array.isArray(planets);
+  const planetsArr: unknown[] | null = Array.isArray(vedicData.planetaryPositions)
+    ? (vedicData.planetaryPositions as unknown[])
+    : Array.isArray(vedicData.planets)
+      ? (vedicData.planets as unknown[])
+      : null;
+
+  function getPlanet(planet: VedicPlanet): Record<string, unknown> | null {
+    if (planetsIsDict) {
+      const p = (planets as Record<string, unknown>)[planet];
+      return p != null && typeof p === "object" ? (p as Record<string, unknown>) : null;
+    }
+    if (planetsArr) {
+      const found = planetsArr.find((item) => {
+        if (!item || typeof item !== "object") return false;
+        const name = (item as Record<string, unknown>).name;
+        return typeof name === "string" && name.toLowerCase() === planet;
+      });
+      return found ? (found as Record<string, unknown>) : null;
+    }
+    return null;
+  }
+
+  for (const planet of VEDIC_PLANETS) {
+    const p = getPlanet(planet);
+    const signKey = `vedic_${planet}_sign` as ReportTemplateVariableKey;
+    const degKey = `vedic_${planet}_degree` as ReportTemplateVariableKey;
+    vars[signKey] = p?.sign ? capitalize(safeString(p.sign)) : "";
+    const rawDeg = p?.degree ?? p?.degreeInSign;
+    vars[degKey] =
+      rawDeg !== undefined && rawDeg !== null
+        ? String(Math.round(Number(rawDeg) * 100) / 100)
+        : "";
+    if (planet !== "rahu" && planet !== "ketu") {
+      const retroKey = `vedic_${planet}_retro` as ReportTemplateVariableKey;
+      vars[retroKey] = p && (p.isRetrograde || p.retrograde) ? "R" : "";
+    }
+  }
+
+  const asc = vedicData.ascendant as Record<string, unknown> | undefined;
+  vars.vedic_lagna_degree =
+    asc?.degree !== undefined && asc.degree !== null
+      ? String(Math.round(Number(asc.degree) * 100) / 100)
+      : "";
+
+  const houses = vedicData.houses;
+  const housesIsObj =
+    houses != null && typeof houses === "object" && !Array.isArray(houses);
+  for (let h = 1; h <= 12; h++) {
+    const k = `vedic_house_${h}_sign` as ReportTemplateVariableKey;
+    if (housesIsObj) {
+      const raw = houses as Record<string | number, unknown>;
+      const hi = (raw[h] ?? raw[String(h)]) as Record<string, unknown> | undefined;
+      vars[k] = hi?.sign ? capitalize(safeString(hi.sign)) : "";
+    } else {
+      vars[k] = "";
+    }
+  }
+}
+
+function extractDashaDateVars(
+  dashasData: unknown,
+  maha: string,
+  antar: string,
+  vars: Record<ReportTemplateVariableKey, string>
+): void {
+  vars.dasha_mahadasha_start = "";
+  vars.dasha_mahadasha_end = "";
+  vars.dasha_antardasha_start = "";
+  vars.dasha_antardasha_end = "";
+  if (!Array.isArray(dashasData) || !maha) return;
+
+  const now = new Date();
+
+  const mahaRec = (dashasData as unknown[]).find((d) => {
+    if (!d || typeof d !== "object") return false;
+    const rec = d as Record<string, unknown>;
+    return (
+      rec.level === "MAHADASHA" &&
+      typeof rec.planetName === "string" &&
+      rec.planetName.toLowerCase() === maha.toLowerCase()
+    );
+  }) as Record<string, unknown> | undefined;
+
+  if (mahaRec) {
+    vars.dasha_mahadasha_start = mahaRec.startDate
+      ? String(mahaRec.startDate).slice(0, 10)
+      : "";
+    vars.dasha_mahadasha_end = mahaRec.endDate
+      ? String(mahaRec.endDate).slice(0, 10)
+      : "";
+  }
+
+  if (!antar) return;
+
+  const antarRec = (dashasData as unknown[]).find((d) => {
+    if (!d || typeof d !== "object") return false;
+    const rec = d as Record<string, unknown>;
+    if (
+      rec.level !== "ANTARDASHA" ||
+      typeof rec.planetName !== "string" ||
+      rec.planetName.toLowerCase() !== antar.toLowerCase()
+    )
+      return false;
+    const start = rec.startDate ? new Date(String(rec.startDate)) : null;
+    const end = rec.endDate ? new Date(String(rec.endDate)) : null;
+    if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
+      return false;
+    return start <= now && now <= end;
+  }) as Record<string, unknown> | undefined;
+
+  if (antarRec) {
+    vars.dasha_antardasha_start = antarRec.startDate
+      ? String(antarRec.startDate).slice(0, 10)
+      : "";
+    vars.dasha_antardasha_end = antarRec.endDate
+      ? String(antarRec.endDate).slice(0, 10)
+      : "";
+  }
 }
 
 export type BuildReportTemplateVarsInput = {
@@ -273,6 +410,7 @@ export function buildReportTemplateVars(
         : typeof rawSade === "object"
           ? safeJson(rawSade, 2000)
           : safeString(rawSade);
+    extractGranularVedicVars(vedicData, vars);
   } else {
     vars.lagna = "";
     vars.sun_sign = "";
@@ -287,6 +425,7 @@ export function buildReportTemplateVars(
   vars.current_antardasha = antar;
   vars.current_dasha = maha;
   vars.dashas_json = dashasData ? safeJson(dashasData) : "";
+  extractDashaDateVars(dashasData, maha, antar, vars);
 
   vars.transit_json = transitData ? safeJson(transitData) : "";
 

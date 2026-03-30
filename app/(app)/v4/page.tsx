@@ -16,7 +16,7 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { getOrCreateHDChart, getOrCreateVedicChart } from "@/lib/astro/chartService";
 import {
@@ -52,11 +52,11 @@ function V4Divider({ glyph }: { glyph: string }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function V4Page() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
-  const userId    = session.user.id;
-  const userName  = session.user?.name ?? session.user?.email?.split("@")[0] ?? "Traveler";
+  const userId    = ctx.userId;
+  const userName  = ctx.name?.trim() || ctx.email?.split("@")[0] || "Traveler";
   const firstName = userName.split(" ")[0];
 
   // ── Subscription ────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ export default async function V4Page() {
     select: { tier: true },
   });
   const tier    = subscription?.tier ?? "FREE";
-  const isAdmin = session.user.role === "ADMIN";
+  const isAdmin = ctx.isAdmin;
   const isPaid  = isAdmin || tier === "CORE" || tier === "VIP";
 
   // ── Birth profile + charts ──────────────────────────────────────────────────

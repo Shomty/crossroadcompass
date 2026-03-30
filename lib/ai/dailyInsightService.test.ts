@@ -1,12 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { HDChartData } from "@/types";
 
+const { mockGenerateContent } = vi.hoisted(() => ({
+  mockGenerateContent: vi.fn(),
+}));
+
 const mockDashaFindFirst = vi.fn();
 const mockInsightUpsert = vi.fn();
 const mockInsightFindFirst = vi.fn();
+const mockBirthProfileFindUnique = vi.fn();
 
 vi.mock("@/lib/db", () => ({
   db: {
+    birthProfile: {
+      findUnique: (...args: unknown[]) => mockBirthProfileFindUnique(...args),
+    },
     dasha: {
       findFirst: (...args: unknown[]) => mockDashaFindFirst(...args),
     },
@@ -17,19 +25,50 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-const mockGenerateContent = vi.fn();
-vi.mock("@google/generative-ai", () => ({
-  GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
-    getGenerativeModel: () => ({
+vi.mock("@/lib/admin/promptService", () => ({
+  getPrompt: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("@/lib/astro/chartService", () => ({
+  getOrCreateTodayTransits: vi.fn(),
+}));
+
+vi.mock("@google/genai", () => ({
+  GoogleGenAI: class {
+    models = {
       generateContent: (...args: unknown[]) => mockGenerateContent(...args),
-    }),
-  })),
+    };
+  },
 }));
 
 describe("dailyInsightService", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     mockDashaFindFirst.mockResolvedValue(null);
+    mockBirthProfileFindUnique.mockResolvedValue(null);
+    const { getOrCreateTodayTransits } = await import("@/lib/astro/chartService");
+    vi.mocked(getOrCreateTodayTransits).mockResolvedValue({
+      planets: {
+        sun: {
+          sign: "aries",
+          degreeDMSFormatted: "10°00'00\"",
+          nakshatra: "ashwini",
+          isRetrograde: false,
+        },
+        moon: {
+          sign: "taurus",
+          degreeDMSFormatted: "5°00'00\"",
+          nakshatra: "krittika",
+          isRetrograde: false,
+        },
+        mars: {
+          sign: "gemini",
+          degreeDMSFormatted: "1°00'00\"",
+          nakshatra: "ardra",
+          isRetrograde: true,
+        },
+      },
+    } as unknown as import("openastrology-library").VedicChartCalculations);
   });
 
   const fakeChart: HDChartData = {
@@ -64,9 +103,7 @@ describe("dailyInsightService", () => {
         action: "Take a rest.",
         energyTheme: "Calm",
       });
-      mockGenerateContent.mockResolvedValueOnce({
-        response: { text: () => json },
-      });
+      mockGenerateContent.mockResolvedValueOnce({ text: json });
       mockInsightUpsert.mockResolvedValueOnce({});
 
       const { generateDailyInsight } = await import("./dailyInsightService");
@@ -84,6 +121,28 @@ describe("dailyInsightService", () => {
           update: expect.objectContaining({ content: expect.any(String) }),
         })
       );
+      const { getOrCreateTodayTransits } = await import("@/lib/astro/chartService");
+      expect(vi.mocked(getOrCreateTodayTransits)).not.toHaveBeenCalled();
+    });
+
+    it("loads transit chart when birth profile exists (no second DB fetch if passed in)", async () => {
+      const json = JSON.stringify({
+        summary: "S",
+        insight: "I",
+        action: "A",
+        energyTheme: "E",
+      });
+      mockGenerateContent.mockResolvedValueOnce({ text: json });
+      mockInsightUpsert.mockResolvedValueOnce({});
+
+      const fakeProfile = { userId: "user1", id: "bp1" } as import("@prisma/client").BirthProfile;
+
+      const { generateDailyInsight } = await import("./dailyInsightService");
+      await generateDailyInsight("user1", fakeChart, null, fakeProfile);
+
+      expect(mockBirthProfileFindUnique).not.toHaveBeenCalled();
+      const { getOrCreateTodayTransits } = await import("@/lib/astro/chartService");
+      expect(vi.mocked(getOrCreateTodayTransits)).toHaveBeenCalledWith("user1", fakeProfile);
     });
 
     it("strips markdown code fences from Gemini response", async () => {
@@ -93,9 +152,7 @@ describe("dailyInsightService", () => {
         action: "A",
         energyTheme: "E",
       }) + "\n```";
-      mockGenerateContent.mockResolvedValueOnce({
-        response: { text: () => raw },
-      });
+      mockGenerateContent.mockResolvedValueOnce({ text: raw });
       mockInsightUpsert.mockResolvedValueOnce({});
 
       const { generateDailyInsight } = await import("./dailyInsightService");

@@ -27,10 +27,13 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   role          UserRole  @default(USER)
+  /// Mirrors role === ADMIN when set; kept in sync by admin user PATCH.
+  isAdmin       Boolean   @default(false)
 
   accounts     Account[]
   sessions     Session[]
   birthProfile BirthProfile?
+  astroSnapshot UserAstroSnapshot?
   transits     Transit[]
   dashas       Dasha[]
   insights     Insight[]
@@ -153,6 +156,160 @@ model BirthProfile {
   @@map("birth_profiles")
 }
 
+/// Cached Jyotish UI snapshot — FE-01 through FE-10; written after chart calculation.
+model UserAstroSnapshot {
+  userId             String    @id
+  // FE-01 base
+  lagnaSign          String?
+  lagnaDegree        Float?
+  lagnaNakshatra     String?
+  lagnaNakshatraPada Int?
+  ayanamsa           Float?
+  birthTimeKnown     Boolean?
+  vedicChartCachedAt DateTime?
+
+  // FE-11 profile snapshot
+  birthDateSnapshot    DateTime?
+  birthCitySnapshot    String?
+  birthCountrySnapshot String?
+  birthLatitude        Float?
+  birthLongitude       Float?
+  birthTimezone        String?
+  profileUpdatedAt     DateTime?
+  cacheInvalidatedAt   DateTime?
+
+  // FE-02 planet snapshot (9 planets × core fields)
+  sunSign        String?
+  sunHouse       Int?
+  sunNakshatra   String?
+  sunDignity     String?
+  sunRetrograde  Boolean?
+  sunCombust     Boolean?
+  moonSign       String?
+  moonHouse      Int?
+  moonNakshatra  String?
+  moonNakshatraPada Int?
+  moonDignity    String?
+  marsSign       String?
+  marsHouse      Int?
+  marsDignity    String?
+  marsRetrograde Boolean?
+  mercurySign    String?
+  mercuryHouse   Int?
+  jupiterSign    String?
+  jupiterHouse   Int?
+  jupiterDignity String?
+  venusSign      String?
+  venusHouse     Int?
+  saturnSign     String?
+  saturnHouse    Int?
+  saturnRetrograde Boolean?
+  rahuSign       String?
+  rahuHouse      Int?
+  ketuSign       String?
+  ketuHouse      Int?
+  retrogradeCount Int?
+  combustCount    Int?
+
+  // FE-03 house snapshot
+  house1Sign   String?
+  house1Lord   String?
+  house1Strength Float?
+  house5Sign   String?
+  house5Lord   String?
+  house5Strength Float?
+  house7Sign   String?
+  house7Lord   String?
+  house7Strength Float?
+  house10Sign  String?
+  house10Lord  String?
+  house10Strength Float?
+  strongestHouseNum Int?
+  weakestHouseNum   Int?
+
+  // FE-04 yoga snapshot
+  totalYogasCount Int?
+  rajaYogasCount  Int?
+  dhanaYogasCount Int?
+  strongYogasCount Int?
+  hasNeechabhanga  Boolean?
+  topYogaName      String?
+  topYogaStrength  Float?
+  yogaNamesAll     String? // JSON-encoded string[]
+
+  // FE-05 dasha snapshot
+  mahadashaPlanet       String?
+  mahadashaStartDate    DateTime?
+  mahadashaEndDate      DateTime?
+  mahadashaRemainingYrs Float?
+  mahadashaRemainingMos Float?
+  antardashaPlanet      String?
+  antardashaStartDate   DateTime?
+  antardashaEndDate     DateTime?
+  nextMahadashaPlanet   String?
+  nextMahadashaStartDate DateTime?
+
+  // FE-06 special points snapshot
+  arudhaLagnaSign       String?
+  arudhaLagnaHouse      Int?
+  ghatiLagnaSign        String?
+  bhavaLagnaSign        String?
+  horaLagnaSign         String?
+  atmakarakaPlanet      String?
+  amatyakarakaPlanet    String?
+  specialPointsCalcAt   DateTime?
+
+  // FE-07 ashtakavarga snapshot
+  avSarvaHouse1    Int?
+  avSarvaHouse5    Int?
+  avSarvaHouse7    Int?
+  avSarvaHouse10   Int?
+  avSarvaTotal     Int?
+  avSarvaMax       Int?
+  avSarvaMaxHouse  Int?
+  avSarvaMin       Int?
+  avSarvaMinHouse  Int?
+  avSunBhinna      Float?
+  avMoonBhinna     Float?
+  avJupiterBhinna  Float?
+  avSaturnBhinna   Float?
+
+  // FE-08 divisional snapshot
+  d9MoonSign           String?
+  d9VenusSign          String?
+  d9AscendantSign      String?
+  d10SunSign           String?
+  d10SaturnSign        String?
+  d10AscendantSign     String?
+  divisionalChartsCachedAt DateTime?
+
+  // FE-09 daily transit snapshot (refreshed each day)
+  transitSunSign       String?
+  transitMoonSign      String?
+  transitMoonNakshatra String?
+  transitMarsSign      String?
+  transitJupiterSign   String?
+  transitSaturnSign    String?
+  transitSaturnRetro   Boolean?
+  transitCacheDate     DateTime?
+
+  // FE-10 insight snapshot
+  lastInsightDate         DateTime?
+  lastInsightGeneratedAt  DateTime?
+  insightStreakDays        Int?
+  totalInsightsCount       Int?
+  insightFeedbackLast      String?
+
+  feJson Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_astro_snapshots")
+}
+
 // ---------------------------------------------------------------------------
 // TRANSITS — section 18.3 — one row per user per calendar day
 // ---------------------------------------------------------------------------
@@ -232,6 +389,7 @@ model Insight {
   rejectedAt           DateTime?
   rejectedBy           String?
   accuracyRating       Int?      // 1-5 user rating from email poll (section 6.3)
+  insightFeedback      String?   // 'positive' | 'negative' — FE-10 daily card thumbs
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -343,6 +501,14 @@ enum AuditActionType {
   CONFIG_CHANGED
   FEATURE_FLAG_TOGGLED
   CRON_MANUALLY_TRIGGERED
+  REPORT_PRODUCT_CREATED
+  REPORT_PROMPT_SAVED
+  REPORT_ACTIVATE_TOGGLED
+  REPORT_TEST_RUN
+  REPORT_REGENERATE
+  PAYMENT_BANK_INSTRUCTIONS_SENT
+  USER_IMPERSONATE
+  USER_ADMIN_UPDATE
 }
 
 model PromptTemplate {
@@ -382,15 +548,19 @@ model PromptTemplateVersion {
 }
 
 model AuditLog {
-  id         String          @id @default(cuid())
-  timestamp  DateTime        @default(now())
-  adminEmail String
-  actionType AuditActionType
-  targetId   String?
-  targetType String?
-  before     String?
-  after      String?
-  notes      String?
+  id          String          @id @default(cuid())
+  timestamp   DateTime        @default(now())
+  adminEmail  String
+  actionType  AuditActionType
+  targetId    String?
+  targetType  String?
+  before      String?
+  after       String?
+  notes       String?
+  /// Free-form action label (e.g. task-spec action strings) for admin panel filtering
+  actionLabel String?
+  detail      String?
+  ip          String?
 
   @@index([adminEmail])
   @@index([actionType])
@@ -454,6 +624,14 @@ enum ReportPurchaseStatus {
   FAILED
 }
 
+/// Lifecycle for GeneratedReport rows (admin report logs / regeneration).
+enum ReportGenerationStatus {
+  PENDING
+  GENERATING
+  DONE
+  FAILED
+}
+
 model ReportProduct {
   id            String   @id @default(cuid())
   slug          String   @unique // URL-safe identifier, e.g. "shadow-work-deep-dive"
@@ -466,12 +644,30 @@ model ReportProduct {
   sortOrder     Int     @default(0)
   coverImageUrl String?
   geminiPrompt  String  // Supports placeholders: {{hd_type}}, {{hd_authority}}, ...
+  /// Incremented when a new ReportPromptVersion row is saved.
+  promptVersion Int     @default(1)
   estimatedWordCount Int @default(2000) // Shown to user as "~X word report"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   createdBy     String // Admin email who created it
 
-  purchases     ReportPurchase[]
+  purchases      ReportPurchase[]
+  promptVersions ReportPromptVersion[]
+}
+
+/// Version history for ReportProduct.geminiPrompt (admin prompt editor).
+model ReportPromptVersion {
+  id              String        @id @default(cuid())
+  reportProductId String
+  reportProduct   ReportProduct @relation(fields: [reportProductId], references: [id], onDelete: Cascade)
+  version         Int
+  prompt          String
+  savedBy         String
+  savedAt         DateTime      @default(now())
+  testResult      String?
+
+  @@index([reportProductId])
+  @@map("report_prompt_versions")
 }
 
 model ReportPurchase {
@@ -498,9 +694,12 @@ model GeneratedReport {
   purchaseId       String   @unique
   purchase         ReportPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
 
-  content          String   // Full Gemini output, human-readable markdown
-  wordCount        Int
+  status           ReportGenerationStatus @default(DONE)
+  errorMsg         String?
+  regeneratedAt    DateTime?
+  content          String   @default("") // Full Gemini output; empty while PENDING/GENERATING
+  wordCount        Int      @default(0)
   generatedAt      DateTime @default(now())
-  geminiModel      String // e.g. "gemini-1.5-pro"
+  geminiModel      String   @default("")
   generationTimeMs Int?
 }

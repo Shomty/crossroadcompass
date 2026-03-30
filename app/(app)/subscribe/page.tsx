@@ -6,17 +6,17 @@
  */
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import Link from "next/link";
 import { UpgradeButton } from "@/components/subscribe/UpgradeButton";
 
 export default async function SubscribePage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const ctx = await getAppUserContext();
+  if (!ctx) redirect("/login");
 
   const sub = await db.subscription.findUnique({
-    where: { userId: session.user.id },
+    where: { userId: ctx.userId },
     select: { tier: true },
   });
   const currentTier = sub?.tier ?? "FREE";

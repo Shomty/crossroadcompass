@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin/requireAdmin";
 import { db } from "@/lib/db";
+import type { Prisma, SubscriptionTier } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   const { error } = await requireAdminApi(request);
@@ -9,12 +10,19 @@ export async function GET(request: NextRequest) {
 
   const url = new URL(request.url);
   const search = url.searchParams.get("search") ?? "";
+  const tierFilter = url.searchParams.get("tier");
   const page = parseInt(url.searchParams.get("page") ?? "1");
   const PAGE_SIZE = 50;
 
-  const where = search
-    ? { email: { contains: search } }
-    : {};
+  const where: Prisma.UserWhereInput = {};
+  if (search) {
+    where.email = { contains: search };
+  }
+  if (tierFilter && tierFilter !== "ALL") {
+    where.subscription = {
+      is: { tier: tierFilter as SubscriptionTier },
+    };
+  }
 
   const [users, total] = await Promise.all([
     db.user.findMany({
@@ -30,7 +38,7 @@ export async function GET(request: NextRequest) {
           take: 1,
           select: { deliveredAt: true, type: true },
         },
-        _count: { select: { insights: true } },
+        _count: { select: { insights: true, bookings: true, reportPurchases: true } },
       },
     }),
     db.user.count({ where }),
@@ -47,6 +55,8 @@ export async function GET(request: NextRequest) {
     chartCached: !!(u.birthProfile?.chartDataHumanDesign),
     lastInsight: u.insights[0]?.deliveredAt ?? null,
     totalInsights: u._count.insights,
+    consultationsCount: u._count.bookings,
+    generatedReportsCount: u._count.reportPurchases,
   }));
 
   return NextResponse.json({ items, total, page, pages: Math.ceil(total / PAGE_SIZE) });

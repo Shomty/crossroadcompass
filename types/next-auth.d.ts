@@ -4,6 +4,9 @@ declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     id?: string;
     role?: string;
+    isAdmin?: boolean;
+    /** Set when admin uses impersonation; real admin id kept in token.sub flow via cookie */
+    impersonatedUserId?: string;
   }
 }
 
@@ -12,6 +15,7 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
+      isAdmin: boolean;
       name?: string | null;
       email?: string | null;
       image?: string | null;

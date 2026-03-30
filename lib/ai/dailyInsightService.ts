@@ -1,14 +1,18 @@
 /**
  * lib/ai/dailyInsightService.ts
  * Generates a personalised daily insight using Gemini.
- * Incorporates: HD chart identity + active Mahadasha/Antardasha + today's date context.
- * Stored as an Insight row with type "DAILY" and periodDate = today.
+ * Incorporates: HD chart identity + active Mahadasha/Antardasha (from Prisma `dasha`)
+ * + sidereal transit summary from `getOrCreateTodayTransits` (OA.13) + today's date.
+ * No external Vedic HTTP API.
  */
 
 import { GoogleGenAI } from "@google/genai";
+import type { BirthProfile } from "@prisma/client";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
 import { buildDailyInsightPrompt } from "@/lib/content/promptBuilder";
+import { getOrCreateTodayTransits } from "@/lib/astro/chartService";
+import { formatVedicTransitSummary } from "@/lib/astro/vedicTransitPrompt";
 import type { HDChartData } from "@/types";
 
 let _gemini: GoogleGenAI | null = null;
@@ -35,10 +39,25 @@ export interface DailyInsight {
 export async function generateDailyInsight(
   userId: string,
   chart: HDChartData,
-  userName: string | null
+  userName: string | null,
+  birthProfile?: BirthProfile | null
 ): Promise<DailyInsight> {
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
+
+  const profile =
+    birthProfile ??
+    (await db.birthProfile.findUnique({ where: { userId } }));
+
+  let vedicTransitSummary: string | undefined;
+  if (profile) {
+    try {
+      const transit = await getOrCreateTodayTransits(userId, profile);
+      vedicTransitSummary = formatVedicTransitSummary(transit);
+    } catch (err) {
+      console.warn("[dailyInsight] Vedic transit prompt skipped:", err);
+    }
+  }
 
   // Get active Dasha context
   const now = new Date();
@@ -76,6 +95,7 @@ export async function generateDailyInsight(
       : undefined,
     todayDate:    dateStr,
     userName:     userName ?? undefined,
+    vedicTransitSummary,
   });
 
   const result = await gemini().models.generateContent({

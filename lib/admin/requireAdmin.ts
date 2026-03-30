@@ -5,7 +5,9 @@ import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
 
 function isAdmin(session: Session | null): boolean {
-  return session?.user?.role === "ADMIN";
+  if (!session?.user) return false;
+  if (session.user.role === "ADMIN") return true;
+  return session.user.isAdmin === true;
 }
 
 /**

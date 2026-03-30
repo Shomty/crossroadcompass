@@ -19,7 +19,7 @@ import { storeDashasFromChart } from "@/lib/astro/dashaService";
 import { kvGet, kvSet, kvDeleteMany } from "@/lib/kv/helpers";
 import { kvKeys, KV_TTL } from "@/lib/kv/keys";
 import { db } from "@/lib/db";
-import type { BirthInfo, HDChartData, SpecialPointsResult, ExtendedSpecialPointsResult, KaalVelaSetResult, SignNumber } from "@/types";
+import type { BirthInfo, HDChartData, SpecialPointsResult, ExtendedSpecialPointsResult, KaalVelaSetResult, SignNumber, YogaDetectionResult, PlanetName } from "@/types";
 import type { VedicChartCalculations, PlanetDasha } from "openastrology-library";
 import {
   calculateSpecialPoints,
@@ -27,12 +27,17 @@ import {
   calculateKaalVelas,
   planetAbsoluteLongitude,
 } from "@/lib/astro/specialPoints";
-import SunCalc from "suncalc";
 import {
   extractSpecialPointsInputs,
   extractNatalLagnaInfo,
   type SpecialPointsInputs,
 } from "@/lib/astro/vedicChartMapper";
+import {
+  attachExtendedPlacements,
+  attachFoundationPlacements,
+} from "@/lib/astro/vedicPointPlacement";
+import { extractYogaChartInput } from "@/lib/astro/vedicChartMapper";
+import { detectAllYogas, normalizeDashaLord } from "@/lib/astro/yoga/aggregate";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -70,10 +75,13 @@ export async function invalidateChartCache(userId: string): Promise<void> {
       kvKeys.hdChart(userId),
       kvKeys.dashas(userId),
       kvKeys.specialPoints(userId),
+      kvKeys.specialPointsLegacy(userId),
       kvKeys.specialPointsInsights(userId),
       kvKeys.extendedSpecialPoints(userId),
+      kvKeys.extendedSpecialPointsLegacy(userId),
       kvKeys.divisionalCharts(userId),
       kvKeys.currentDasha(userId),
+      kvKeys.yogas(userId),
     ]),
     db.insight.deleteMany({
       where: { userId, type: InsightType.SPECIAL_POINTS },
@@ -132,6 +140,17 @@ export async function getOrCreateHDChart(
 // ─── Task 3.5 / OA.3 — Vedic natal chart: get or calculate ──────────────
 
 /**
+ * Guard: returns true only when `data` looks like a fresh openastrology-library
+ * VedicChartCalculations (has `planets`). Rejects old rawResponse-based format
+ * stored before the library migration.
+ */
+function isValidVedicChart(data: unknown): data is VedicChartCalculations {
+  if (data == null || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  return 'planets' in d && d.planets != null;
+}
+
+/**
  * Returns the Vedic natal chart for a user, using KV cache when available.
  * Calculates locally via openastrology-library on cache miss.
  * birthProfile is passed in — this function does NOT query the DB itself.
@@ -143,7 +162,7 @@ export async function getOrCreateVedicChart(
   // ── Layer 1: KV hot cache ────────────────────────────────────────────────
   const cached = await kvGet<VedicChartCalculations>(kvKeys.vedicChart(userId));
 
-  if (cached !== null) {
+  if (cached !== null && isValidVedicChart(cached)) {
     // Chart is cached — but dashas may not have been stored yet.
     const dashaCount = await db.dasha.count({ where: { userId } });
     if (dashaCount === 0) {
@@ -160,7 +179,8 @@ export async function getOrCreateVedicChart(
 
   if (
     dbProfile?.chartDataVedic != null &&
-    dbProfile.vedicProfileVersion === dbProfile.profileVersion
+    dbProfile.vedicProfileVersion === dbProfile.profileVersion &&
+    isValidVedicChart(dbProfile.chartDataVedic)
   ) {
     const chartData = dbProfile.chartDataVedic as unknown as VedicChartCalculations;
     await kvSet(kvKeys.vedicChart(userId), chartData, KV_TTL.NATAL_CHART);
@@ -283,13 +303,15 @@ export function deriveSpecialPoints(
   birthHourUTC:   number,
   birthMinuteUTC: number,
   birthLatDeg:    number,
-  birthLonDeg:    number
+  birthLonDeg:    number,
+  timezoneIana?:  string | null
 ): SpecialPointsResult | null {
   const inputs = extractSpecialPointsInputs(
     vedicChartRaw,
     birthYear, birthMonth, birthDay,
     birthHourUTC, birthMinuteUTC,
-    birthLatDeg, birthLonDeg
+    birthLatDeg, birthLonDeg,
+    { timezoneIana: timezoneIana ?? undefined }
   )
 
   if (!inputs) {
@@ -302,11 +324,16 @@ export function deriveSpecialPoints(
       inputs.lagnaSignNumber,
       inputs.planets,
       inputs.sunAbsoluteLongitudeAtSunrise,
-      inputs.minutesSinceSunrise
+      inputs.minutesSinceSunrise,
+      {
+        isDayBirth: inputs.isDayBirth,
+        udayaLagnaLongitude: inputs.lagnaAbsoluteLongitude,
+      }
     )
     const natalFromChart = extractNatalLagnaInfo(vedicChartRaw)
     const natalLagna = natalFromChart ?? { signNumber: inputs.lagnaSignNumber }
-    return { ...result, natalLagna }
+    const withNatal = { ...result, natalLagna }
+    return attachFoundationPlacements(withNatal, inputs)
   } catch (err) {
     console.error('[deriveSpecialPoints] Calculation error:', err)
     return null
@@ -341,6 +368,7 @@ export async function getOrCreateSpecialPoints(
       birthTimeKnown: true,
       latitude:       true,
       longitude:      true,
+      timezone:       true,
     },
   })
   if (!birthProfile) return null
@@ -349,17 +377,18 @@ export async function getOrCreateSpecialPoints(
   const hour   = birthProfile.birthTimeKnown ? (birthProfile.birthHour   ?? 12) : 12
   const minute = birthProfile.birthTimeKnown ? (birthProfile.birthMinute ?? 0)  : 0
 
-  // Layer 2: Vedic chart from KV
-  let vedicChartRaw: unknown = await kvGet<unknown>(kvKeys.vedicChart(userId))
+  // Layer 2: Vedic chart from KV (only if it's valid new-library format)
+  const kvChart = await kvGet<unknown>(kvKeys.vedicChart(userId))
+  let vedicChartRaw: unknown = isValidVedicChart(kvChart) ? kvChart : null
 
-  // Layer 3: Vedic chart from DB
+  // Layer 3: Vedic chart from DB (only if it's valid new-library format)
   if (!vedicChartRaw) {
     const dbProfile = await db.birthProfile.findUnique({
       where: { userId },
       select: { chartDataVedic: true },
     })
-    if (!dbProfile?.chartDataVedic) {
-      console.warn(`[getOrCreateSpecialPoints] No Vedic chart for user ${userId}`)
+    if (!dbProfile?.chartDataVedic || !isValidVedicChart(dbProfile.chartDataVedic)) {
+      console.warn(`[getOrCreateSpecialPoints] No valid Vedic chart for user ${userId}`)
       return null
     }
     vedicChartRaw = dbProfile.chartDataVedic
@@ -369,7 +398,8 @@ export async function getOrCreateSpecialPoints(
     vedicChartRaw,
     d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(),
     hour, minute,
-    birthProfile.latitude, birthProfile.longitude
+    birthProfile.latitude, birthProfile.longitude,
+    birthProfile.timezone
   )
 
   if (result) {
@@ -378,11 +408,65 @@ export async function getOrCreateSpecialPoints(
   return result
 }
 
+function retagYogaDashaFromChart(
+  result: YogaDetectionResult,
+  chart: VedicChartCalculations
+): YogaDetectionResult {
+  const cur = getChartCurrentDasha(chart)
+  const maha = normalizeDashaLord(String(cur.mahaDasha?.planet ?? ""))
+  const antar = normalizeDashaLord(String(cur.antarDasha?.planet ?? ""))
+  const lords = [maha, antar].filter(Boolean) as PlanetName[]
+  return {
+    ...result,
+    yogas: result.yogas.map((y) => ({
+      ...y,
+      dashaActivated: lords.some((l) => y.planetsInvolved.includes(l)),
+    })),
+  }
+}
+
+/**
+ * KV-cached Parashara yoga bundle. `dashaActivated` is refreshed from the current
+ * Vimshottari period on every read; base yogas invalidate with chart cache.
+ */
+export async function getOrCreateYogas(userId: string): Promise<YogaDetectionResult | null> {
+  const kvChart = await kvGet<unknown>(kvKeys.vedicChart(userId))
+  let vedicChartRaw: unknown = isValidVedicChart(kvChart) ? kvChart : null
+  if (!vedicChartRaw) {
+    const dbProfile = await db.birthProfile.findUnique({
+      where: { userId },
+      select: { chartDataVedic: true },
+    })
+    if (!dbProfile?.chartDataVedic || !isValidVedicChart(dbProfile.chartDataVedic)) {
+      console.warn(`[getOrCreateYogas] No valid Vedic chart for user ${userId}`)
+      return null
+    }
+    vedicChartRaw = dbProfile.chartDataVedic
+  }
+
+  const chart = vedicChartRaw as VedicChartCalculations
+  const cacheKey = kvKeys.yogas(userId)
+  const cached = await kvGet<YogaDetectionResult>(cacheKey)
+  if (cached !== null) {
+    return retagYogaDashaFromChart(cached, chart)
+  }
+
+  const input = extractYogaChartInput(vedicChartRaw)
+  if (!input) return null
+
+  const cur = getChartCurrentDasha(chart)
+  const maha = normalizeDashaLord(String(cur.mahaDasha?.planet ?? ""))
+  const antar = normalizeDashaLord(String(cur.antarDasha?.planet ?? ""))
+  const result = detectAllYogas(input, maha, antar)
+  await kvSet(cacheKey, result)
+  return result
+}
+
 // ─── SP-EXT.9 — Extended special points ──────────────────────────────────
 
 /**
  * Extended points from the same `SpecialPointsInputs` as foundation special points
- * (supports rawResponse.chartD1 when top-level VedicChartData fields are absent).
+ * (supports rawResponse.chartD1 when top-level normalized fields are absent).
  */
 export function deriveExtendedSpecialPoints(
   inputs: SpecialPointsInputs,
@@ -401,7 +485,7 @@ export function deriveExtendedSpecialPoints(
     ?? null
 
   try {
-    return calculateExtendedSpecialPoints(
+    const extended = calculateExtendedSpecialPoints(
       inputs.lagnaSignNumber,
       horaLagnaSignNumber,
       inputs.planets,
@@ -411,6 +495,7 @@ export function deriveExtendedSpecialPoints(
       gulikaLongitude,
       kaalVelaSetResult
     )
+    return attachExtendedPlacements(extended, inputs)
   } catch (err) {
     console.error('[deriveExtendedSpecialPoints] Calculation error:', err)
     return null
@@ -473,7 +558,8 @@ export async function getOrCreateExtendedSpecialPoints(
     hour,
     minute,
     birthProfile.latitude,
-    birthProfile.longitude
+    birthProfile.longitude,
+    { timezoneIana: birthProfile.timezone }
   )
   if (!inputs) {
     console.warn(
@@ -484,16 +570,12 @@ export async function getOrCreateExtendedSpecialPoints(
 
   let kaalVelaSetResult: KaalVelaSetResult | null = null
   try {
-    const birthDate = new Date(birthProfile.birthDate)
-    const times     = SunCalc.getTimes(birthDate, birthProfile.latitude, birthProfile.longitude)
-    const dayDurationMinutes = (times.sunset.getTime() - times.sunrise.getTime()) / 60000
-    const weekdayStr = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: birthProfile.timezone ?? 'UTC' })
-      .format(birthDate)
-    const WEEKDAY_MAP: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
-    const weekdayIndex = WEEKDAY_MAP[weekdayStr] ?? birthDate.getDay()
-    const sunAtSunrise = inputs.sunAbsoluteLongitudeAtSunrise
-    if (dayDurationMinutes > 0) {
-      kaalVelaSetResult = calculateKaalVelas(sunAtSunrise, dayDurationMinutes, weekdayIndex)
+    if (inputs.daytimeDurationMinutes > 0) {
+      kaalVelaSetResult = calculateKaalVelas(
+        inputs.lagnaAbsoluteLongitude,
+        inputs.daytimeDurationMinutes,
+        inputs.dayOfWeek
+      )
     }
   } catch (err) {
     console.warn('[getOrCreateExtendedSpecialPoints] Kaal Vela calculation failed:', err)

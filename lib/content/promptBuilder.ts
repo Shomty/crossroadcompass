@@ -23,17 +23,19 @@ export interface DailyContext {
   currentDasha?: string;
   todayDate?: string;
   userName?: string;
+  /** Sidereal transit lines from getOrCreateTodayTransits (OA.13). */
+  vedicTransitSummary?: string;
 }
 
 /**
  * Maps each promptKey to the variable names it accepts (for admin preview panel).
  */
 export const PROMPT_VARIABLE_MAP: Record<string, string[]> = {
-  "daily.generator": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName"],
-  "daily.manifesting_generator": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName"],
-  "daily.projector": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName"],
-  "daily.manifestor": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName"],
-  "daily.reflector": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName"],
+  "daily.generator": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName", "vedicTransitSummary"],
+  "daily.manifesting_generator": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName", "vedicTransitSummary"],
+  "daily.projector": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName", "vedicTransitSummary"],
+  "daily.manifestor": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName", "vedicTransitSummary"],
+  "daily.reflector": ["hdType", "strategy", "authority", "profile", "currentDasha", "todayDate", "userName", "vedicTransitSummary"],
   "weekly.base": ["hdType", "strategy", "authority", "currentDasha", "weekStart"],
   "monthly.base": ["hdType", "strategy", "authority", "currentDasha", "monthName"],
   "hd_report.base": ["hdType", "strategy", "authority", "profile", "definition", "channels", "intakeLifeSituation", "intakePrimaryFocus"],
@@ -74,6 +76,7 @@ export async function buildDailyInsightPrompt(
       currentDasha: ctx.currentDasha ?? "",
       todayDate: ctx.todayDate ?? new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }),
       userName: ctx.userName ?? "the user",
+      vedicTransitSummary: ctx.vedicTransitSummary ?? "",
     });
   }
 
@@ -82,13 +85,15 @@ export async function buildDailyInsightPrompt(
   const name = ctx.userName ?? "the user";
   const dateStr = ctx.todayDate ?? new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   const dashaLine = ctx.currentDasha ? `Active Dasha: ${ctx.currentDasha}` : "";
+  const transitBlock = ctx.vedicTransitSummary
+    ? `\n${ctx.vedicTransitSummary}\n`
+    : "";
 
   return `Write a short personalised daily insight for ${name}.
 Today: ${dateStr}
 HD Type: ${ctx.hdType} | Strategy: ${ctx.strategy} | Authority: ${ctx.authority} | Profile: ${ctx.profile}
-${dashaLine}
-
-Rules: warm and practical tone, no "you will" predictions, 2-3 sentences for insight, one short action.
+${dashaLine}${transitBlock}
+Rules: warm and practical tone, no "you will" predictions, 2-3 sentences for insight, one short action. Weave in Human Design and, if provided, sidereal transit context lightly — no fatalism.
 
 Return ONLY valid JSON:
 {"summary":"one sentence headline","insight":"2-3 sentences personalised to this HD type and dasha","action":"one concrete action for today","energyTheme":"2-4 word theme"}`;

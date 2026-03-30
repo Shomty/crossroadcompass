@@ -14,6 +14,8 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { DataChangeConfirmModal } from "@/components/profile/DataChangeConfirmModal";
+import { BirthTimeUnknownWarning } from "@/components/profile/BirthTimeUnknownWarning";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -56,6 +58,8 @@ interface Props {
   initialValues?: Partial<BirthDataValues> & { cityLabel?: string };
   /** true = show PATCH flow + call onSuccess; false = POST flow + redirect */
   isEdit?: boolean;
+  /** Existing chart on disk — FE-11 unknown-time warning */
+  hasVedicChart?: boolean;
   onSuccess?: () => void;
 }
 
@@ -149,11 +153,12 @@ function GenderChips({ value, onChange }: { value: Gender; onChange: (v: Gender)
 
 // ─── Main component ───────────────────────────────────────────────────────
 
-export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Props) {
+export function BirthDataForm({ initialValues, isEdit = false, hasVedicChart = false, onSuccess }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [patchConfirmOpen, setPatchConfirmOpen] = useState(false);
 
   // Build initial city label for edit mode
   const initialCityLabel = initialValues?.cityLabel ?? (initialValues?.birthCity ? `${initialValues.birthCity}, ${initialValues.birthCountry ?? ""}`.trim().replace(/,$/, "") : "");
@@ -205,17 +210,28 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
 
   // ── Submit ──────────────────────────────────────────────────────────────
 
-  async function handleSubmit() {
-    if (!form.selectedPlace) return;
-    setSubmitting(true);
-    setError(null);
+  type Payload = {
+    birthName: string;
+    birthDate: string;
+    birthTimeKnown: boolean;
+    birthHour: number | null;
+    birthMinute: number | null;
+    gender: Gender;
+    birthCity: string;
+    birthCountry: string;
+    latitude: number;
+    longitude: number;
+    timezone: string;
+  };
 
-    const payload = {
+  function buildPayload(): Payload | null {
+    if (!form.selectedPlace) return null;
+    return {
       birthName: form.birthName.trim(),
       birthDate: form.birthDate,
       birthTimeKnown: form.birthTimeKnown,
-      birthHour: form.birthTimeKnown && form.birthHour !== "" ? parseInt(form.birthHour) : null,
-      birthMinute: form.birthTimeKnown && form.birthMinute !== "" ? parseInt(form.birthMinute) : null,
+      birthHour: form.birthTimeKnown && form.birthHour !== "" ? parseInt(form.birthHour, 10) : null,
+      birthMinute: form.birthTimeKnown && form.birthMinute !== "" ? parseInt(form.birthMinute, 10) : null,
       gender: form.gender,
       birthCity: form.selectedPlace.displayName.split(",")[0].trim(),
       birthCountry: form.selectedPlace.displayName.split(",").at(-1)?.trim() ?? "",
@@ -223,6 +239,11 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
       longitude: form.selectedPlace.lon,
       timezone: form.selectedPlace.timezone,
     };
+  }
+
+  async function executeSubmit(payload: Payload) {
+    setSubmitting(true);
+    setError(null);
 
     try {
       const method = isEdit ? "PATCH" : "POST";
@@ -232,24 +253,48 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Something went wrong."); setSubmitting(false); return; }
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong.");
+        setSubmitting(false);
+        return;
+      }
 
-      // Trigger HD report + all insights (fire-and-forget)
       void fetch("/api/report/generate", { method: "POST" });
       void fetch("/api/insights/generate", { method: "POST" });
       void fetch("/api/insights/generate/weekly", { method: "POST" });
       void fetch("/api/insights/generate/monthly", { method: "POST" });
 
+      void fetch("/api/chart").catch(() => {});
+      void fetch("/api/user/astro-snapshot", { method: "PATCH" }).catch(() => {});
+
       setSubmitting(false);
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push("/report");
+        router.push("/chart");
       }
     } catch {
       setError("Network error. Please check your connection and try again.");
       setSubmitting(false);
     }
+  }
+
+  function handleSubmit() {
+    const payload = buildPayload();
+    if (!payload) return;
+
+    if (isEdit) {
+      setPatchConfirmOpen(true);
+      return;
+    }
+
+    void executeSubmit(payload);
+  }
+
+  function handleConfirmPatch() {
+    setPatchConfirmOpen(false);
+    const payload = buildPayload();
+    if (payload) void executeSubmit(payload);
   }
 
   // ── Validation ──────────────────────────────────────────────────────────
@@ -268,6 +313,11 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
 
   return (
     <div className="card" style={{ width: "100%", maxWidth: 480, padding: "2.5rem" }}>
+      <DataChangeConfirmModal
+        open={patchConfirmOpen}
+        onCancel={() => setPatchConfirmOpen(false)}
+        onConfirm={handleConfirmPatch}
+      />
       <StepIndicator current={step} total={2} />
 
       {/* ── Step 1: Personal details ──────────────────────────── */}
@@ -348,16 +398,19 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
                 </div>
               </div>
             ) : (
-              <p style={{
-                fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.08em",
-                color: "var(--mist)", lineHeight: 1.65,
-                padding: "0.75rem 1rem",
-                border: "1px solid rgba(200,135,58,0.15)",
-                borderRadius: 2,
-                margin: 0,
-              }}>
-                Without a birth time, some chart elements may be approximate. We&apos;ll use noon as a default.
-              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <p style={{
+                  fontFamily: "'DM Mono', monospace", fontSize: "0.65rem", letterSpacing: "0.08em",
+                  color: "var(--mist)", lineHeight: 1.65,
+                  padding: "0.75rem 1rem",
+                  border: "1px solid rgba(200,135,58,0.15)",
+                  borderRadius: 2,
+                  margin: 0,
+                }}>
+                  Without a birth time, some chart elements may be approximate. We&apos;ll use noon as a default.
+                </p>
+                {isEdit && hasVedicChart && <BirthTimeUnknownWarning />}
+              </div>
             )}
           </div>
 
@@ -454,27 +507,46 @@ export function BirthDataForm({ initialValues, isEdit = false, onSuccess }: Prop
 
           {/* Selected place confirmation */}
           {form.selectedPlace && (
-            <div style={{
-              padding: "0.75rem 1rem", borderRadius: 2,
-              border: "1px solid rgba(200,135,58,0.35)",
-              background: "rgba(200,135,58,0.06)",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}>
-              <div>
-                <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: "0.85rem", color: "var(--cream)", fontWeight: 500 }}>
-                  ✓ {form.selectedPlace.displayName.split(",").slice(0, 2).join(",")}
-                </span>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.58rem", letterSpacing: "0.08em", color: "var(--amber)", marginLeft: "0.5rem", opacity: 0.7 }}>
-                  {form.selectedPlace.timezone}
-                </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+              <div style={{
+                padding: "0.75rem 1rem", borderRadius: 2,
+                border: "1px solid rgba(200,135,58,0.35)",
+                background: "rgba(200,135,58,0.06)",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                <div>
+                  <span style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif", fontSize: "0.85rem", color: "var(--cream)", fontWeight: 500 }}>
+                    ✓ {form.selectedPlace.displayName.split(",").slice(0, 2).join(",")}
+                  </span>
+                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.58rem", letterSpacing: "0.08em", color: "var(--amber)", marginLeft: "0.5rem", opacity: 0.7 }}>
+                    {form.selectedPlace.timezone}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { update("selectedPlace", null); update("cityQuery", ""); }}
+                  style={{ background: "none", border: "none", color: "var(--mist)", fontSize: "0.75rem", cursor: "pointer" }}
+                >
+                  change
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => { update("selectedPlace", null); update("cityQuery", ""); }}
-                style={{ background: "none", border: "none", color: "var(--mist)", fontSize: "0.75rem", cursor: "pointer" }}
+              <div
+                style={{
+                  padding: "0.65rem 1rem",
+                  borderRadius: 2,
+                  border: "1px solid rgba(200,135,58,0.12)",
+                  background: "rgba(255,255,255,0.03)",
+                  fontFamily: "'DM Mono', monospace",
+                  fontSize: "0.6rem",
+                  letterSpacing: "0.06em",
+                  color: "var(--mist)",
+                  lineHeight: 1.6,
+                }}
               >
-                change
-              </button>
+                <div>Latitude: {form.selectedPlace.lat.toFixed(4)}°</div>
+                <div>Longitude: {form.selectedPlace.lon.toFixed(4)}°</div>
+                <div>Timezone (IANA): {form.selectedPlace.timezone}</div>
+              </div>
             </div>
           )}
 

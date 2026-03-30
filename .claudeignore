@@ -1,0 +1,46 @@
+# Claude Code Context Exclusions
+# Prevents these paths from being indexed or loaded into context windows
+
+# Build artifacts & package managers
+node_modules/
+.next/
+dist/
+build/
+out/
+.turbo/
+
+# Version control
+.git/
+
+# Ephemeris data tables (large binary/data files, not code)
+ephe/
+
+# Reference repositories (not part of this project)
+everything-claude-code/
+
+# Dead experiment subdirectories
+hello-prisma/
+vedic-sky-observer/
+
+# Other IDE/AI tool config directories (not Claude Code)
+.cursor/
+.windsurf/
+.gemini/
+.codex/
+.continue/
+.kiro/
+.opencode/
+.qoder/
+.roo/
+.trae/
+.codebuddy/
+
+# Claude-flow runtime data (auto-generated, not human-authored)
+.claude-flow/data/
+.claude-flow/neural/
+.claude-flow/sessions/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
