@@ -130,35 +130,47 @@ export default async function ReportReaderPage({
 
             {/* Report Content */}
             {content && (
-              <div className="cc-body">
+              <div className="report-prose">
                 <ReactMarkdown
                   components={{
                     h1: ({ node, ...props }) => (
-                      <h1 className="cc-title-lg mt-6 mb-3" {...props} />
+                      <h1 className="report-h1" {...props} />
                     ),
                     h2: ({ node, ...props }) => (
-                      <h2 className="cc-title-card mt-6 mb-2" {...props} />
+                      <h2 className="report-h2" {...props} />
                     ),
                     h3: ({ node, ...props }) => (
-                      <h3 className="cc-title-card mt-5 mb-2" {...props} />
+                      <h3 className="report-h3" {...props} />
+                    ),
+                    h4: ({ node, ...props }) => (
+                      <h4 className="report-h4" {...props} />
                     ),
                     p: ({ node, ...props }) => (
-                      <p className="cc-body mt-4" {...props} />
+                      <p className="report-p" {...props} />
                     ),
                     ul: ({ node, ...props }) => (
-                      <ul className="list-disc pl-6" {...props} />
+                      <ul className="report-ul" {...props} />
                     ),
                     ol: ({ node, ...props }) => (
-                      <ol className="list-decimal pl-6" {...props} />
+                      <ol className="report-ol" {...props} />
                     ),
                     li: ({ node, ...props }) => (
-                      <li className="cc-body mt-2" {...props} />
+                      <li className="report-li" {...props} />
                     ),
                     strong: ({ node, ...props }) => (
-                      <strong className="font-semibold text-amber-200" {...props} />
+                      <strong className="report-strong" {...props} />
+                    ),
+                    em: ({ node, ...props }) => (
+                      <em className="report-em" {...props} />
+                    ),
+                    hr: ({ node, ...props }) => (
+                      <hr className="report-hr" {...props} />
+                    ),
+                    blockquote: ({ node, ...props }) => (
+                      <blockquote className="report-blockquote" {...props} />
                     ),
                     a: ({ node, ...props }) => (
-                      <a className="underline text-amber-200 hover:text-amber-100" {...props} />
+                      <a className="underline text-amber-200 hover:text-amber-100 transition-colors" {...props} />
                     ),
                   }}
                 >
