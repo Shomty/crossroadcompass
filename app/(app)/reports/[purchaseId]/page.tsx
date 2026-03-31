@@ -69,7 +69,7 @@ export default async function ReportReaderPage({
           <div className="flex flex-col gap-5">
             <Link
               href="/reports"
-              className="cc-body text-sm text-amber-200 hover:text-amber-100 transition-colors"
+              className="cc-body print-hide text-sm text-amber-200 hover:text-amber-100 transition-colors"
             >
               ← Back to Reports
             </Link>

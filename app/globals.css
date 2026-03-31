@@ -1568,128 +1568,224 @@ label {
 
 /* ─── Print / Save as PDF ───────────────────────────────────────────────── */
 
-.print-hide {
-  /* Applied to nav/action elements that should not appear in PDF */
-}
+/* Applied to nav/action elements that must not appear in printed PDF */
+.print-hide { }
 
 @media print {
-  /* Hide app chrome */
+  /* ── Page setup ───────────────────────────────────────────────────── */
+  @page {
+    margin: 1in 0.85in;
+    size: A4;
+  }
+
+  /* ── Universal reset: remove all dark-theme decoration ─────────────── */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ── Hide all app chrome ──────────────────────────────────────────── */
   .app-sidebar,
-  .app-topbar,
-  .page-layout-header,
+  .app-sidebar-mobile-header,
+  .app-sidebar-overlay,
+  .app-sidebar-drawer,
+  .dashboard-bottom-nav,
+  .dashboard-sidebar,
+  .cosmic-chat-btn,
+  .cosmic-chat-panel,
   .print-hide,
   .btn-primary,
   .btn-ghost,
   .btn-toggle,
-  .chart-variant-toggle {
+  .chart-variant-toggle,
+  .card-grain {
     display: none !important;
   }
 
-  /* Page setup */
-  @page {
-    margin: 0.75in;
-    size: A4;
+  /* ── Remove layout constraints so content fills the page ───────────── */
+  .app-main-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    flex: none !important;
+    display: block !important;
   }
 
-  /* Base: white page, readable text */
-  html,
-  body,
-  .app-main-content,
   .v4-wrap {
-    background: #ffffff !important;
-    color: #1a1a1a !important;
+    max-width: 100% !important;
     padding: 0 !important;
+    margin: 0 !important;
+    gap: 1.5rem !important;
+  }
+
+  /* ── Animate-enter: force all content visible ───────────────────────── */
+  .animate-enter,
+  [class*="animate-enter"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* ── Page header — styled as document title ──────────────────────── */
+  .page-layout-header {
+    display: block !important;
+    margin-bottom: 2rem !important;
+    padding-bottom: 1rem !important;
+    border-bottom: 1.5px solid #c8873a !important;
+  }
+
+  .page-eyebrow {
+    font-family: 'DM Mono', monospace !important;
+    font-size: 8pt !important;
+    color: #8a5a00 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.18em !important;
+    margin: 0 0 0.3rem !important;
+  }
+
+  .page-title {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-size: 24pt !important;
+    font-weight: 400 !important;
+    color: #1a1a1a !important;
+    margin: 0 0 0.35rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .page-subtitle {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 10pt !important;
+    color: #555 !important;
     margin: 0 !important;
   }
 
-  /* Glass cards become flat white boxes */
+  /* ── Glass cards: remove all chrome, become transparent ─────────────── */
   .glass-card,
-  [class*="glass-card"] {
-    background: #ffffff !important;
-    border: 1px solid #e0e0e0 !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
+  .v4-gold-edge,
+  .v4-violet-glow {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
   }
 
-  /* ── Report prose print overrides ────────────────────────────────── */
+  /* ── cc-tag metadata labels ──────────────────────────────────────────── */
+  .cc-tag {
+    background: #f5ede0 !important;
+    color: #4a3000 !important;
+    border: 1px solid #c8a060 !important;
+    border-radius: 3px !important;
+    font-size: 8pt !important;
+    padding: 2px 7px !important;
+  }
+
+  .cc-tag--amber {
+    background: #fdf3e3 !important;
+    color: #3a2000 !important;
+  }
+
+  /* ── Report prose — document-quality body ────────────────────────────── */
   .report-prose {
     background: transparent !important;
     color: #1a1a1a !important;
     font-size: 11pt !important;
-    line-height: 1.7 !important;
+    line-height: 1.78 !important;
+    max-width: 100% !important;
   }
 
   .report-h1 {
-    color: #1a1a1a !important;
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
     font-size: 22pt !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    border-bottom: 1.5px solid #c8873a !important;
+    padding-bottom: 0.4rem !important;
+    margin: 2.5rem 0 0.8rem !important;
     page-break-after: avoid;
   }
 
   .report-h2 {
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
+    font-size: 17pt !important;
+    font-weight: 500 !important;
     color: #1a1a1a !important;
-    font-size: 16pt !important;
+    border-bottom: 1px solid #ddc080 !important;
+    padding-bottom: 0.3rem !important;
+    margin: 2rem 0 0.65rem !important;
     page-break-after: avoid;
-    border-bottom: 1px solid #d0b070 !important;
   }
 
   .report-h3 {
-    color: #4a3000 !important;
+    font-family: 'Cormorant Garamond', Georgia, serif !important;
     font-size: 13pt !important;
+    font-weight: 600 !important;
+    color: #2a1800 !important;
+    margin: 1.5rem 0 0.5rem !important;
     page-break-after: avoid;
   }
 
   .report-h4 {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 10pt !important;
+    font-weight: 700 !important;
     color: #4a3000 !important;
-    font-size: 11pt !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    margin: 1.25rem 0 0.4rem !important;
     page-break-after: avoid;
   }
 
   .report-p {
     color: #1a1a1a !important;
+    margin: 0 0 0.85rem !important;
     orphans: 3;
     widows: 3;
-  }
-
-  .report-blockquote {
-    background: #faf6ee !important;
-    border-left: 2px solid #c8873a !important;
-    color: #3a2800 !important;
-  }
-
-  .report-strong {
-    color: #1a1a1a !important;
-  }
-
-  .report-em {
-    color: #1a1a1a !important;
-  }
-
-  .report-hr {
-    border-top: 1px solid #d0b070 !important;
   }
 
   .report-ul,
   .report-ol {
     color: #1a1a1a !important;
+    padding-left: 1.5rem !important;
+    margin: 0.4rem 0 0.85rem !important;
   }
 
-  /* ── Purpose / Shadow AI sections print overrides ───────────────── */
-  [style*="rgba(13,18,32"],
-  [style*="rgba(200,135,58"] {
-    background: #fafafa !important;
-    border-color: #e8d5a0 !important;
+  .report-li {
+    color: #1a1a1a !important;
+    margin-bottom: 0.3rem !important;
   }
 
-  /* Prevent ugly page breaks inside cards */
-  .glass-card,
-  section {
-    page-break-inside: avoid;
+  .report-blockquote {
+    background: #faf5eb !important;
+    border-left: 3px solid #c8873a !important;
+    border-radius: 0 !important;
+    color: #3a2400 !important;
+    padding: 0.6rem 1rem !important;
+    margin: 1rem 0 !important;
+    font-style: italic !important;
   }
 
-  /* cc-tag metadata labels */
-  .cc-tag {
-    background: #f0e8d0 !important;
-    color: #4a3000 !important;
-    border-color: #c8a060 !important;
+  .report-strong {
+    color: #0a0a0a !important;
+    font-weight: 700 !important;
+  }
+
+  .report-em {
+    color: #2a1800 !important;
+  }
+
+  .report-hr {
+    border: none !important;
+    border-top: 1px solid #c8a060 !important;
+    margin: 1.5rem 0 !important;
   }
 }
