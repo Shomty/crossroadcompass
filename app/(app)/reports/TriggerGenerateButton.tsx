@@ -37,7 +37,7 @@ export function TriggerGenerateButton({ reportProductId }: { reportProductId: st
         type="button"
         onClick={trigger}
         disabled={loading}
-        className="w-full rounded-xl border border-amber-400/40 bg-amber-500/20 px-3 py-2 text-sm font-medium text-amber-200 transition-colors hover:bg-amber-500/30 disabled:cursor-not-allowed disabled:opacity-70"
+        className="btn-primary w-full"
       >
         {loading ? "Starting generation…" : "Generate Now"}
       </button>

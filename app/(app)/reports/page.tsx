@@ -104,10 +104,8 @@ export default async function ReportsPage({
               <Link
                 key={cat}
                 href={href}
-                className={[
-                  "cc-tag",
-                  isActive ? "cc-tag--amber" : "",
-                ].join(" ")}
+                className="btn-toggle"
+                data-active={isActive ? "true" : undefined}
               >
                 {label}
               </Link>
@@ -127,7 +125,7 @@ export default async function ReportsPage({
 
             return (
               <V4GlassCard key={product.id} className="h-full">
-                <div className="flex h-full flex-col p-5">
+                <div className="flex h-full flex-col">
                   <div className="flex items-start justify-between gap-4">
                     <span className="cc-tag">
                       {String(product.category)
@@ -176,7 +174,7 @@ export default async function ReportsPage({
                         href={`/reports/${product.purchaseId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full rounded-xl border border-amber-400/40 bg-amber-500/20 px-3 py-2 text-center text-sm font-medium text-amber-200 transition-colors hover:bg-amber-500/30"
+                        className="btn-primary w-full"
                       >
                         Read Report
                       </Link>
@@ -187,7 +185,7 @@ export default async function ReportsPage({
                         <button
                           type="button"
                           disabled
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/40"
+                          className="btn-primary w-full"
                         >
                           Generating your report…
                         </button>

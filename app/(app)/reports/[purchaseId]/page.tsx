@@ -64,8 +64,8 @@ export default async function ReportReaderPage({
       subtitle={product.subtitle ?? "Your personalised report"}
     >
       <section className="animate-enter animate-enter-2">
-        <V4GlassCard className="rounded-2xl">
-          <div className="p-5 md:p-6 flex flex-col gap-5">
+        <V4GlassCard>
+          <div className="flex flex-col gap-5">
             <Link
               href="/reports"
               className="cc-body text-sm text-amber-200 hover:text-amber-100 transition-colors"
@@ -107,7 +107,7 @@ export default async function ReportReaderPage({
 
             {/* Admin Controls */}
             {isRealAdmin && status !== "COMPLETE" && (
-              <div className="glass-card border border-amber-400/30 rounded-xl p-5">
+              <div className="glass-card p-5">
                 <p className="cc-body text-amber-200">
                   Admin: report status is <strong>{status}</strong>. Trigger generation below.
                 </p>
@@ -119,7 +119,7 @@ export default async function ReportReaderPage({
 
             {/* Not Ready State */}
             {!content && status !== "COMPLETE" && (
-              <div className="glass-card border border-white/10 rounded-xl p-10 text-center">
+              <div className="glass-card p-10 text-center">
                 <p className="cc-body text-lg">
                   {status === "GENERATING"
                     ? "Your report is being generated. This may take a few minutes."
