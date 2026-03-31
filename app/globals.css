@@ -1565,3 +1565,131 @@ label {
   font-style: italic;
   color: var(--cc-text-secondary);
 }
+
+/* ─── Print / Save as PDF ───────────────────────────────────────────────── */
+
+.print-hide {
+  /* Applied to nav/action elements that should not appear in PDF */
+}
+
+@media print {
+  /* Hide app chrome */
+  .app-sidebar,
+  .app-topbar,
+  .page-layout-header,
+  .print-hide,
+  .btn-primary,
+  .btn-ghost,
+  .btn-toggle,
+  .chart-variant-toggle {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 0.75in;
+    size: A4;
+  }
+
+  /* Base: white page, readable text */
+  html,
+  body,
+  .app-main-content,
+  .v4-wrap {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Glass cards become flat white boxes */
+  .glass-card,
+  [class*="glass-card"] {
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* ── Report prose print overrides ────────────────────────────────── */
+  .report-prose {
+    background: transparent !important;
+    color: #1a1a1a !important;
+    font-size: 11pt !important;
+    line-height: 1.7 !important;
+  }
+
+  .report-h1 {
+    color: #1a1a1a !important;
+    font-size: 22pt !important;
+    page-break-after: avoid;
+  }
+
+  .report-h2 {
+    color: #1a1a1a !important;
+    font-size: 16pt !important;
+    page-break-after: avoid;
+    border-bottom: 1px solid #d0b070 !important;
+  }
+
+  .report-h3 {
+    color: #4a3000 !important;
+    font-size: 13pt !important;
+    page-break-after: avoid;
+  }
+
+  .report-h4 {
+    color: #4a3000 !important;
+    font-size: 11pt !important;
+    page-break-after: avoid;
+  }
+
+  .report-p {
+    color: #1a1a1a !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .report-blockquote {
+    background: #faf6ee !important;
+    border-left: 2px solid #c8873a !important;
+    color: #3a2800 !important;
+  }
+
+  .report-strong {
+    color: #1a1a1a !important;
+  }
+
+  .report-em {
+    color: #1a1a1a !important;
+  }
+
+  .report-hr {
+    border-top: 1px solid #d0b070 !important;
+  }
+
+  .report-ul,
+  .report-ol {
+    color: #1a1a1a !important;
+  }
+
+  /* ── Purpose / Shadow AI sections print overrides ───────────────── */
+  [style*="rgba(13,18,32"],
+  [style*="rgba(200,135,58"] {
+    background: #fafafa !important;
+    border-color: #e8d5a0 !important;
+  }
+
+  /* Prevent ugly page breaks inside cards */
+  .glass-card,
+  section {
+    page-break-inside: avoid;
+  }
+
+  /* cc-tag metadata labels */
+  .cc-tag {
+    background: #f0e8d0 !important;
+    color: #4a3000 !important;
+    border-color: #c8a060 !important;
+  }
+}

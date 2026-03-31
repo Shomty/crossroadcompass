@@ -9,6 +9,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { PrintButton } from "@/components/ui/PrintButton";
 import type { HDChart, HDCenterName } from "@/lib/astro/types";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -536,6 +537,7 @@ export function V4Report({ firstName }: { firstName: string }) {
             <RefreshCw size={11} style={generating ? { animation: "spin 1s linear infinite" } : {}} />
             Regenerate
           </button>
+          <PrintButton className="print-hide" />
         </div>
 
         <p style={{ ...bodyText, marginTop: 14, marginBottom: 0 }}>

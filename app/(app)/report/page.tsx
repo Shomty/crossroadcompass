@@ -15,7 +15,11 @@ export default async function ReportPage() {
   const firstName = ctx.name?.split(" ")[0] ?? "You";
 
   return (
-    <PageLayout>
+    <PageLayout
+      eyebrow="Human Design · Foundation"
+      title="HD Foundation Report"
+      subtitle="Your personalised blueprint decoded from birth chart and Human Design"
+    >
       <V4Report firstName={firstName} />
     </PageLayout>
   );

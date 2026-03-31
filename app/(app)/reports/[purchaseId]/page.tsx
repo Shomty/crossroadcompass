@@ -8,6 +8,7 @@ import ReactMarkdown from "react-markdown";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { V4GlassCard } from "@/components/v4/V4GlassCard";
 import { GenerateReportButton } from "../GenerateReportButton";
+import { PrintButton } from "@/components/ui/PrintButton";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -74,35 +75,40 @@ export default async function ReportReaderPage({
             </Link>
 
             {/* Meta */}
-            <div className="flex flex-wrap gap-2 items-center">
-              {generatedAt && (
-                <span className="cc-tag" aria-label="Generated date">
-                  Generated {formatDate(generatedAt)}
-                </span>
-              )}
-              {wordCount != null && (
-                <span className="cc-tag" aria-label="Word count">
-                  {wordCount.toLocaleString()} words
-                </span>
-              )}
-              <span
-                className={[
-                  "cc-tag",
-                  status === "COMPLETE"
-                    ? "cc-tag--amber"
-                    : status === "GENERATING"
+            <div className="flex flex-wrap gap-2 items-center justify-between">
+              <div className="flex flex-wrap gap-2 items-center">
+                {generatedAt && (
+                  <span className="cc-tag" aria-label="Generated date">
+                    Generated {formatDate(generatedAt)}
+                  </span>
+                )}
+                {wordCount != null && (
+                  <span className="cc-tag" aria-label="Word count">
+                    {wordCount.toLocaleString()} words
+                  </span>
+                )}
+                <span
+                  className={[
+                    "cc-tag",
+                    status === "COMPLETE"
                       ? "cc-tag--amber"
-                      : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {status === "COMPLETE"
-                  ? "READY TO READ"
-                  : status === "GENERATING"
-                    ? "GENERATING"
-                    : "QUEUED"}
-              </span>
+                      : status === "GENERATING"
+                        ? "cc-tag--amber"
+                        : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  {status === "COMPLETE"
+                    ? "READY TO READ"
+                    : status === "GENERATING"
+                      ? "GENERATING"
+                      : "QUEUED"}
+                </span>
+              </div>
+              {status === "COMPLETE" && content && (
+                <PrintButton label="Save as PDF" />
+              )}
             </div>
 
             {/* Admin Controls */}

@@ -1,12 +1,9 @@
 "use client";
 // STATUS: done | Premium Features - Purpose Decoder
-/**
- * components/purpose/PurposeDecoder.tsx
- * Main component that displays the full purpose analysis.
- */
 
 import { ArchetypeCard } from "./ArchetypeCard";
 import { CrossBreakdown } from "./CrossBreakdown";
+import { PrintButton } from "@/components/ui/PrintButton";
 import type { PurposeInsight } from "@/lib/ai/purposeInsightService";
 
 interface PurposeDecoderProps {
@@ -30,8 +27,12 @@ export function PurposeDecoder({ insight, crossData }: PurposeDecoderProps) {
           background: "linear-gradient(180deg, rgba(200,135,58,0.08) 0%, rgba(13,18,32,0.4) 100%)",
           borderRadius: 16,
           border: "1px solid rgba(200,135,58,0.2)",
+          position: "relative",
         }}
       >
+        <div className="print-hide" style={{ position: "absolute", top: 16, right: 16 }}>
+          <PrintButton />
+        </div>
         <span
           style={{
             fontFamily: "'DM Mono', monospace",

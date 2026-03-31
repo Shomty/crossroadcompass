@@ -1,12 +1,9 @@
 "use client";
 // STATUS: done | Premium Features - Shadow Work Portal
-/**
- * components/shadow/ShadowPortal.tsx
- * Main component displaying the full shadow work analysis.
- */
 
 import { ShadowMap } from "./ShadowMap";
 import { JournalingPrompt } from "./JournalingPrompt";
+import { PrintButton } from "@/components/ui/PrintButton";
 import type { ShadowInsight } from "@/lib/ai/shadowInsightService";
 
 interface ShadowPortalProps {
@@ -25,8 +22,12 @@ export function ShadowPortal({ insight }: ShadowPortalProps) {
           background: "linear-gradient(180deg, rgba(46,31,15,0.3) 0%, rgba(13,18,32,0.4) 100%)",
           borderRadius: 16,
           border: "1px solid rgba(200,135,58,0.15)",
+          position: "relative",
         }}
       >
+        <div className="print-hide" style={{ position: "absolute", top: 16, right: 16 }}>
+          <PrintButton />
+        </div>
         <span
           style={{
             fontFamily: "'DM Mono', monospace",
