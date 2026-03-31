@@ -174,6 +174,8 @@ export default async function ReportsPage({
                     {isComplete && product.purchaseId ? (
                       <Link
                         href={`/reports/${product.purchaseId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="w-full rounded-xl border border-amber-400/40 bg-amber-500/20 px-3 py-2 text-center text-sm font-medium text-amber-200 transition-colors hover:bg-amber-500/30"
                       >
                         Read Report

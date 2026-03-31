@@ -17,41 +17,19 @@ function formatDate(iso: string) {
 export default async function ReportReaderPage({
   params,
 }: {
-  params: { purchaseId: string };
+  params: Promise<{ purchaseId: string }>;
 }) {
   const ctx = await getAppUserContext();
   if (!ctx) redirect("/login");
 
   const userId = ctx.userId;
-  const purchaseId = params?.purchaseId;
+  const { purchaseId } = await params;
 
   if (typeof purchaseId !== "string" || purchaseId.length === 0) {
     redirect("/reports");
   }
 
-  const reportPurchase = (db as any).reportPurchase as
-    | { findUnique: Function }
-    | undefined;
-
-  if (!reportPurchase?.findUnique) {
-    return (
-      <PageLayout
-        eyebrow="REPORTS"
-        title="My Reports"
-        subtitle="Deep, personalized reports generated from your unique chart data."
-      >
-        <section className="animate-enter animate-enter-2">
-          <div className="glass-card border border-white/10 rounded-xl p-6 cc-body">
-            Reports are not ready yet. Please run `npx prisma generate` and
-            restart the dev server so the Prisma client includes
-            `reportPurchase` tables.
-          </div>
-        </section>
-      </PageLayout>
-    );
-  }
-
-  const purchase = await reportPurchase.findUnique({
+  const purchase = await db.reportPurchase.findUnique({
     where: { id: purchaseId },
     include: {
       reportProduct: true,
