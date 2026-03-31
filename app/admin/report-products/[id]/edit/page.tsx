@@ -69,7 +69,12 @@ export default async function EditReportProductPage({
           id · {product.id}
         </p>
       </div>
-      <ReportProductForm mode="edit" productId={product.id} initial={initial} />
+      <ReportProductForm
+        mode="edit"
+        productId={product.id}
+        initial={initial}
+        isSoftDeleted={!!product.deletedAt}
+      />
     </div>
   );
 }

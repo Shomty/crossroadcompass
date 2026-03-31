@@ -14,6 +14,8 @@ import { db } from "@/lib/db";
 import { getOrCreateVedicChart } from "@/lib/astro/chartService";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { KarmaTimeline } from "@/components/insights/KarmaTimeline";
+import { OracleForm } from "@/components/oracle/OracleForm";
+import { OracleBirthProfileGate } from "@/components/oracle/OracleBirthProfileGate";
 import type { SubscriptionTier } from "@/types";
 
 export default async function KarmaTimelinePage() {
@@ -21,6 +23,7 @@ export default async function KarmaTimelinePage() {
   if (!ctx) redirect("/login");
 
   const userId = ctx.userId;
+  const userName = ctx.name?.trim() || ctx.email?.split("@")[0] || "Traveler";
 
   // ── Subscription ──────────────────────────────────────────────────────────
   const subscription = await db.subscription.findUnique({
@@ -33,6 +36,17 @@ export default async function KarmaTimelinePage() {
 
   // ── Ensure Vedic chart + dasha rows exist ─────────────────────────────────
   const birthProfile = await db.birthProfile.findUnique({ where: { userId } });
+  const oracleProfileReady = Boolean(
+    birthProfile?.birthCity?.trim() &&
+      birthProfile?.birthCountry?.trim() &&
+      birthProfile?.birthDate
+  );
+  const birthPlaceLabel =
+    birthProfile?.observationCity?.trim() ||
+    (birthProfile?.birthCity && birthProfile?.birthCountry
+      ? `${birthProfile.birthCity}, ${birthProfile.birthCountry}`
+      : "");
+
   if (birthProfile) {
     try {
       await getOrCreateVedicChart(userId, birthProfile);
@@ -63,9 +77,16 @@ export default async function KarmaTimelinePage() {
     <PageLayout
       eyebrow="Vimshottari Dasha"
       title="Karma Timeline"
-      subtitle="Your complete cycle of planetary periods from birth to 120 years"
+      subtitle="Your complete cycle of planetary periods from birth to 120 years — includes Crossroads Oracle™ for guidance in your current Dasha window."
     >
       <section className="animate-enter animate-enter-2">
+        {oracleProfileReady && birthProfile ? (
+          <OracleForm displayName={userName} birthPlace={birthPlaceLabel} />
+        ) : (
+          <OracleBirthProfileGate />
+        )}
+      </section>
+      <section className="animate-enter animate-enter-3">
         <KarmaTimeline
           periods={periods}
           currentPeriodId={activeMaha?.id ?? null}

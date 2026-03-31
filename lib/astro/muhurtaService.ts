@@ -3,6 +3,10 @@
  * lib/astro/muhurtaService.ts
  * Electional astrology - finding auspicious timing windows.
  * Calculates planetary hours, tithi, nakshatra for timing recommendations.
+ *
+ * For the personalised Vedic Muhurta engine (functional benefics, Ashtakavarga overlay,
+ * dasha modifiers), add logic under `lib/astro/muhurta/` and call it from new API routes;
+ * keep this service as the stable surface for `/muhurta` + `muhurtaInsightService`.
  */
 
 import type { BirthProfile } from "@prisma/client";
@@ -32,6 +36,11 @@ export interface TimingWindow {
   nakshatra: string;
   reasoning: string[];
   hdAlignment: string;
+  /**
+   * Stable unique key for React / expand state when multiple slots share the same
+   * civil date and clock time (e.g. several transit windows from one scan step).
+   */
+  timelineKey?: string;
 }
 
 export interface MuhurtaData {

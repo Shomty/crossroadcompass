@@ -61,7 +61,7 @@ export interface GeminiReportGenerationOptions {
 /**
  * Generate a long-form report using Gemini.
  * @param systemPrompt - The full system/context prompt (from ReportProduct.geminiPrompt)
- * @param userDataContext - Assembled user chart data as a structured string
+ * @param userDataContext - User turn (e.g. marketplace chart JSON + instructions from `buildMarketplaceUserContextPayload`)
  */
 export async function generateReportWithGemini(
   systemPrompt: string,

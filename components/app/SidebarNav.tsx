@@ -10,11 +10,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, X, Compass, LayoutGrid, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight, Clock, BookOpen, Zap, Target, Sparkles, Timer, Heart, Telescope } from "lucide-react";
+import { LogOut, Menu, X, Compass, LayoutGrid, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight, Clock, BookOpen, Zap, Target, Sparkles, Timer, Heart, Telescope, CalendarClock, Sunrise, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const NAV_ITEMS = [
   { href: "/dashboard",         label: "Dashboard",       Icon: Compass },
+  { href: "/chat",              label: "Chat",            Icon: MessageSquare },
   { href: "/chart",             label: "Jyotish Chart",   Icon: LayoutGrid },
   { href: "/reports",           label: "My Reports",      Icon: Moon },
   { href: "/transit",           label: "Transits",        Icon: Globe },
@@ -24,6 +25,8 @@ const NAV_ITEMS = [
   { href: "/purpose",           label: "Purpose Decoder", Icon: Target },
   { href: "/shadow",            label: "Shadow Work",     Icon: Sparkles },
   { href: "/muhurta",           label: "Muhurta Finder",  Icon: Timer },
+  { href: "/new-muhurta",      label: "Muhurta (new)",   Icon: CalendarClock },
+  { href: "/purushartha-muhurta", label: "Puruṣārtha Muhūrta", Icon: Sunrise },
   { href: "/chemistry",         label: "Cosmic Chemistry",Icon: Heart },
   { href: "/sky-observer",      label: "Sky Observer",    Icon: Telescope },
   { href: "/settings/profile",  label: "Settings",        Icon: SlidersHorizontal },

@@ -1,7 +1,17 @@
 // STATUS: done | Task Admin-4
 import { db } from "@/lib/db";
-import { PromptTemplate, PromptTemplateVersion, PromptFeature } from "@prisma/client";
+import {
+  Prisma,
+  PromptTemplate,
+  PromptTemplateVersion,
+  PromptFeature,
+} from "@prisma/client";
 import { writeAuditLog } from "@/lib/admin/auditLogger";
+import {
+  prismaCreateTodayMoonBase,
+  todayMoonBaseTemplateFields,
+  TODAY_MOON_BASE_PROMPT_KEY,
+} from "@/lib/admin/todayMoonBasePromptDefault";
 
 export interface PromptUpdateInput {
   systemPrompt: string;
@@ -15,7 +25,88 @@ export interface PromptUpdateInput {
 }
 
 export async function getPrompt(promptKey: string): Promise<PromptTemplate | null> {
-  return db.promptTemplate.findUnique({ where: { promptKey } });
+  let row = await db.promptTemplate.findUnique({ where: { promptKey } });
+
+  if (promptKey === TODAY_MOON_BASE_PROMPT_KEY) {
+    // #region agent log
+    fetch("http://127.0.0.1:7699/ingest/5bba2a91-3664-43de-850b-4feb81d96c61", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceb90d" },
+      body: JSON.stringify({
+        sessionId: "ceb90d",
+        location: "promptService.ts:getPrompt:enterTodayMoon",
+        message: "todayMoon.base lookup",
+        data: {
+          rowFound: !!row,
+          userPromptLen: row?.userPromptTemplate?.length ?? 0,
+          trimEmpty: !row?.userPromptTemplate?.trim(),
+        },
+        timestamp: Date.now(),
+        hypothesisId: "H-empty-row-or-template",
+      }),
+    }).catch(() => {});
+    // #endregion
+
+    if (!row) {
+      try {
+        await db.promptTemplate.create({
+          data: prismaCreateTodayMoonBase("system:lazy-seed"),
+        });
+      } catch (e) {
+        const dup =
+          e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
+        // #region agent log
+        fetch("http://127.0.0.1:7699/ingest/5bba2a91-3664-43de-850b-4feb81d96c61", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceb90d" },
+          body: JSON.stringify({
+            sessionId: "ceb90d",
+            location: "promptService.ts:getPrompt:createTodayMoon",
+            message: "lazy create result",
+            data: { dup, err: dup ? null : String(e) },
+            timestamp: Date.now(),
+            hypothesisId: "H-upsert-empty-update",
+          }),
+        }).catch(() => {});
+        // #endregion
+        if (!dup) throw e;
+      }
+      row = await db.promptTemplate.findUnique({ where: { promptKey } });
+    }
+
+    if (row && !row.userPromptTemplate?.trim()) {
+      row = await db.promptTemplate.update({
+        where: { promptKey: TODAY_MOON_BASE_PROMPT_KEY },
+        data: {
+          systemPrompt: todayMoonBaseTemplateFields.systemPrompt,
+          userPromptTemplate: todayMoonBaseTemplateFields.userPromptTemplate,
+          maxTokens: todayMoonBaseTemplateFields.maxTokens,
+          temperature: todayMoonBaseTemplateFields.temperature,
+          updatedBy: "system:lazy-seed-repair",
+        },
+      });
+    }
+
+    // #region agent log
+    fetch("http://127.0.0.1:7699/ingest/5bba2a91-3664-43de-850b-4feb81d96c61", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "ceb90d" },
+      body: JSON.stringify({
+        sessionId: "ceb90d",
+        location: "promptService.ts:getPrompt:exitTodayMoon",
+        message: "todayMoon.base final",
+        data: {
+          rowFound: !!row,
+          userPromptLen: row?.userPromptTemplate?.length ?? 0,
+        },
+        timestamp: Date.now(),
+        hypothesisId: "H-verify",
+      }),
+    }).catch(() => {});
+    // #endregion
+  }
+
+  return row;
 }
 
 export async function getAllPrompts(): Promise<PromptTemplate[]> {

@@ -3,6 +3,10 @@ import { requireAdminSession } from "@/lib/admin/requireAdmin";
 import { db } from "@/lib/db";
 import { ConfigEditor } from "@/components/admin/ConfigEditor";
 import { GeminiTestPanel } from "@/components/admin/GeminiTestPanel";
+import {
+  CHAT_INTRO_CONFIG_KEY,
+  DEFAULT_CHAT_INTRO_MESSAGE,
+} from "@/lib/ai/chatWelcome";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +24,7 @@ const DEFAULT_CONFIG = [
   { key: "DAILY_MAX_TOKENS", defaultValue: "800" },
   { key: "WEEKLY_MAX_TOKENS", defaultValue: "1200" },
   { key: "MONTHLY_MAX_TOKENS", defaultValue: "1500" },
+  { key: CHAT_INTRO_CONFIG_KEY, defaultValue: DEFAULT_CHAT_INTRO_MESSAGE },
 ];
 
 export default async function ConfigPage() {

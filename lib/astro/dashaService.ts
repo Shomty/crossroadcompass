@@ -91,3 +91,33 @@ export async function getCurrentDasha(userId: string): Promise<Dasha | null> {
     },
   });
 }
+
+/**
+ * Returns the Antardasha period currently active for a user.
+ * `planetName` in DB: "MAHADASHA_PLANET/ANTARDASHA_PLANET"
+ */
+export async function getCurrentAntardasha(userId: string): Promise<Dasha | null> {
+  const now = new Date();
+  return db.dasha.findFirst({
+    where: {
+      userId,
+      startDate: { lte: now },
+      endDate: { gte: now },
+      level: "ANTARDASHA",
+    },
+  });
+}
+
+/** Fractional months remaining in a period from today (floor at 0). */
+export function monthsRemaining(endDate: Date): number {
+  const now = new Date();
+  const msLeft = endDate.getTime() - now.getTime();
+  return Math.max(0, Math.round(msLeft / (1000 * 60 * 60 * 24 * 30.44)));
+}
+
+/** Whole years remaining in a period from today (floor at 0). */
+export function yearsRemaining(endDate: Date): number {
+  const now = new Date();
+  const msLeft = endDate.getTime() - now.getTime();
+  return Math.max(0, Math.round(msLeft / (1000 * 60 * 60 * 24 * 365.25)));
+}

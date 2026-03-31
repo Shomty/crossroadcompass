@@ -57,12 +57,12 @@ export function getSignNature(sign: SignNumber): SignNature {
   return SIGN_NATURE[sign]
 }
 
-const EXALTATION_SIGN: Partial<Record<PlanetName, SignNumber>> = {
+export const EXALTATION_SIGN: Partial<Record<PlanetName, SignNumber>> = {
   Sun: 1, Moon: 2, Mars: 10, Mercury: 6,
   Jupiter: 4, Venus: 12, Saturn: 7, Rahu: 3, Ketu: 9,
 }
 
-const DEBILITATION_SIGN: Partial<Record<PlanetName, SignNumber>> = {
+export const DEBILITATION_SIGN: Partial<Record<PlanetName, SignNumber>> = {
   Sun: 7, Moon: 8, Mars: 4, Mercury: 12,
   Jupiter: 10, Venus: 6, Saturn: 1, Rahu: 9, Ketu: 3,
 }
@@ -130,7 +130,7 @@ export function wrapLongitude(longitude: number): number {
 
 // ─── SP.4 Dual-Lord Tiebreaker ────────────────────────────────────────────
 
-function getOwnSigns(planet: PlanetName): SignNumber[] {
+export function getOwnSigns(planet: PlanetName): SignNumber[] {
   const result: SignNumber[] = []
   for (const [s, lord] of Object.entries(SIGN_LORDS)) {
     const sign = Number(s) as SignNumber

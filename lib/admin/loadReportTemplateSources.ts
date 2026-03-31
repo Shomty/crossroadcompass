@@ -6,18 +6,29 @@ import {
   getOrCreateExtendedSpecialPoints,
   getOrCreateSpecialPoints,
 } from "@/lib/astro/chartService";
+import type { BirthProfile } from "@prisma/client";
 import type { HDChartData } from "@/types";
 import type { BuildReportTemplateVarsInput } from "@/lib/reports/reportTemplateVars";
+
+export type LoadReportTemplateSourcesOptions = {
+  /** When set, skips the extra `birthProfile` DB read (caller already loaded it). */
+  birthProfile: BirthProfile;
+};
 
 /**
  * Loads HD, Vedic, transit, dasha, and birth data for template interpolation
  * (admin inspect / custom-test / shared with marketplace generation pattern).
  */
 export async function loadReportTemplateSources(
-  userId: string
+  userId: string,
+  options?: LoadReportTemplateSourcesOptions
 ): Promise<BuildReportTemplateVarsInput> {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
+
+  const birthProfilePromise = options?.birthProfile
+    ? Promise.resolve(options.birthProfile)
+    : db.birthProfile.findUnique({ where: { userId } });
 
   const [
     hdDataKv,
@@ -34,7 +45,7 @@ export async function loadReportTemplateSources(
     kvGet<unknown>(kvKeys.transit(userId, todayStr)),
     kvGet<unknown>(kvKeys.dashas(userId)),
     db.user.findUnique({ where: { id: userId }, select: { email: true } }),
-    db.birthProfile.findUnique({ where: { userId } }),
+    birthProfilePromise,
     getOrCreateSpecialPoints(userId),
     getOrCreateExtendedSpecialPoints(userId),
   ]);

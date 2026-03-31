@@ -4,19 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
+  { href: "/admin", label: "Dashboard", icon: "⌂" },
   { href: "/admin/statistics", label: "Statistics", icon: "◆" },
-  { href: "/admin/market-reports", label: "Report Builder", icon: "◧" },
-  { href: "/admin/reports", label: "Custom Builder", icon: "◇" },
   { href: "/admin/report-products", label: "Report Catalog", icon: "▣" },
   { href: "/admin/users", label: "User Management", icon: "⊙" },
   { href: "/admin/payments", label: "Payments", icon: "◇" },
   { href: "/admin/report-logs", label: "Report Logs", icon: "▥" },
   { href: "/admin/prompts", label: "Prompt Editor", icon: "✦" },
   { href: "/admin/audit", label: "Audit Log", icon: "▤" },
-  { href: "/admin/review", label: "Review Queue", icon: "◎" },
   { href: "/admin/insights", label: "Quality", icon: "◈" },
   { href: "/admin/cron", label: "Cron Jobs", icon: "⟳" },
   { href: "/admin/config", label: "Config", icon: "⚙" },
+  { href: "/admin/chat-starters", label: "Chat starters", icon: "💬" },
 ];
 
 export function AdminSidebarNav() {

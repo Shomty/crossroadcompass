@@ -186,7 +186,7 @@ export async function generateLifeReading(
       type: TYPE_MAP[type],
       periodDate: EPOCH,
       content: JSON.stringify(reading),
-      reviewedByConsultant: false,
+      reviewedByConsultant: true,
     },
     update: {
       content: JSON.stringify(reading),

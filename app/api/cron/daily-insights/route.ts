@@ -19,6 +19,7 @@ import React from "react";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getOrCreateHDChart } from "@/lib/astro/chartService";
+import { precomputeTransitsLookaheadForUser } from "@/lib/astro/transitPrecache";
 import { generateDailyInsight, getTodaysDailyInsight } from "@/lib/ai/dailyInsightService";
 import { sendEmail } from "@/lib/email/client";
 import { DailyInsightEmail } from "@/lib/email/templates/DailyInsightEmail";
@@ -52,20 +53,34 @@ export async function GET(req: NextRequest) {
   });
 
   const results: { userId: string; status: "generated" | "skipped" | "error"; error?: string }[] = [];
+  let transitPrecacheCharts = 0;
+  let transitPrecacheHits = 0;
+  let transitPrecacheErrors = 0;
 
   for (const idx of profilesIndex) {
     try {
+      const profile = await db.birthProfile.findUnique({ where: { userId: idx.userId } });
+      if (!profile) {
+        results.push({ userId: idx.userId, status: "error", error: "Profile not found" });
+        continue;
+      }
+
+      try {
+        const pc = await precomputeTransitsLookaheadForUser(idx.userId, profile);
+        transitPrecacheCharts += pc.chartsComputed;
+        transitPrecacheHits += pc.cacheHits;
+      } catch (precacheErr) {
+        transitPrecacheErrors++;
+        console.error(
+          `[cron/daily-insights] transit precache failed for user ${idx.userId}:`,
+          precacheErr
+        );
+      }
+
       // Idempotent — skip if already generated today
       const existing = await getTodaysDailyInsight(idx.userId);
       if (existing) {
         results.push({ userId: idx.userId, status: "skipped" });
-        continue;
-      }
-
-      // Need full profile for chart generation
-      const profile = await db.birthProfile.findUnique({ where: { userId: idx.userId } });
-      if (!profile) {
-        results.push({ userId: idx.userId, status: "error", error: "Profile not found" });
         continue;
       }
 
@@ -101,6 +116,9 @@ export async function GET(req: NextRequest) {
     generated: results.filter((r) => r.status === "generated").length,
     skipped: results.filter((r) => r.status === "skipped").length,
     errors: results.filter((r) => r.status === "error").length,
+    transitPrecacheCharts,
+    transitPrecacheHits,
+    transitPrecacheErrors,
   };
 
   console.log("[cron/daily-insights] done:", summary);

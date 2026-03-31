@@ -38,7 +38,15 @@ export async function POST(request: Request) {
     orderBy: { purchasedAt: "desc" },
   });
 
+  const productActive = await db.reportProduct.findFirst({
+    where: { id: reportProductId, deletedAt: null },
+    select: { id: true },
+  });
+
   if (!purchase && adminBypass) {
+    if (!productActive) {
+      return NextResponse.json({ error: "Report product not found" }, { status: 404 });
+    }
     purchase = await db.reportPurchase.upsert({
       where: {
         userId_reportProductId: { userId, reportProductId },

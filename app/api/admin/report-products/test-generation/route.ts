@@ -3,11 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin/requireAdmin";
 import { db } from "@/lib/db";
-import { getOrCreateHDChart } from "@/lib/astro/chartService";
-import { loadReportTemplateSources } from "@/lib/admin/loadReportTemplateSources";
-import { buildReportTemplateVars } from "@/lib/reports/reportTemplateVars";
-import { interpolateReportTemplate } from "@/lib/reports/interpolateReportTemplate";
-import { buildUserReportContext } from "@/lib/reports/contextBuilder";
+import { env } from "@/lib/env";
+import { loadMarketplaceReportPromptParts } from "@/lib/reports/marketplaceReportRunner";
 import {
   generateReportWithGemini,
   GeminiGenerationError,
@@ -75,16 +72,17 @@ export async function POST(request: Request) {
   }
 
   try {
-    const hdChart = await getOrCreateHDChart(userId, birthProfile);
-    const templateSources = await loadReportTemplateSources(userId);
-    const vars = buildReportTemplateVars({
-      ...templateSources,
-      hdData: hdChart,
-      userEmail: templateSources.userEmail,
-    });
+    const parts = await loadMarketplaceReportPromptParts(
+      userId,
+      geminiPrompt,
+      birthProfile
+    );
+    if (!parts.ok) {
+      return NextResponse.json({ error: parts.error }, { status: 400 });
+    }
 
-    let systemPrompt = interpolateReportTemplate(geminiPrompt, vars);
-    let userContext = await buildUserReportContext(userId);
+    let systemPrompt = parts.systemPrompt;
+    let userContext = parts.userContext;
     let truncated = false;
 
     if (systemPrompt.length > TEST_MAX_SYSTEM_CHARS) {
@@ -104,9 +102,11 @@ export async function POST(request: Request) {
       setTimeout(() => reject(new Error("Test generation timed out")), TEST_TIMEOUT_MS)
     );
 
+    const envCap = env.GEMINI_REPORT_MAX_OUTPUT_TOKENS ?? 2048;
+
     const result = await Promise.race([
       generateReportWithGemini(systemPrompt, userContext, {
-        maxOutputTokens: 2048,
+        maxOutputTokens: Math.min(envCap, 2048),
         temperature: 0.55,
       }),
       timeout,

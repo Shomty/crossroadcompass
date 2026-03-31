@@ -1,6 +1,8 @@
 // STATUS: done | Admin report catalog
 import Link from "next/link";
 import { requireAdminSession } from "@/lib/admin/requireAdmin";
+import { ReportProductDeleteButton } from "@/components/admin/ReportProductDeleteButton";
+import { ReportProductRestoreButton } from "@/components/admin/ReportProductRestoreButton";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -57,15 +59,17 @@ export default async function AdminReportProductsPage() {
                 maxWidth: 520,
               }}
             >
-              Create and edit catalog items shown on the user-facing{" "}
+              This is the only place to create and edit marketplace reports:
+              prompts, pricing, activation, and test generation. Products appear
+              on the user-facing{" "}
               <Link href="/reports" style={{ color: "#c8873a" }}>
                 /reports
               </Link>{" "}
-              page. For one-off assembled reports, use{" "}
-              <Link href="/admin/reports" style={{ color: "#c8873a" }}>
-                Custom Report Builder
-              </Link>
-              .
+              page. Use{" "}
+              <Link href="/admin/report-products/new" style={{ color: "#c8873a" }}>
+                + New product
+              </Link>{" "}
+              to add a catalog item.
             </p>
           </div>
           <Link
@@ -140,18 +144,31 @@ export default async function AdminReportProductsPage() {
                   key={p.id}
                   style={{
                     borderBottom: "1px solid rgba(255,255,255,0.06)",
+                    opacity: p.deletedAt ? 0.72 : 1,
                   }}
                 >
                   <td style={{ padding: "12px 14px", verticalAlign: "middle" }}>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono, 'DM Mono')",
-                        fontSize: 10,
-                        color: p.isActive ? "#6ec98a" : "#806080",
-                      }}
-                    >
-                      {p.isActive ? "ON" : "OFF"}
-                    </span>
+                    {p.deletedAt ? (
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono, 'DM Mono')",
+                          fontSize: 10,
+                          color: "#E8705A",
+                        }}
+                      >
+                        DELETED
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono, 'DM Mono')",
+                          fontSize: 10,
+                          color: p.isActive ? "#6ec98a" : "#806080",
+                        }}
+                      >
+                        {p.isActive ? "ON" : "OFF"}
+                      </span>
+                    )}
                   </td>
                   <td
                     style={{
@@ -203,17 +220,39 @@ export default async function AdminReportProductsPage() {
                     {p._count.purchases}
                   </td>
                   <td style={{ padding: "12px 14px", textAlign: "right" }}>
-                    <Link
-                      href={`/admin/report-products/${p.id}/edit`}
+                    <div
                       style={{
-                        fontFamily: "var(--font-mono, 'DM Mono')",
-                        fontSize: 11,
-                        color: "#6080c0",
-                        textDecoration: "none",
+                        display: "flex",
+                        gap: 10,
+                        justifyContent: "flex-end",
+                        alignItems: "center",
+                        flexWrap: "wrap",
                       }}
                     >
-                      Edit
-                    </Link>
+                      <Link
+                        href={`/admin/report-products/${p.id}/edit`}
+                        style={{
+                          fontFamily: "var(--font-mono, 'DM Mono')",
+                          fontSize: 11,
+                          color: "#6080c0",
+                          textDecoration: "none",
+                        }}
+                      >
+                        Edit
+                      </Link>
+                      {p.deletedAt ? (
+                        <ReportProductRestoreButton
+                          productId={p.id}
+                          title={p.title}
+                        />
+                      ) : (
+                        <ReportProductDeleteButton
+                          productId={p.id}
+                          title={p.title}
+                          purchaseCount={p._count.purchases}
+                        />
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

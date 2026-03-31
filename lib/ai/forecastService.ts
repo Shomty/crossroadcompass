@@ -185,7 +185,7 @@ export async function generateWeeklyForecast(
 
   await db.insight.upsert({
     where: { userId_type_periodDate: { userId, type: "WEEKLY", periodDate: weekStart } },
-    create: { userId, type: "WEEKLY", periodDate: weekStart, content: JSON.stringify(forecast), reviewedByConsultant: false },
+    create: { userId, type: "WEEKLY", periodDate: weekStart, content: JSON.stringify(forecast), reviewedByConsultant: true },
     update: { content: JSON.stringify(forecast), generatedAt: new Date() },
   });
 
@@ -250,7 +250,7 @@ export async function generateMonthlyForecast(
 
   await db.insight.upsert({
     where: { userId_type_periodDate: { userId, type: "MONTHLY", periodDate: monthStart } },
-    create: { userId, type: "MONTHLY", periodDate: monthStart, content: JSON.stringify(forecast), reviewedByConsultant: false },
+    create: { userId, type: "MONTHLY", periodDate: monthStart, content: JSON.stringify(forecast), reviewedByConsultant: true },
     update: { content: JSON.stringify(forecast), generatedAt: new Date() },
   });
 

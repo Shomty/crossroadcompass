@@ -33,6 +33,7 @@ prisma/dev.db-wal
 
 # Local SQLite backups (never commit)
 prisma/*.backup*
+prisma/backups/
 
 # Python bytecode
 __pycache__/

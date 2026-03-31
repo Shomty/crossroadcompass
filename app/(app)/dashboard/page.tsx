@@ -28,7 +28,13 @@ import { DashaCard } from "@/components/dashboard/DashaCard";
 import { TransitCard } from "@/components/dashboard/TransitCard";
 import { CosmicGuidanceCard } from "@/components/dashboard/CosmicGuidanceCard";
 import { DashboardTransitsSection } from "@/components/dashboard/DashboardTransitsSection";
+import { TodayMoonJudgment } from "@/components/dashboard/TodayMoonJudgment";
+import { formatLocalCalendarDateYmd, formatMoonContextLine } from "@/lib/astro/dailyMoonJudgment";
 import { getOrCreateHDChart, getOrCreateTodayTransits, getOrCreateVedicChart } from "@/lib/astro/chartService";
+import {
+  getOrGenerateTodayMoonInterpretation,
+  type TodayMoonInterpretationResult,
+} from "@/lib/ai/todayMoonInterpretationService";
 import { serializeVedicChart } from "@/lib/astro/serializeVedicChart";
 import {
   getThisWeeksForecast,
@@ -73,6 +79,10 @@ export default async function DashboardPage({
   let hdAuthority: string | null = null;
   let hdProfile:   string | null = null;
   let transitChartJson: unknown = null;
+  let moonJudgmentBlock: (TodayMoonInterpretationResult & {
+    natalMoonLine: string | null;
+    transitMoonLine: string | null;
+  }) | null = null;
   if (birthProfile) {
     try {
       const hdChart = await getOrCreateHDChart(userId, birthProfile);
@@ -82,12 +92,29 @@ export default async function DashboardPage({
       hdProfile   = hdChart.profile   ?? null;
     } catch { /* render without HD chart — fail silently */ }
     // Generate Vedic chart so dashas get populated into DB before we query them below
+    let natalVedic: Awaited<ReturnType<typeof getOrCreateVedicChart>> | null = null;
     try {
-      await getOrCreateVedicChart(userId, birthProfile);
+      natalVedic = await getOrCreateVedicChart(userId, birthProfile);
     } catch { /* fail silently — dasha card shows empty if API unavailable */ }
     try {
       const t = await getOrCreateTodayTransits(userId, birthProfile);
       transitChartJson = serializeVedicChart(t);
+      if (natalVedic) {
+        const moonIx = await getOrGenerateTodayMoonInterpretation(
+          userId,
+          birthProfile,
+          natalVedic,
+          t,
+          userName
+        );
+        if (moonIx) {
+          moonJudgmentBlock = {
+            ...moonIx,
+            natalMoonLine: formatMoonContextLine(natalVedic.planets?.moon),
+            transitMoonLine: formatMoonContextLine(t.planets?.moon),
+          };
+        }
+      }
     } catch { /* transits optional on dashboard */ }
   }
 
@@ -151,18 +178,19 @@ export default async function DashboardPage({
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="dash-page">
-      <div className="dash-inner">
-        <div className="dash-wrap">
-
+      {/* Single shell: avoids extra wrapper that can confuse hydration (dash-inner + dash-wrap merged). */}
+      <div className="dash-inner dash-wrap">
           {/* ── HEADER ──────────────────────────────────────────────────────── */}
           <header className="dash-header">
 
             <div className="dash-header-left">
               <span className="dash-eyebrow">Personal Navigation</span>
-              <h1 className="dash-greeting">
+              <h1 className="dash-greeting" suppressHydrationWarning>
                 Good {timeOfDay}, <em>{firstName}</em>
               </h1>
-              <p className="dash-date-line">{dateLabel}</p>
+              <p className="dash-date-line" suppressHydrationWarning>
+                {dateLabel}
+              </p>
             </div>
 
             <div className="dash-header-actions">
@@ -227,12 +255,38 @@ export default async function DashboardPage({
             />
           </div>
 
-          {/* ── Transit Moon Widget (1/3 width) ──────────────────────────── */}
-          <div className="dash-grid-12 dash-mb">
-            <div className="dash-col-4">
-              <DashboardTransitsSection transitJson={transitChartJson} />
+          {/* ── Live Sky + Today’s Moon interpretation ───────────────────── */}
+          {transitChartJson != null && (
+            <div className="dash-grid-12 dash-mb">
+              <div className="dash-col-4">
+                <DashboardTransitsSection transitJson={transitChartJson} />
+              </div>
+              {moonJudgmentBlock && birthProfile && (
+                <div className="dash-col-8">
+                  <TodayMoonJudgment
+                    natalMoonLine={moonJudgmentBlock.natalMoonLine}
+                    transitMoonLine={moonJudgmentBlock.transitMoonLine}
+                    headline={moonJudgmentBlock.headline}
+                    body={moonJudgmentBlock.body}
+                    daytimeFocus={moonJudgmentBlock.daytimeFocus}
+                    caution={moonJudgmentBlock.caution}
+                    toneTags={moonJudgmentBlock.toneTags}
+                    source={moonJudgmentBlock.source}
+                    phaseEnergy={moonJudgmentBlock.phaseEnergy}
+                    houseFromChandra={moonJudgmentBlock.houseFromChandra}
+                    timeZone={birthProfile.timezone}
+                    transitDateYmd={formatLocalCalendarDateYmd(birthProfile.timezone)}
+                    transitDateLabel={new Intl.DateTimeFormat("en-GB", {
+                      timeZone: birthProfile.timezone,
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    }).format(new Date())}
+                  />
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {/* ── ROW 1: Cosmic Guidance (8) + Current Period / Dasha (4) ─────── */}
           <div className="dash-grid-12 dash-mb dash-row-hero">
@@ -377,8 +431,6 @@ export default async function DashboardPage({
             <span className="dash-section-subtitle">◈ Full birth chart analysis</span>
             <DashboardReport />
           </div>
-
-        </div>
       </div>
     </div>
   );

@@ -40,8 +40,49 @@ model User {
   bookings     ConsultationBooking[]
   subscription Subscription?
   reportPurchases ReportPurchase[]
+  chatThreads   ChatThread[]
+  chatState     UserChatState?
 
   @@map("users")
+}
+
+/// Cosmic Chat thread — messages JSON array `{ role, content }[]` (max 20 turns in app).
+model ChatThread {
+  id        String   @id
+  userId    String
+  title     String
+  messages  Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+  @@map("chat_threads")
+}
+
+/// Per-user active Cosmic Chat thread pointer.
+model UserChatState {
+  userId         String  @id
+  activeThreadId String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_chat_state")
+}
+
+/// Admin-editable Cosmic Chat starter suggestions (empty enabled set falls back to code defaults).
+model ChatStarterPrompt {
+  id        String   @id @default(cuid())
+  label     String
+  message   String
+  sortOrder Int      @default(0)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@map("chat_starter_prompts")
 }
 
 model Account {
@@ -506,6 +547,9 @@ enum AuditActionType {
   REPORT_ACTIVATE_TOGGLED
   REPORT_TEST_RUN
   REPORT_REGENERATE
+  REPORT_PURCHASE_DELETED
+  REPORT_PRODUCT_DELETED
+  REPORT_PRODUCT_RESTORED
   PAYMENT_BANK_INSTRUCTIONS_SENT
   USER_IMPERSONATE
   USER_ADMIN_UPDATE
@@ -647,12 +691,16 @@ model ReportProduct {
   /// Incremented when a new ReportPromptVersion row is saved.
   promptVersion Int     @default(1)
   estimatedWordCount Int @default(2000) // Shown to user as "~X word report"
+  /// Set when admin soft-deletes; slug is rewritten with `--del--{id}` to keep slug unique.
+  deletedAt     DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   createdBy     String // Admin email who created it
 
   purchases      ReportPurchase[]
   promptVersions ReportPromptVersion[]
+
+  @@index([deletedAt])
 }
 
 /// Version history for ReportProduct.geminiPrompt (admin prompt editor).

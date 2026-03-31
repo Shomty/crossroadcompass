@@ -5,6 +5,7 @@ import type {
   ExtendedSpecialPointsResult,
   SignNumber,
 } from "@/types";
+import { applySpecialPointTemplateScalars } from "./applySpecialPointTemplateScalars";
 import {
   REPORT_TEMPLATE_VARIABLE_KEYS,
   type ReportTemplateVariableKey,
@@ -423,7 +424,14 @@ export function buildReportTemplateVars(
 
   vars.current_mahadasha = maha;
   vars.current_antardasha = antar;
-  vars.current_dasha = maha;
+  const mahaL = capitalize(maha);
+  const antarL = capitalize(antar);
+  vars.current_dasha =
+    mahaL && antarL
+      ? `${mahaL} Mahadasha / ${antarL} Antardasha`
+      : mahaL
+        ? `${mahaL} Mahadasha`
+        : "";
   vars.dashas_json = dashasData ? safeJson(dashasData) : "";
   extractDashaDateVars(dashasData, maha, antar, vars);
 
@@ -480,6 +488,14 @@ export function buildReportTemplateVars(
     vars.sp_dhooma_chain_json = "";
     vars.sp_kaal_velas_json = "";
   }
+
+  applySpecialPointTemplateScalars(
+    vars as unknown as Record<string, string>,
+    specialPoints ?? undefined,
+    extendedSpecialPoints ?? undefined,
+    signLabel,
+    formatLon
+  );
 
   for (const k of REPORT_TEMPLATE_VARIABLE_KEYS) {
     if (vars[k] === undefined) vars[k] = "";

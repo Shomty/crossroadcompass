@@ -33,8 +33,14 @@ vi.mock("@/lib/ai/dailyInsightService", () => ({
 }));
 
 const mockGetOrCreateHDChart = vi.fn();
+const mockPrecacheTransits = vi.fn();
 vi.mock("@/lib/astro/chartService", () => ({
   getOrCreateHDChart: (...args: unknown[]) => mockGetOrCreateHDChart(...args),
+}));
+
+vi.mock("@/lib/astro/transitPrecache", () => ({
+  precomputeTransitsLookaheadForUser: (...args: unknown[]) =>
+    mockPrecacheTransits(...args),
 }));
 
 vi.mock("@/lib/email/client", () => ({
@@ -45,6 +51,11 @@ describe("GET /api/cron/daily-insights", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFindMany.mockResolvedValue([]);
+    mockPrecacheTransits.mockResolvedValue({
+      datesConsidered: 31,
+      cacheHits: 31,
+      chartsComputed: 0,
+    });
   });
 
   it("returns 401 when CRON_SECRET is set and Authorization header is missing", async () => {
@@ -75,7 +86,15 @@ describe("GET /api/cron/daily-insights", () => {
     const res = await GET(req);
     expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data).toEqual({ total: 0, generated: 0, skipped: 0, errors: 0 });
+    expect(data).toEqual({
+      total: 0,
+      generated: 0,
+      skipped: 0,
+      errors: 0,
+      transitPrecacheCharts: 0,
+      transitPrecacheHits: 0,
+      transitPrecacheErrors: 0,
+    });
     expect(mockFindMany).toHaveBeenCalled();
   });
 
@@ -85,7 +104,20 @@ describe("GET /api/cron/daily-insights", () => {
       birthName: "Test",
       user: { email: "test@example.com" },
     };
+    const minimalProfile = {
+      id: "bp1",
+      userId: "user1",
+      birthName: "Test",
+      birthDate: new Date(),
+      birthTimeKnown: false,
+      timezone: "UTC",
+      latitude: 0,
+      longitude: 0,
+      observationLatitude: null,
+      observationLongitude: null,
+    };
     mockFindMany.mockResolvedValue([profileIndex]);
+    mockFindUnique.mockResolvedValue(minimalProfile);
     mockGetTodaysDailyInsight.mockResolvedValue({ summary: "Existing", insight: "...", action: "...", energyTheme: "...", generatedAt: "" });
 
     const req = new NextRequest("http://localhost/api/cron/daily-insights", {
@@ -98,7 +130,9 @@ describe("GET /api/cron/daily-insights", () => {
     expect(data.total).toBe(1);
     expect(data.skipped).toBe(1);
     expect(data.generated).toBe(0);
+    expect(data.transitPrecacheHits).toBe(31);
     expect(mockGenerateDailyInsight).not.toHaveBeenCalled();
+    expect(mockPrecacheTransits).toHaveBeenCalledWith("user1", minimalProfile);
   });
 
   it("generates insight and returns summary when profile exists and no insight yet", async () => {
@@ -128,6 +162,8 @@ describe("GET /api/cron/daily-insights", () => {
     expect(data.total).toBe(1);
     expect(data.generated).toBe(1);
     expect(data.errors).toBe(0);
+    expect(data.transitPrecacheHits).toBe(31);
     expect(mockGenerateDailyInsight).toHaveBeenCalledWith("user1", fakeChart, "Test", fullProfile);
+    expect(mockPrecacheTransits).toHaveBeenCalledWith("user1", fullProfile);
   });
 });

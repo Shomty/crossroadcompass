@@ -119,7 +119,7 @@ export async function generateDailyInsight(
       type: "DAILY",
       periodDate: today,
       content: JSON.stringify(insight),
-      reviewedByConsultant: false,
+      reviewedByConsultant: true,
     },
     update: {
       content: JSON.stringify(insight),

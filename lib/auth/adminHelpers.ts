@@ -17,6 +17,9 @@ const ACTION_MAP: Record<string, AuditActionType> = {
   "report.activate": AuditActionType.REPORT_ACTIVATE_TOGGLED,
   "report.test": AuditActionType.REPORT_TEST_RUN,
   "report.regenerate": AuditActionType.REPORT_REGENERATE,
+  "report.purchase.delete": AuditActionType.REPORT_PURCHASE_DELETED,
+  "report.product.delete": AuditActionType.REPORT_PRODUCT_DELETED,
+  "report.product.restore": AuditActionType.REPORT_PRODUCT_RESTORED,
   "payment.bank_instructions_sent":
     AuditActionType.PAYMENT_BANK_INSTRUCTIONS_SENT,
   "user.impersonate": AuditActionType.USER_IMPERSONATE,

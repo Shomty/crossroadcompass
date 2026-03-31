@@ -82,6 +82,7 @@ export async function invalidateChartCache(userId: string): Promise<void> {
       kvKeys.divisionalCharts(userId),
       kvKeys.currentDasha(userId),
       kvKeys.yogas(userId),
+      kvKeys.ashtakavarga(userId),
     ]),
     db.insight.deleteMany({
       where: { userId, type: InsightType.SPECIAL_POINTS },
@@ -218,6 +219,51 @@ export async function getOrCreateVedicChart(
 
 // ─── OA transit — Today's transit chart ─────────────────────────────────
 
+export type TransitCacheOptions = {
+  latOverride?: number
+  lngOverride?: number
+  tzOverride?: string
+  /** When set, overrides default 24h TTL (used by cron lookahead pre-cache). */
+  ttlSeconds?: number
+}
+
+/**
+ * Sidereal transit chart for a civil calendar date in the user's timezone
+ * (`localDateYmd` = YYYY-MM-DD). Uses noon local wall time via `timeOfBirth: 12:00`
+ * and observation coordinates — same contract as today's transits.
+ *
+ * API: `VedicAstrologyCalculator.calculateChart` from openastrology-library.
+ */
+export async function getOrCreateTransitsForLocalCalendarDate(
+  userId: string,
+  profile: BirthProfile,
+  localDateYmd: string,
+  options?: TransitCacheOptions
+): Promise<VedicChartCalculations> {
+  const cacheKey = kvKeys.transit(userId, localDateYmd)
+  const cached = await kvGet<VedicChartCalculations>(cacheKey)
+  if (cached !== null) return cached
+
+  const latitude =
+    options?.latOverride ?? (profile.observationLatitude ?? profile.latitude)
+  const longitude =
+    options?.lngOverride ?? (profile.observationLongitude ?? profile.longitude)
+
+  const transitBirthInfo = {
+    ...prismaProfileToBirthInfo(profile),
+    dateOfBirth: localDateYmd,
+    timeOfBirth: '12:00',
+    latitude,
+    longitude,
+  }
+
+  const calculator = getVedicCalculator()
+  const transitChart = await calculator.calculateChart(transitBirthInfo)
+  const ttl = options?.ttlSeconds ?? KV_TTL.TRANSIT_SECONDS
+  await kvSet(cacheKey, transitChart, ttl)
+  return transitChart
+}
+
 /**
  * Returns today's transit chart for a user, using KV cache when available.
  * "Today" is resolved in the user's timezone.
@@ -235,25 +281,11 @@ export async function getOrCreateTodayTransits(
     year: 'numeric', month: '2-digit', day: '2-digit',
   }).format(new Date())
 
-  const cacheKey = kvKeys.transit(userId, today)
-  const cached = await kvGet<VedicChartCalculations>(cacheKey)
-  if (cached !== null) return cached
-
-  const latitude  = latOverride ?? (profile.observationLatitude  ?? profile.latitude)
-  const longitude = lngOverride ?? (profile.observationLongitude ?? profile.longitude)
-
-  const transitBirthInfo = {
-    ...prismaProfileToBirthInfo(profile),
-    dateOfBirth: today,
-    timeOfBirth: '12:00',
-    latitude,
-    longitude,
-  }
-
-  const calculator = getVedicCalculator()
-  const transitChart = await calculator.calculateChart(transitBirthInfo)
-  await kvSet(cacheKey, transitChart, KV_TTL.TRANSIT_SECONDS)
-  return transitChart
+  return getOrCreateTransitsForLocalCalendarDate(userId, profile, today, {
+    latOverride,
+    lngOverride,
+    tzOverride,
+  })
 }
 
 // ─── OA.5 — Divisional charts ────────────────────────────────────────────

@@ -25,6 +25,9 @@ vi.mock("@/lib/kv/keys", () => ({
     divisionalCharts:      (userId: string) => `chart:divisional:${userId}`,
     currentDasha:          (userId: string) => `chart:dasha:current:${userId}`,
     yogas:                 (userId: string) => `chart:yogas:${userId}`,
+    ashtakavarga:          (userId: string) => `chart:ashtakavarga:${userId}`,
+    muhurtaPersonalized:   (userId: string, s: string, e: string, i: string) =>
+      `muhurta:personalized:${userId}:${s}:${e}:${i}`,
   },
   KV_TTL: { NATAL_CHART: undefined, TRANSIT_SECONDS: 86400 },
 }));

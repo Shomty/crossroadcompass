@@ -170,7 +170,7 @@ export async function generatePurposeInsight(
       type: InsightType.CAREER,
       periodDate: PURPOSE_EPOCH,
       content: JSON.stringify(insight),
-      reviewedByConsultant: false,
+      reviewedByConsultant: true,
     },
     update: {
       content: JSON.stringify(insight),

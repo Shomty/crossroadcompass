@@ -24,23 +24,21 @@ export async function generateReportForPurchase(
     };
   }
 
-  // 2. Mark as GENERATING
+  const userId = purchase.user.id;
+  const birthProfile = await db.birthProfile.findUnique({
+    where: { userId },
+  });
+  if (!birthProfile) {
+    return { success: false, error: "No birth profile for user" };
+  }
+
+  // 2. Mark as GENERATING (only after we know chart inputs exist)
   await db.reportPurchase.update({
     where: { id: purchaseId },
     data: { status: "GENERATING" },
   });
 
   try {
-    const userId = purchase.user.id;
-    const email = purchase.user.email ?? "";
-
-    const birthProfile = await db.birthProfile.findUnique({
-      where: { userId },
-    });
-    if (!birthProfile) {
-      throw new Error("No birth profile for user");
-    }
-
     await db.generatedReport.upsert({
       where: { purchaseId },
       create: {
@@ -59,7 +57,7 @@ export async function generateReportForPurchase(
     const result = await runMarketplaceReportGeneration(
       userId,
       purchase.reportProduct.geminiPrompt,
-      email
+      { birthProfile }
     );
 
     if (!result.ok) {

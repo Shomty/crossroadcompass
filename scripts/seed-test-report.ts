@@ -5,8 +5,8 @@ async function main() {
 
     const slug = "shadow-work-deep-dive-test";
 
-    const existing = await db.reportProduct.findUnique({
-      where: { slug },
+    const existing = await db.reportProduct.findFirst({
+      where: { slug, deletedAt: null },
     });
 
     if (existing) {
@@ -31,7 +31,7 @@ async function main() {
         geminiPrompt: `You are a deeply skilled Vedic astrologer and Human Design analyst specializing in shadow work and psychological integration.
 
 The user is a {{hd_type}} with {{hd_authority}} Authority and a {{hd_profile}} profile.
-Their Vedic Lagna is {{lagna}}, Moon Sign is in {{moon_sign}}, and they are currently in their {{current_dasha}} Mahadasha period.
+Their Vedic Lagna is {{lagna}}, Moon Sign is in {{moon_sign}}, and they are currently in {{current_dasha}}.
 
 Write a comprehensive, warm, and practically focused Shadow Work report for {{user_name}}.
 

@@ -18,30 +18,8 @@ export default async function ReportsPage({
   const params = await searchParams;
   const activeCategory = (params.category ?? "ALL") as string;
 
-  const reportProduct = (db as any).reportProduct as
-    | { findMany: Function }
-    | undefined;
-
-  if (!reportProduct?.findMany) {
-    return (
-      <PageLayout
-        eyebrow="REPORTS"
-        title="My Reports"
-        subtitle="Deep, personalized reports generated from your unique chart data."
-      >
-        <section className="animate-enter animate-enter-2">
-          <div className="glass-card border border-white/10 rounded-xl p-6 cc-body">
-            Reports are not ready yet. Please run `npx prisma generate` and
-            restart the dev server (or redeploy) so the Prisma client includes
-            `reportProduct` tables.
-          </div>
-        </section>
-      </PageLayout>
-    );
-  }
-
-  const products = (await reportProduct.findMany({
-    where: { isActive: true },
+  const products = await db.reportProduct.findMany({
+    where: { isActive: true, deletedAt: null },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     select: {
       id: true,
@@ -56,43 +34,9 @@ export default async function ReportsPage({
       coverImageUrl: true,
       estimatedWordCount: true,
     },
-  })) as Array<{
-    id: string;
-    slug: string;
-    title: string;
-    subtitle: string | null;
-    description: string;
-    category: string;
-    priceUsd: number;
-    isActive: boolean;
-    sortOrder: number;
-    coverImageUrl: string | null;
-    estimatedWordCount: number;
-  }>;
+  });
 
-  const reportPurchase = (db as any).reportPurchase as
-    | { findMany: Function }
-    | undefined;
-
-  if (!reportPurchase?.findMany) {
-    return (
-      <PageLayout
-        eyebrow="REPORTS"
-        title="My Reports"
-        subtitle="Deep, personalized reports generated from your unique chart data."
-      >
-        <section className="animate-enter animate-enter-2">
-          <div className="glass-card border border-white/10 rounded-xl p-6 cc-body">
-            Reports are not ready yet. Please run `npx prisma generate` and
-            restart the dev server so the Prisma client includes
-            `reportPurchase` tables.
-          </div>
-        </section>
-      </PageLayout>
-    );
-  }
-
-  const purchases = (await reportPurchase.findMany({
+  const purchases = await db.reportPurchase.findMany({
     where: {
       userId,
       status: { in: ["PAID", "GENERATING", "COMPLETE"] },
@@ -102,11 +46,7 @@ export default async function ReportsPage({
       status: true,
       id: true,
     },
-  })) as Array<{
-    reportProductId: string;
-    status: string;
-    id: string;
-  }>;
+  });
 
   const purchaseMap = new Map<string, (typeof purchases)[number]>(
     purchases.map((p) => [p.reportProductId, p])

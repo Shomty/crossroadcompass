@@ -615,3 +615,232 @@ export interface ReportProductFull extends ReportProductSummary {
   createdBy: string;
   createdAt: string;
 }
+
+// ─── Personalized Muhurta (Vedic electional — transit × natal) ─────────────
+
+export type MuhurtaIntentCategory =
+  | "career"
+  | "relationship"
+  | "finance"
+  | "health"
+  | "travel"
+  | "spiritual"
+  | "all";
+
+export type MuhurtaWindowColor = "green" | "amber" | "neutral" | "red";
+
+export type AvasthaState = "awakened" | "active" | "sleeping";
+
+export type HouseDomain =
+  | "identity"
+  | "wealth"
+  | "communication"
+  | "home"
+  | "creativity"
+  | "service"
+  | "partnership"
+  | "transformation"
+  | "dharma"
+  | "career"
+  | "windfall"
+  | "spiritual";
+
+export interface MuhurtaWindowScoreBreakdown {
+  functionalNature: "benefic" | "malefic" | "neutral";
+  avasthaState: AvasthaState;
+  ashtakavargaRekhas: number;
+  virtualConjunctionDamage: boolean;
+  dashaModifier: number;
+  totalScore: number;
+}
+
+export interface PersonalizedMuhurtaWindow {
+  id: string;
+  startTime: string;
+  endTime: string;
+  planet: PlanetName;
+  transitSignNumber: SignNumber;
+  houseFromLagna: number;
+  houseDomain: HouseDomain;
+  color: MuhurtaWindowColor;
+  scoreBreakdown: MuhurtaWindowScoreBreakdown;
+  intentCategories: MuhurtaIntentCategory[];
+  warningLabel: string | null;
+}
+
+export interface PersonalizedMuhurtaRequest {
+  userId: string;
+  startDate: Date;
+  endDate: Date;
+  intentFilter: MuhurtaIntentCategory;
+}
+
+export interface PersonalizedMuhurtaResponse {
+  windows: PersonalizedMuhurtaWindow[];
+  dashaContext: {
+    mahadashaLord: PlanetName;
+    antardashaLord: PlanetName;
+    mahadashaEndDate: string;
+    modifierApplied: number;
+  } | null;
+  generatedAt: string;
+  cacheHit: boolean;
+}
+
+export interface SamudayaAshtakavarga {
+  rekhasBySign: Record<SignNumber, number>;
+}
+
+export interface MuhurtaDashaContext {
+  mahadashaLord: PlanetName;
+  antardashaLord: PlanetName;
+  mahadashaEndDate: Date;
+  antardashaEndDate: Date;
+}
+
+/** Puruṣārtha (electional) heatmap tier — `volatile` = Gaṇḍānta or critical instability flag. */
+export type PurusharthaHeatTier = "high" | "medium" | "low" | "volatile";
+
+/** Sarvashtakavarga bindus on the sign transit Moon occupies (personal scan). */
+export type PurusharthaSavBand = "drained" | "struggling" | "strong";
+
+/** 50-point-base weighted engine components (detail panel). */
+export interface PurusharthaWeightedScoreBreakdown {
+  base: number;
+  taraDelta: number;
+  savDelta: number;
+  tithiVaraDelta: number;
+  drishtiDelta: number;
+  gandantaDelta: number;
+  total: number;
+}
+
+export interface PurusharthaMuhurtaSlotSummary {
+  startIso: string;
+  /** Weighted Puruṣārtha score (0–100), base 50 + Vedic adjustments. */
+  score: number;
+  heatTier: PurusharthaHeatTier;
+  /** Pañcaka śuddhi reference (0–100), not mixed into weighted `score`. */
+  electionScore: number;
+  personalization: "full" | "unavailable";
+  savMoonSignPoints: number | null;
+  savBand: PurusharthaSavBand | null;
+  /** Score ≥ 70 and not Gaṇḍānta — bright green in heatmap. */
+  greenEligible: boolean;
+  taraFault: boolean;
+  /** Tara 7 (Naidhana) — strongest personal stress. */
+  taraNaidhana: boolean;
+  taraNumber: number | null;
+  mantraRequired: boolean;
+  mantraWarning: string | null;
+  remedyHint: string | null;
+  sadeSatiHeavy: boolean;
+  tithiLabel: string;
+  nakshatraLabel: string;
+  yogaLabel: string;
+  karanaLabel: string;
+  vaaraLabel: string;
+  lagnaSignNumber: SignNumber;
+  lagnaLord: PlanetName;
+  lagnaLordHouse: number | null;
+  lagnaLordStrong: boolean;
+  gandanta: boolean;
+  gandantaReason: string | null;
+  panchakaDeductions: string[];
+}
+
+export interface PurusharthaMuhurtaScanResponse {
+  slots: PurusharthaMuhurtaSlotSummary[];
+  intervalMinutes: number;
+  windowHours: number;
+  timeZone: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface PurusharthaMuhurtaDetailResponse {
+  instantIso: string;
+  score: number;
+  heatTier: PurusharthaHeatTier;
+  electionScore: number;
+  personalization: "full" | "unavailable";
+  savMoonSignPoints: number | null;
+  savBand: PurusharthaSavBand | null;
+  greenEligible: boolean;
+  taraFault: boolean;
+  taraNaidhana: boolean;
+  taraNumber: number | null;
+  mantraRequired: boolean;
+  mantraWarning: string | null;
+  remedyHint: string | null;
+  sadeSatiHeavy: boolean;
+  weightedBreakdown: PurusharthaWeightedScoreBreakdown;
+  chart: import("openastrology-library").VedicChartCalculations;
+  limbs: {
+    tithi: { label: string; index1to30: number; indexInPaksha: number };
+    nakshatra: { label: string; index0to26: number };
+    yoga: string;
+    karana: string;
+    vaara: string;
+  };
+  lagnaSignNumber: SignNumber;
+  lagnaLord: PlanetName;
+  lagnaLordHouse: number | null;
+  lagnaLordStrong: boolean;
+  gandanta: boolean;
+  gandantaReason: string | null;
+  panchakaScore: number;
+  panchakaDeductions: string[];
+}
+
+// ─── Chat types ───────────────────────────────────────────────────────────────
+
+export type ChatRole = 'user' | 'assistant'
+
+export interface ChatMessage {
+  id: string
+  role: ChatRole
+  content: string
+  createdAt: string  // ISO string
+}
+
+/** Client-side chat UI state (messages only). */
+export interface ChatSession {
+  messages: ChatMessage[]
+}
+
+/** One persisted conversation thread in Redis (Cosmic Chat). */
+export interface ChatThreadSummary {
+  id: string
+  title: string
+  updatedAt: string
+}
+
+export interface ChatRequest {
+  message: string
+  history: Array<{ role: ChatRole; content: string }>
+  /** When omitted, server uses the user’s active thread. */
+  sessionId?: string
+}
+
+export interface ChatResponse {
+  response: string
+  remaining: number | null   // null = unlimited (premium)
+  resetAt: string | null     // ISO string, null if unlimited
+  tier: SubscriptionTier
+  warning?: boolean          // true when premium user approaches soft daily ceiling
+  /** Active thread id (UUID, persisted in DB). */
+  sessionId?: string
+}
+
+export interface ChatRateLimitResponse {
+  error: 'RATE_LIMITED'
+  remaining: 0
+  resetAt: string
+  upgradeMessage: string
+}
+
+export interface ChatErrorResponse {
+  error: string
+  detail?: string
+}

@@ -34,7 +34,6 @@ export interface NorthIndianHouseContent {
 export interface NorthIndianChartInput {
   lagna: ZodiacSignName;
   houses: NorthIndianHouseContent[];
-  highlightLagna?: boolean;
 }
 
 const PLANET_KEYS = [
@@ -112,10 +111,11 @@ function formatGlyph(g: PlanetGlyph): string {
   return text;
 }
 
-const BASE_POSITIONS: Record<
-  number,
-  { x: number; y: number }
-> = {
+/**
+ * House label / planet anchors — normalized cell centers for conventional North Indian Rāśi chart:
+ * House 1 (Lagna) at top (12 o’clock), then counter‑clockwise 2–12. Matches common Parāśara / JH-style diamonds.
+ */
+const BASE_POSITIONS: Record<number, { x: number; y: number }> = {
   1: { x: 0.5, y: 0.25 },
   2: { x: 0.25, y: 0.1 },
   3: { x: 0.11, y: 0.25 },
@@ -138,15 +138,22 @@ function calculateOptimalLayout(planetCount: number): number {
 function generateChartStructure(svgWidth: number, svgHeight: number): string {
   const borderWidth = 4;
   const halfBorder = borderWidth / 2;
+  const L = halfBorder;
+  const R = svgWidth - halfBorder;
+  const T = halfBorder;
+  const B = svgHeight - halfBorder;
+  const cx = svgWidth / 2;
+  const cy = svgHeight / 2;
+  // Same geometry as instructions/north_indian_rashi_chart.tsx: main X + diamond through edge midpoints.
   return `
   <rect x="0" y="0" width="${svgWidth}" height="${svgHeight}" class="ni-bg"/>
-  <rect x="${halfBorder}" y="${halfBorder}" width="${svgWidth - borderWidth}" height="${svgHeight - borderWidth}" class="ni-outer"/>
-  <line x1="${halfBorder}" y1="${halfBorder}" x2="${svgWidth - halfBorder}" y2="${svgHeight - halfBorder}" class="ni-line"/>
-  <line x1="${halfBorder}" y1="${svgHeight - halfBorder}" x2="${svgWidth - halfBorder}" y2="${halfBorder}" class="ni-line"/>
-  <line x1="${svgWidth / 2}" y1="${halfBorder}" x2="${halfBorder}" y2="${svgHeight / 2}" class="ni-line"/>
-  <line x1="${svgWidth / 2}" y1="${halfBorder}" x2="${svgWidth - halfBorder}" y2="${svgHeight / 2}" class="ni-line"/>
-  <line x1="${svgWidth / 2}" y1="${svgHeight - halfBorder}" x2="${halfBorder}" y2="${svgHeight / 2}" class="ni-line"/>
-  <line x1="${svgWidth / 2}" y1="${svgHeight - halfBorder}" x2="${svgWidth - halfBorder}" y2="${svgHeight / 2}" class="ni-line"/>
+  <rect x="${L}" y="${T}" width="${R - L}" height="${B - T}" class="ni-outer"/>
+  <line x1="${L}" y1="${T}" x2="${R}" y2="${B}" class="ni-line"/>
+  <line x1="${R}" y1="${T}" x2="${L}" y2="${B}" class="ni-line"/>
+  <line x1="${cx}" y1="${T}" x2="${R}" y2="${cy}" class="ni-line"/>
+  <line x1="${R}" y1="${cy}" x2="${cx}" y2="${B}" class="ni-line"/>
+  <line x1="${cx}" y1="${B}" x2="${L}" y2="${cy}" class="ni-line"/>
+  <line x1="${L}" y1="${cy}" x2="${cx}" y2="${T}" class="ni-line"/>
 `;
 }
 
@@ -165,10 +172,9 @@ function generateHouseContent(
   const centerY = basePos.y * svgHeight;
   const scale = Math.min(svgWidth, svgHeight) / 480;
 
-  // Always render house number label (even when no planets occupy this house).
-  let content = `<text x="${centerX}" y="${centerY - 22 * scale}" class="ni-house-num">${house.number}</text>\n`;
-
-  if (natal.length === 0 && transit.length === 0) return content;
+  // Whole-sign North Indian: rāśi index (1–12) is drawn separately as the “house”.
+  // This layer is planets only; empty houses have no text here (rāśi still shows).
+  if (natal.length === 0 && transit.length === 0) return "";
 
   const lineHeightNatal = 20 * scale;
   const lineHeightTransit = 16 * scale;
@@ -203,35 +209,24 @@ function generateHouseContent(
   if (transitRows.length > 0 && natalRows.length > 0) totalHeight += padding * 0.5;
   for (const _ of transitRows) totalHeight += lineHeightTransit;
 
-  const containerY = centerY - totalHeight / 2;
-  let y = containerY + padding;
+  // Slightly below cell centroid so glyphs sit under the rāśi numeral drawn beneath.
+  const blockStartY = centerY + 10 * scale - totalHeight / 2;
+  let y = blockStartY + padding;
 
+  let content = "";
   for (const r of natalRows) {
-    content += `<text x="${centerX}" y="${y + lineHeightNatal * 0.7}" class="ni-planet-natal"><title>${escapeXml(r.text)}</title>${escapeXml(r.text)}</text>\n`;
-    y += lineHeightNatal;
+    y += lineHeightNatal * 0.72;
+    content += `<text x="${centerX}" y="${y}" class="ni-planet-natal"><title>${escapeXml(r.text)}</title>${escapeXml(r.text)}</text>\n`;
+    y += lineHeightNatal * 0.28;
   }
   if (transitRows.length > 0 && natalRows.length > 0) y += padding * 0.5;
   for (const r of transitRows) {
-    content += `<text x="${centerX}" y="${y + lineHeightTransit * 0.7}" class="ni-planet-transit"><title>Transit: ${escapeXml(r.text.replace(/^T·/, ""))}</title>${escapeXml(r.text)}</text>\n`;
-    y += lineHeightTransit;
+    y += lineHeightTransit * 0.72;
+    content += `<text x="${centerX}" y="${y}" class="ni-planet-transit"><title>Transit: ${escapeXml(r.text.replace(/^T·/, ""))}</title>${escapeXml(r.text)}</text>\n`;
+    y += lineHeightTransit * 0.28;
   }
 
   return content;
-}
-
-/**
- * Generate a filled polygon highlight for house 1 (Lagna) in the North Indian diamond.
- * House 1 occupies the top triangle: top-center point, mid-left, mid-right.
- */
-function generateLagnaHighlight(svgWidth: number, svgHeight: number): string {
-  const hb = 2; // half border
-  const cx = svgWidth / 2;
-  const mx = svgWidth / 2;
-  const top = hb;
-  const midY = svgHeight / 2;
-  // The top diamond triangle for house 1: top-center → left-center → right-center
-  const points = `${cx},${top} ${hb},${midY} ${svgWidth - hb},${midY}`;
-  return `<polygon points="${points}" class="ni-lagna-fill"/>\n`;
 }
 
 function escapeXml(s: string): string {
@@ -257,86 +252,70 @@ const ZODIAC_ORDER: ZodiacSignName[] = [
   "pisces",
 ];
 
+function zodiacTitleName(sign: ZodiacSignName): string {
+  return sign.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
+ * One numeral per compartment: whole-sign rāśi index (1 = Aries … 12 = Pisces).
+ * In North Indian style the sign *is* the house; compartment order is fixed, signs rotate with Lagna.
+ */
 function generateZodiacSigns(lagna: ZodiacSignName, svgWidth: number, svgHeight: number): string {
   const lagnaIndex = ZODIAC_ORDER.indexOf(lagna);
   if (lagnaIndex === -1) return "";
 
-  const zodiacSignFontSize = 12;
-  const zodiacSignHalfSize = zodiacSignFontSize / 2;
-  const offset = 15;
-
-  const zodiacPositions: Record<
-    number,
-    { x: number; y: number; xOffset: number; yOffset: number }
-  > = {
-    1: { x: 0.5, y: 0.5, xOffset: 0, yOffset: -offset + zodiacSignHalfSize },
-    2: { x: 0.25, y: 0.25, xOffset: 0, yOffset: -offset + zodiacSignHalfSize },
-    3: { x: 0.25, y: 0.25, xOffset: -offset, yOffset: zodiacSignHalfSize },
-    4: { x: 0.5, y: 0.5, xOffset: -offset, yOffset: zodiacSignHalfSize },
-    5: { x: 0.25, y: 0.75, xOffset: -offset, yOffset: zodiacSignHalfSize },
-    6: { x: 0.25, y: 0.75, xOffset: 0, yOffset: offset + zodiacSignHalfSize },
-    7: { x: 0.5, y: 0.5, xOffset: 0, yOffset: offset + zodiacSignHalfSize },
-    8: { x: 0.75, y: 0.75, xOffset: 0, yOffset: offset + zodiacSignHalfSize },
-    9: { x: 0.75, y: 0.75, xOffset: offset, yOffset: zodiacSignHalfSize },
-    10: { x: 0.5, y: 0.5, xOffset: offset, yOffset: zodiacSignHalfSize },
-    11: { x: 0.75, y: 0.25, xOffset: offset, yOffset: zodiacSignHalfSize },
-    12: { x: 0.75, y: 0.25, xOffset: 0, yOffset: -offset + zodiacSignHalfSize },
-  };
-
+  const scale = Math.min(svgWidth, svgHeight) / 480;
   let content = "";
   for (let houseNum = 1; houseNum <= 12; houseNum++) {
     const zodiacIndex = (lagnaIndex + houseNum - 1) % 12;
     const zodiacNumber = zodiacIndex + 1;
-    const position = zodiacPositions[houseNum];
-    if (!position) continue;
-    const x = position.x * svgWidth + position.xOffset;
-    const y = position.y * svgHeight + position.yOffset;
-    content += `<text x="${x}" y="${y}" class="ni-zodiac"><title>House ${houseNum} sign</title>${zodiacNumber}</text>\n`;
+    const signName = ZODIAC_ORDER[zodiacIndex];
+    const pos = BASE_POSITIONS[houseNum];
+    if (!pos) continue;
+    const pull = 0.32;
+    const x = (0.5 + (pos.x - 0.5) * (1 - pull)) * svgWidth;
+    const y = (0.5 + (pos.y - 0.5) * (1 - pull)) * svgHeight - 20 * scale;
+    const title = `Rāśi ${zodiacNumber} (${zodiacTitleName(signName)}) — whole-sign house from Lagna`;
+    content += `<text x="${x}" y="${y}" class="ni-zodiac"><title>${escapeXml(title)}</title>${zodiacNumber}</text>\n`;
   }
   return content;
 }
+
+/** Unified gold stroke for frame + inner diamond */
+const NI_STROKE = "rgba(200, 135, 58, 0.42)";
+const NI_TEXT = "rgba(240, 220, 160, 0.92)";
 
 const STYLE_BLOCK = `
   .ni-bg { fill: transparent; stroke: none; }
   .ni-outer {
     fill: rgba(13, 18, 32, 0.55);
-    stroke: rgba(200, 135, 58, 0.45);
-    stroke-width: 3;
+    stroke: ${NI_STROKE};
+    stroke-width: 2.5;
   }
   .ni-line {
-    stroke: rgba(200, 135, 58, 0.32);
-    stroke-width: 1.25;
+    stroke: ${NI_STROKE};
+    stroke-width: 1.5;
     fill: none;
   }
   .ni-planet-natal {
     font-family: 'DM Mono', ui-monospace, monospace;
     font-size: 11px;
-    fill: rgba(240, 220, 160, 0.95);
+    fill: ${NI_TEXT};
     text-anchor: middle;
   }
   .ni-planet-transit {
     font-family: 'DM Mono', ui-monospace, monospace;
-    font-size: 10px;
-    fill: rgba(232, 185, 106, 0.92);
+    font-size: 11px;
+    fill: ${NI_TEXT};
     text-anchor: middle;
-    font-style: italic;
   }
   .ni-zodiac {
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-    font-size: 12px;
-    fill: rgba(200, 135, 58, 0.75);
+    font-size: 13px;
+    font-weight: 600;
+    fill: ${NI_TEXT};
     text-anchor: middle;
-  }
-  .ni-house-num {
-    font-family: 'DM Mono', ui-monospace, monospace;
-    font-size: 9px;
-    fill: rgba(200, 135, 58, 0.5);
-    text-anchor: middle;
-  }
-  .ni-lagna-fill {
-    fill: rgba(200, 135, 58, 0.07);
-    stroke: rgba(200, 135, 58, 0.38);
-    stroke-width: 1;
+    opacity: 0.9;
   }
 `;
 
@@ -354,16 +333,11 @@ export function generateNorthIndianChartSVG(
 `;
   svg += generateChartStructure(width, height);
 
-  // Lagna highlight drawn before planets so it sits behind text.
-  if (input.highlightLagna !== false) {
-    svg += generateLagnaHighlight(width, height);
-  }
-
+  // Rāśi numerals first (whole-sign “house”), then planets on top.
+  svg += generateZodiacSigns(input.lagna, width, height);
   for (const house of input.houses) {
     svg += generateHouseContent(house, width, height);
   }
-
-  svg += generateZodiacSigns(input.lagna, width, height);
   svg += "</svg>";
   return svg;
 }

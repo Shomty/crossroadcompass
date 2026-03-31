@@ -3,6 +3,7 @@
  * Uses chartService-backed loaders via loadReportTemplateSources; no new astro math.
  */
 
+import type { BirthProfile } from "@prisma/client";
 import { loadReportTemplateSources } from "@/lib/admin/loadReportTemplateSources";
 import { getPrimaryLord } from "@/lib/astro/specialPoints";
 import { signToHouse } from "@/lib/astro/yoga/signToHouse";
@@ -226,13 +227,23 @@ export function buildAp5VariableMap(
   return out;
 }
 
+/** Merged {{variable}} map from already-loaded template sources (no extra I/O). */
+export function resolveMergedPromptVariablesFromSources(
+  birthProfile: BirthProfile,
+  input: BuildReportTemplateVarsInput
+): Record<string, string> {
+  const legacy = buildReportTemplateVars(input);
+  const ap5 = buildAp5VariableMap(input, legacy, birthProfile.birthDate);
+  return { ...legacy, ...ap5 };
+}
+
 export async function resolveReportVariables(
   userId: string
 ): Promise<Record<string, string>> {
   const birthProfile = await db.birthProfile.findUnique({ where: { userId } });
   if (!birthProfile) return {};
 
-  const input = await loadReportTemplateSources(userId);
+  const input = await loadReportTemplateSources(userId, { birthProfile });
   const base = buildReportTemplateVars(input);
   return buildAp5VariableMap(input, base, birthProfile.birthDate);
 }
@@ -244,8 +255,6 @@ export async function resolveMergedPromptVariables(
   const birthProfile = await db.birthProfile.findUnique({ where: { userId } });
   if (!birthProfile) return {};
 
-  const input = await loadReportTemplateSources(userId);
-  const legacy = buildReportTemplateVars(input);
-  const ap5 = buildAp5VariableMap(input, legacy, birthProfile.birthDate);
-  return { ...legacy, ...ap5 };
+  const input = await loadReportTemplateSources(userId, { birthProfile });
+  return resolveMergedPromptVariablesFromSources(birthProfile, input);
 }

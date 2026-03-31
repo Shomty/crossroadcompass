@@ -18,6 +18,7 @@ const MAGIC_LINK_FROM = env.NODE_ENV === "production"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
+  secret: env.AUTH_SECRET,
   session: { strategy: "jwt" },
   trustHost: true,
   logger: {
@@ -61,13 +62,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       // Refresh role at sign-in and recover it for JWTs created outside the normal callback path.
+      // DB failures must not bubble: Auth.js wraps jwt callback errors as JWTSessionError and logs loudly.
       if (userId && (user || !token.role || token.isAdmin === undefined)) {
-        const dbUser = await db.user.findUnique({
-          where: { id: userId },
-          select: { role: true, isAdmin: true },
-        });
-        token.role = dbUser?.role ?? "USER";
-        token.isAdmin = Boolean(dbUser?.isAdmin);
+        try {
+          const dbUser = await db.user.findUnique({
+            where: { id: userId },
+            select: { role: true, isAdmin: true },
+          });
+          token.role = dbUser?.role ?? "USER";
+          token.isAdmin = Boolean(dbUser?.isAdmin);
+        } catch (err) {
+          console.error("[auth] jwt db.user lookup failed:", err);
+          if (!token.role) token.role = "USER";
+          if (token.isAdmin === undefined) {
+            token.isAdmin = token.role === "ADMIN";
+          }
+        }
       } else if (!token.role) {
         token.role = "USER";
       }

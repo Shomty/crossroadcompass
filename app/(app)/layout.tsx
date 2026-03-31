@@ -11,6 +11,8 @@ import { db } from "@/lib/db";
 import { SidebarNav } from "@/components/app/SidebarNav";
 import { TimeColorProvider } from "@/components/app/TimeColorProvider";
 import { ImpersonationBanner } from "@/components/app/ImpersonationBanner";
+import { CosmicChat } from "@/components/chat/CosmicChat";
+import { getChatInitialState } from "@/lib/ai/getChatInitialState";
 import "@/styles/v2.css";
 import "@/styles/dashboard.css";
 
@@ -29,6 +31,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     ctx.email?.split("@")[0] ||
     "You";
 
+  const chatState = await getChatInitialState(ctx.userId);
+
   return (
     <div style={{ minHeight: "100vh" }}>
       <TimeColorProvider />
@@ -41,6 +45,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+      <CosmicChat
+        initialRemaining={chatState.remaining}
+        initialTier={chatState.tier}
+        initialMessages={chatState.history}
+        initialSessionId={chatState.activeSessionId}
+        initialLimitResetIso={chatState.resetAt}
+        introMessage={chatState.introMessage}
+        starterPrompts={chatState.starterPrompts}
+      />
     </div>
   );
 }

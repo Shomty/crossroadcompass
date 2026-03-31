@@ -34,8 +34,8 @@ export async function POST(request: Request) {
 
   const { reportProductId, stripePaymentId } = parsed.data;
 
-  const product = await db.reportProduct.findUnique({
-    where: { id: reportProductId },
+  const product = await db.reportProduct.findFirst({
+    where: { id: reportProductId, deletedAt: null },
     select: { id: true, priceUsd: true, isActive: true },
   });
 

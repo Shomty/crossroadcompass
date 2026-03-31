@@ -1,8 +1,10 @@
 // STATUS: done | Report template placeholders
+import { SPECIAL_POINT_SCALAR_KEYS } from "./specialPointScalarKeys";
+
 /**
  * Every {{placeholder}} supported by `buildReportTemplateVars` (admin UIs import this only).
  */
-export const REPORT_TEMPLATE_VARIABLE_KEYS = [
+const BASE_REPORT_TEMPLATE_VARIABLE_KEYS = [
   "user_email",
   "user_name",
   "birth_name",
@@ -97,6 +99,11 @@ export const REPORT_TEMPLATE_VARIABLE_KEYS = [
   // Dasha period dates
   "dasha_mahadasha_start", "dasha_mahadasha_end",
   "dasha_antardasha_start", "dasha_antardasha_end",
+] as const;
+
+export const REPORT_TEMPLATE_VARIABLE_KEYS = [
+  ...BASE_REPORT_TEMPLATE_VARIABLE_KEYS,
+  ...SPECIAL_POINT_SCALAR_KEYS,
 ] as const;
 
 export type ReportTemplateVariableKey =

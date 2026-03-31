@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CHAT_INTRO_CONFIG_KEY } from "@/lib/ai/chatWelcome";
 
 interface FlagItem { key: string; value: boolean }
 interface ConfigItem { key: string; value: string }
@@ -161,45 +162,102 @@ export function ConfigEditor({ flags: initialFlags, configs: initialConfigs }: P
         }}>
           {configs.map((cfg, i) => {
             const isPending = pendingConfig?.key === cfg.key;
+            const isIntro = cfg.key === CHAT_INTRO_CONFIG_KEY;
+            const summaryValue =
+              isIntro && cfg.value.length > 56 ? `${cfg.value.slice(0, 54)}…` : cfg.value;
 
             return (
               <div key={cfg.key} style={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: isPending && isIntro ? "flex-start" : "center",
                 padding: "12px 16px",
                 borderTop: i > 0 ? "1px solid rgba(255,255,255,0.04)" : "none",
                 gap: 16,
               }}>
-                <span style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 12, color: "#c8d0e8", flex: 1 }}>{cfg.key}</span>
+                <span style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 12, color: "#c8d0e8", flex: isIntro ? "0 0 180px" : 1 }}>{cfg.key}</span>
 
                 {isPending ? (
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <input
-                      type="text"
-                      value={pendingConfig!.newValue}
-                      onChange={(e) => setPendingConfig({ key: cfg.key, newValue: e.target.value })}
-                      style={{ background: "rgba(13,18,32,0.8)", border: "1px solid rgba(200,135,58,0.3)", borderRadius: 4, color: "#c8d0e8", padding: "4px 8px", fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 12, width: 100, outline: "none" }}
-                    />
-                    <button
-                      onClick={() => saveConfig(cfg.key, pendingConfig!.newValue)}
-                      disabled={saving}
-                      style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 10, padding: "4px 12px", background: "rgba(200,135,58,0.2)", border: "1px solid rgba(200,135,58,0.5)", borderRadius: 4, color: "#e8b96a", cursor: "pointer" }}
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setPendingConfig(null)}
-                      style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 10, padding: "4px 12px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#606880", cursor: "pointer" }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  isIntro ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 2, minWidth: 0 }}>
+                      <textarea
+                        value={pendingConfig!.newValue}
+                        onChange={(e) => setPendingConfig({ key: cfg.key, newValue: e.target.value })}
+                        rows={4}
+                        style={{
+                          width: "100%",
+                          maxWidth: 560,
+                          background: "rgba(13,18,32,0.8)",
+                          border: "1px solid rgba(200,135,58,0.3)",
+                          borderRadius: 4,
+                          color: "#c8d0e8",
+                          padding: "8px 10px",
+                          fontFamily: "var(--font-sans, 'Instrument Sans', sans-serif)",
+                          fontSize: 13,
+                          outline: "none",
+                          resize: "vertical",
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => saveConfig(cfg.key, pendingConfig!.newValue)}
+                          disabled={saving}
+                          style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 10, padding: "4px 12px", background: "rgba(200,135,58,0.2)", border: "1px solid rgba(200,135,58,0.5)", borderRadius: 4, color: "#e8b96a", cursor: "pointer" }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingConfig(null)}
+                          style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 10, padding: "4px 12px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#606880", cursor: "pointer" }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <input
+                        type="text"
+                        value={pendingConfig!.newValue}
+                        onChange={(e) => setPendingConfig({ key: cfg.key, newValue: e.target.value })}
+                        style={{ background: "rgba(13,18,32,0.8)", border: "1px solid rgba(200,135,58,0.3)", borderRadius: 4, color: "#c8d0e8", padding: "4px 8px", fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 12, width: 100, outline: "none" }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => saveConfig(cfg.key, pendingConfig!.newValue)}
+                        disabled={saving}
+                        style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 10, padding: "4px 12px", background: "rgba(200,135,58,0.2)", border: "1px solid rgba(200,135,58,0.5)", borderRadius: 4, color: "#e8b96a", cursor: "pointer" }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPendingConfig(null)}
+                        style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 10, padding: "4px 12px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "#606880", cursor: "pointer" }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <button
+                    type="button"
                     onClick={() => setPendingConfig({ key: cfg.key, newValue: cfg.value })}
-                    style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 12, color: "#e8b96a", background: "transparent", border: "1px solid rgba(232,185,106,0.2)", borderRadius: 4, padding: "4px 12px", cursor: "pointer" }}
+                    style={{
+                      fontFamily: "var(--font-mono, 'DM Mono')",
+                      fontSize: 12,
+                      color: "#e8b96a",
+                      background: "transparent",
+                      border: "1px solid rgba(232,185,106,0.2)",
+                      borderRadius: 4,
+                      padding: "4px 12px",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      maxWidth: isIntro ? 400 : undefined,
+                    }}
                   >
-                    {cfg.value}
+                    {summaryValue}
                   </button>
                 )}
               </div>

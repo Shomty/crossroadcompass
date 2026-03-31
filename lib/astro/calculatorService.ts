@@ -9,6 +9,7 @@
 import path from 'path'
 import { createRequire } from 'module'
 import { env } from '@/lib/env'
+import { patchOpenAstrologyCalculatorsForFutureDates } from '@/lib/astro/openAstrologyAllowFutureBirth'
 
 // Force CJS load — the ESM build (index.mjs) uses `import * as swisseph` which
 // returns a namespace object where native Node bindings are inaccessible.
@@ -17,6 +18,8 @@ const {
   VedicAstrologyCalculator,
   WesternAstrologyCalculator,
 } = _require('openastrology-library') as typeof import('openastrology-library')
+
+patchOpenAstrologyCalculatorsForFutureDates(VedicAstrologyCalculator, WesternAstrologyCalculator)
 
 const EPHE_PATH = path.isAbsolute(env.EPHE_PATH)
   ? env.EPHE_PATH

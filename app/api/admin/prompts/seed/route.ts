@@ -2,6 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin/requireAdmin";
 import { savePrompt } from "@/lib/admin/promptService";
+import {
+  todayMoonBaseTemplateFields,
+  TODAY_MOON_BASE_PROMPT_KEY,
+} from "@/lib/admin/todayMoonBasePromptDefault";
 import { PromptFeature } from "@prisma/client";
 
 const SEED_PROMPTS: Array<{
@@ -343,6 +347,10 @@ Return ONLY valid JSON (no markdown fences):
 }`,
     maxTokens: 8192,
     temperature: 0.75,
+  },
+  {
+    promptKey: TODAY_MOON_BASE_PROMPT_KEY,
+    ...todayMoonBaseTemplateFields,
   },
 ];
 

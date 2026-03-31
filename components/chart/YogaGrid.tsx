@@ -92,11 +92,8 @@ export function YogaGrid({ data }: YogaGridProps) {
             key={f}
             type="button"
             onClick={() => setActiveFilter(f)}
-            className={`rounded-full border px-3 py-1 font-mono text-xs transition-all ${
-              activeFilter === f
-                ? "border-amber-500/60 bg-amber-500/15 text-amber-400"
-                : "border-[rgba(255,255,255,0.08)] text-[rgba(240,232,216,0.45)] hover:border-amber-500/30"
-            }`}
+            className="btn-toggle"
+            data-active={activeFilter === f ? "true" : undefined}
           >
             {f === "all" ? "All Yogas" : "Active Only"}
           </button>
@@ -106,11 +103,8 @@ export function YogaGrid({ data }: YogaGridProps) {
             key={cat}
             type="button"
             onClick={() => setActiveFilter(cat)}
-            className={`rounded-full border px-3 py-1 font-mono text-xs transition-all ${
-              activeFilter === cat
-                ? "border-amber-500/60 bg-amber-500/15 text-amber-400"
-                : "border-[rgba(255,255,255,0.08)] text-[rgba(240,232,216,0.45)] hover:border-amber-500/30"
-            }`}
+            className="btn-toggle"
+            data-active={activeFilter === cat ? "true" : undefined}
           >
             {cat.replace(/_/g, " ")}
           </button>

@@ -58,8 +58,6 @@ export default async function UserDetailPage({
           type: true,
           generatedAt: true,
           deliveredAt: true,
-          reviewedByConsultant: true,
-          rejectedAt: true,
         },
       },
       bookings: {
@@ -210,8 +208,8 @@ export default async function UserDetailPage({
                   }}>
                     <span style={{ fontFamily: MONO, fontSize: 11, color: GOLD, width: 80 }}>{ins.type}</span>
                     <span style={{ fontFamily: MONO, fontSize: 11, color: DIM }}>{new Date(ins.generatedAt).toLocaleDateString()}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: ins.reviewedByConsultant ? GREEN : ins.rejectedAt ? RED : AMBER }}>
-                      {ins.reviewedByConsultant ? "approved" : ins.rejectedAt ? "rejected" : "pending"}
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: ins.deliveredAt ? GREEN : AMBER }}>
+                      {ins.deliveredAt ? "delivered" : "queued"}
                     </span>
                   </div>
                 ))}

@@ -40,6 +40,17 @@ export async function POST(request: Request) {
   const data = parsed.data;
   const createdBy = session.user.email ?? "admin";
 
+  const slugTaken = await db.reportProduct.findFirst({
+    where: { slug: data.slug, deletedAt: null },
+    select: { id: true },
+  });
+  if (slugTaken) {
+    return NextResponse.json(
+      { error: "A product with this slug already exists" },
+      { status: 409 }
+    );
+  }
+
   try {
     const product = await db.reportProduct.create({
       data: {

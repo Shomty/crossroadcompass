@@ -14,34 +14,23 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-const mockGetOrCreateHDChart = vi.fn();
-vi.mock("@/lib/astro/chartService", () => ({
-  getOrCreateHDChart: (...a: unknown[]) => mockGetOrCreateHDChart(...a),
-}));
-
-const mockLoadSources = vi.fn();
-vi.mock("@/lib/admin/loadReportTemplateSources", () => ({
-  loadReportTemplateSources: (...a: unknown[]) => mockLoadSources(...a),
-}));
-
-const mockBuildVars = vi.fn();
-vi.mock("@/lib/reports/reportTemplateVars", () => ({
-  buildReportTemplateVars: (...a: unknown[]) => mockBuildVars(...a),
-}));
-
-const mockInterpolate = vi.fn();
-vi.mock("@/lib/reports/interpolateReportTemplate", () => ({
-  interpolateReportTemplate: (...a: unknown[]) => mockInterpolate(...a),
-}));
-
-const mockUserContext = vi.fn();
-vi.mock("@/lib/reports/contextBuilder", () => ({
-  buildUserReportContext: (...a: unknown[]) => mockUserContext(...a),
+const mockLoadPromptParts = vi.fn();
+vi.mock("@/lib/reports/marketplaceReportRunner", () => ({
+  loadMarketplaceReportPromptParts: (...a: unknown[]) => mockLoadPromptParts(...a),
 }));
 
 const mockGenerate = vi.fn();
 vi.mock("@/lib/gemini/client", () => ({
   generateReportWithGemini: (...a: unknown[]) => mockGenerate(...a),
+  GeminiGenerationError: class extends Error {
+    name = "GeminiGenerationError";
+  },
+}));
+
+vi.mock("@/lib/env", () => ({
+  env: {
+    GEMINI_REPORT_MAX_OUTPUT_TOKENS: undefined,
+  },
 }));
 
 describe("POST /api/admin/report-products/test-generation", () => {
@@ -52,20 +41,12 @@ describe("POST /api/admin/report-products/test-generation", () => {
       error: null,
     });
     mockFindUnique.mockResolvedValue({ id: "bp1", userId: "u1" });
-    mockGetOrCreateHDChart.mockResolvedValue({ type: "Generator" });
-    mockLoadSources.mockResolvedValue({
-      hdData: null,
-      vedicData: null,
-      dashasData: [],
-      transitData: null,
-      birthProfile: null,
-      userEmail: "x@y.com",
-      currentMahadasha: "Jupiter",
-      currentAntardasha: "Saturn",
+    mockLoadPromptParts.mockResolvedValue({
+      ok: true,
+      vars: { hd_type: "Generator" },
+      systemPrompt: "interpolated system",
+      userContext: "user ctx",
     });
-    mockBuildVars.mockReturnValue({ hd_type: "Generator" });
-    mockInterpolate.mockReturnValue("interpolated system");
-    mockUserContext.mockResolvedValue("user ctx");
     mockGenerate.mockResolvedValue({
       text: "Hello report",
       wordCount: 2,
@@ -108,6 +89,11 @@ describe("POST /api/admin/report-products/test-generation", () => {
     expect(data.ok).toBe(true);
     expect(data.preview).toBe("Hello report");
     expect(data.truncated).toBe(false);
+    expect(mockLoadPromptParts).toHaveBeenCalledWith(
+      "u1",
+      "Hi {{hd_type}}",
+      expect.objectContaining({ userId: "u1" })
+    );
     expect(mockGenerate).toHaveBeenCalledWith(
       "interpolated system",
       "user ctx",

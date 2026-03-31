@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import clsx from "clsx";
+import { AnimatedNorthIndianChart, SouthIndianChart } from "@node-jhora/ui-react";
 import { DIVISIONAL_LABELS } from "@/lib/astro/divisionalLabels";
-import { NatalChartGrid } from "./NatalChartGrid";
+import { mapVedicChartToJhoraUi } from "@/lib/chart/vedicChartToJhoraUi";
 import { parseSerializedVedicChart } from "@/lib/astro/serializeVedicChart";
 import type { VedicChartCalculations } from "openastrology-library";
+import { BirthTimeBanner, NORTH_INDIAN_CHART_SIZE_PX } from "./NatalChartGrid";
 
 interface Props {
   birthTimeKnown: boolean;
@@ -14,6 +17,7 @@ export function DivisionalChartsPanel({ birthTimeKnown }: Props) {
   const [divisional, setDivisional] = useState<Record<string, unknown> | null>(null);
   const [key, setKey] = useState("D9");
   const [err, setErr] = useState<string | null>(null);
+  const [jhoraStyle, setJhoraStyle] = useState<"north" | "south">("north");
 
   useEffect(() => {
     let cancelled = false;
@@ -35,12 +39,32 @@ export function DivisionalChartsPanel({ birthTimeKnown }: Props) {
     };
   }, []);
 
+  const keys = useMemo(() => (divisional ? Object.keys(divisional).sort() : []), [divisional]);
+
+  useLayoutEffect(() => {
+    if (!divisional || keys.length === 0) return;
+    if (!keys.includes(key)) {
+      setKey(keys[0]!);
+    }
+  }, [divisional, keys, key]);
+
+  const chart = useMemo((): VedicChartCalculations | null => {
+    if (!divisional || keys.length === 0) return null;
+    const chartKey = keys.includes(key) ? key : keys[0]!;
+    try {
+      return parseSerializedVedicChart(divisional[chartKey]) as VedicChartCalculations;
+    } catch {
+      return null;
+    }
+  }, [divisional, key, keys]);
+
+  const jhora = useMemo(() => (chart ? mapVedicChartToJhoraUi(chart) : null), [chart]);
+
   if (err) return <p className="text-sm text-amber-200">{err}</p>;
   if (!divisional) return <p className="text-muted-chart">Loading divisional charts…</p>;
 
-  const keys = Object.keys(divisional).sort();
-  const chart = parseSerializedVedicChart(divisional[key]) as VedicChartCalculations;
-  const meta = DIVISIONAL_LABELS[key] ?? { name: key, meaning: "Divisional chart." };
+  const chartKey = keys.includes(key) ? key : keys[0]!;
+  const meta = DIVISIONAL_LABELS[chartKey] ?? { name: chartKey, meaning: "Divisional chart." };
 
   return (
     <div>
@@ -48,7 +72,7 @@ export function DivisionalChartsPanel({ birthTimeKnown }: Props) {
         Chart
         <select
           className="ml-2 rounded-lg border border-[rgba(200,135,58,0.35)] bg-transparent px-2 py-1 text-sm text-[var(--cream)]"
-          value={key}
+          value={chartKey}
           onChange={(e) => setKey(e.target.value)}
         >
           {keys.map((k) => (
@@ -59,7 +83,70 @@ export function DivisionalChartsPanel({ birthTimeKnown }: Props) {
         </select>
       </label>
       <p className="text-muted-chart mb-3">{meta.meaning}</p>
-      <NatalChartGrid chart={chart} birthTimeKnown={birthTimeKnown} />
+
+      <BirthTimeBanner birthTimeKnown={birthTimeKnown} />
+
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--mist)]">
+            Jhora · {meta.name}
+          </p>
+          <p className="text-xs text-[var(--mist)] opacity-80">
+            Same sidereal data as openastrology divisional charts; whole sign. Toggle North or South Indian.
+          </p>
+        </div>
+        <div
+          className="chart-variant-toggle shrink-0"
+          role="group"
+          aria-label="Divisional chart style"
+        >
+          <button
+            type="button"
+            onClick={() => setJhoraStyle("north")}
+            data-active={jhoraStyle === "north" ? "true" : undefined}
+          >
+            North Indian
+          </button>
+          <button
+            type="button"
+            onClick={() => setJhoraStyle("south")}
+            data-active={jhoraStyle === "south" ? "true" : undefined}
+          >
+            South Indian
+          </button>
+        </div>
+      </div>
+
+      {!chart ? (
+        <p className="text-muted-chart text-sm">Could not read this divisional chart from the server.</p>
+      ) : jhora ? (
+        <div
+          className={clsx(
+            "north-indian-chart-wrap w-full max-w-[min(100%,520px)] [&_svg]:h-auto [&_svg]:w-full",
+            "text-[var(--cream)]",
+          )}
+        >
+          {jhoraStyle === "north" ? (
+            <AnimatedNorthIndianChart
+              planets={jhora.planets}
+              ascendant={jhora.ascendant}
+              width={NORTH_INDIAN_CHART_SIZE_PX}
+              height={NORTH_INDIAN_CHART_SIZE_PX}
+            />
+          ) : (
+            <SouthIndianChart
+              planets={jhora.planets}
+              ascendant={jhora.ascendant}
+              width={NORTH_INDIAN_CHART_SIZE_PX}
+              height={NORTH_INDIAN_CHART_SIZE_PX}
+            />
+          )}
+        </div>
+      ) : (
+        <p className="text-muted-chart text-sm">
+          This divisional payload is incomplete (missing grahas or ascendant) — Jhora view unavailable.
+        </p>
+      )}
     </div>
   );
 }

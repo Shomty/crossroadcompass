@@ -1,13 +1,14 @@
 /**
  * components/ui/Label.tsx
- * DM Mono uppercase label for form fields.
+ * Canonical field label. DM Mono · uppercase · amber tint.
+ * Applies ui-label base styles. Pass className to override specific properties.
  */
 
 import type { LabelHTMLAttributes } from "react";
 
 export function Label({ className = "", children, ...props }: LabelHTMLAttributes<HTMLLabelElement>) {
   return (
-    <label className={className} {...props}>
+    <label className={`ui-label ${className}`} {...props}>
       {children}
     </label>
   );

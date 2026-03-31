@@ -13,6 +13,8 @@ interface AINarrative {
   date: string;
   timeRange: string;
   narrative: string;
+  /** Must match `TimingWindow.timelineKey` when both are set (personalized Muhurta). */
+  timelineKey?: string;
 }
 
 interface WeekTimelineProps {
@@ -81,17 +83,22 @@ function isPast(dateStr: string): boolean {
   return dateStr < new Date().toISOString().split("T")[0];
 }
 
+function slotRowKey(slot: TimingWindow): string {
+  return slot.timelineKey ?? `${slot.date}|${slot.startTime}`;
+}
+
 export function WeekTimeline({ windows, narratives = [], label }: WeekTimelineProps) {
-  const [expanded, setExpanded] = useState<string | null>(null); // "date|startTime"
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const grouped = groupByDate(windows);
   const dates = Object.keys(grouped).sort();
 
   const narrativeMap: Record<string, string> = {};
   for (const n of narratives) {
-    // Match by date; timeRange from AI is "HH:00 - HH:00", startTime is "HH:00"
     const startTime = n.timeRange.split(" - ")[0]?.trim();
-    if (startTime) narrativeMap[`${n.date}|${startTime}`] = n.narrative;
+    if (!startTime) continue;
+    const k = n.timelineKey ?? `${n.date}|${startTime}`;
+    narrativeMap[k] = n.narrative;
   }
 
   const toggle = (key: string) => setExpanded((prev) => (prev === key ? null : key));
@@ -202,7 +209,7 @@ export function WeekTimeline({ windows, narratives = [], label }: WeekTimelinePr
               }}
             >
               {slots.map((slot) => {
-                const key = `${slot.date}|${slot.startTime}`;
+                const key = slotRowKey(slot);
                 const q = QUALITY[slot.quality];
                 const isExpanded = expanded === key;
                 const hasNarrative = !!narrativeMap[key];
@@ -249,7 +256,7 @@ export function WeekTimeline({ windows, narratives = [], label }: WeekTimelinePr
 
             {/* Expanded detail — shows for any expanded slot in this day */}
             {slots.map((slot) => {
-              const key = `${slot.date}|${slot.startTime}`;
+              const key = slotRowKey(slot);
               if (expanded !== key) return null;
               const q = QUALITY[slot.quality];
               const narrative = narrativeMap[key];

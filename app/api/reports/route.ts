@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   const products = await db.reportProduct.findMany({
-    where: { isActive: true },
+    where: { isActive: true, deletedAt: null },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     select: {
       id: true,

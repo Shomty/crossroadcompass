@@ -1,0 +1,20 @@
+---
+description: Digital Grimoire frontend — PageLayout, glass surfaces, typography, motion
+globs: app/(app)/**/*.tsx,components/**/*.tsx
+alwaysApply: false
+---
+
+# Frontend (authenticated app)
+
+Canonical spec: **`STYLE_GUIDE.md`** at repo root (v1.2+). Follow it over ad-hoc styling.
+
+## Checklist
+
+1. **Page shell** — New pages under `app/(app)/`: wrap content in `PageLayout`. Do not add fixed nav/header inside the page.
+2. **Section stagger** — Major children: `<section className="animate-enter animate-enter-2">` then `-3`, `-4`, … (header uses `-1` inside `PageLayout`).
+3. **Outer container** — Feature blocks: prefer `V4GlassCard` (`components/v4/V4GlassCard.tsx`). Avoid bespoke full-width glass boxes duplicating `.glass-card`.
+4. **Inner tiles** — Lists/pickers inside a card: `rgba(13,18,32,0.45)`, border `rgba(255,255,255,0.05)`, radius `14px`; selected: subtle gold border `rgba(200,135,58,0.35)`. See `DashaPeriodCard`, `OracleForm`.
+5. **Typography** — Cinzel (titles), Plus Jakarta Sans (body), DM Mono (pills/metadata). Do not use Cormorant/Instrument for timeline/dashboard-adjacent UI.
+6. **Colors** — Prefer CSS variables from `app/globals.css` (`--cream`, `--mist`, `--gold-solar`, `--muted`, …). **Exception:** canonical primary CTA gradient is fixed (documented in `STYLE_GUIDE.md`).
+7. **Nested motion** — If the parent `<section>` already has `animate-enter-N`, stagger children with `animate-enter` + `animationDelay`, not the same `-N` on a huge inner wrapper.
+8. **Examples** — `components/insights/DashaPeriodCard.tsx`, `components/oracle/OracleForm.tsx`, `app/(app)/_template/page.tsx`.

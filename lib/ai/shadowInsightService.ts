@@ -184,7 +184,7 @@ export async function generateShadowInsight(
       type: InsightType.HEALTH,
       periodDate: SHADOW_EPOCH,
       content: JSON.stringify(insight),
-      reviewedByConsultant: false,
+      reviewedByConsultant: true,
     },
     update: {
       content: JSON.stringify(insight),

@@ -13,6 +13,7 @@ export function ReportLogsActions({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function regenerate() {
     setLoading(true);
@@ -23,6 +24,30 @@ export function ReportLogsActions({
       router.refresh();
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function deleteReport() {
+    if (
+      !window.confirm(
+        "Delete this report and its purchase record? The user will need to buy again to get a new copy."
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/report-logs/${reportRowId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const j = (await res.json()) as { error?: string };
+        window.alert(j.error ?? "Delete failed");
+        return;
+      }
+      router.refresh();
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -58,6 +83,22 @@ export function ReportLogsActions({
         }}
       >
         Regenerate
+      </button>
+      <button
+        type="button"
+        disabled={deleting}
+        onClick={() => void deleteReport()}
+        style={{
+          fontSize: 10,
+          padding: "4px 8px",
+          background: "rgba(180,60,60,0.15)",
+          border: "1px solid rgba(232,112,90,0.45)",
+          borderRadius: 4,
+          color: "#E8705A",
+          cursor: deleting ? "wait" : "pointer",
+        }}
+      >
+        Delete
       </button>
       {open ? (
         <div

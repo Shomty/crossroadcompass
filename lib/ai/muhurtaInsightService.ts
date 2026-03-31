@@ -204,7 +204,7 @@ export async function getMuhurtaWithInsight(
       if (isGeneral) {
         await db.insight.upsert({
           where: { userId_type_periodDate: { userId, type: "MUHURTA_WEEKLY", periodDate: weekStart } },
-          create: { userId, type: "MUHURTA_WEEKLY", periodDate: weekStart, content: JSON.stringify(insight), reviewedByConsultant: false },
+          create: { userId, type: "MUHURTA_WEEKLY", periodDate: weekStart, content: JSON.stringify(insight), reviewedByConsultant: true },
           update: { content: JSON.stringify(insight), generatedAt: new Date() },
         });
       }

@@ -1,11 +1,13 @@
 /**
  * Natal Vedic chart — FE-01+ hub.
+ * Jhora SVG uses @node-jhora/ui-react fed from the same Vedic chart as NatalChartGrid.
  */
 import { redirect } from "next/navigation";
 import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { getOrCreateVedicChart } from "@/lib/astro/chartService";
 import { serializeVedicChart } from "@/lib/astro/serializeVedicChart";
+import { mapVedicChartToJhoraUi } from "@/lib/chart/vedicChartToJhoraUi";
 import { ChartPageClient } from "@/components/chart/ChartPageClient";
 import { PageLayout } from "@/components/layout/PageLayout";
 
@@ -20,6 +22,7 @@ export default async function ChartPage() {
 
   const chart = await getOrCreateVedicChart(ctx.userId, profile);
   const serialized = serializeVedicChart(chart);
+  const jhoraChart = mapVedicChartToJhoraUi(chart);
 
   const lagnaSign = chart.ascendant?.sign;
   const lagnaLabel = lagnaSign
@@ -34,7 +37,11 @@ export default async function ChartPage() {
       title="Natal chart"
       subtitle={subtitle}
     >
-      <ChartPageClient initialChart={serialized} birthTimeKnown={profile.birthTimeKnown} />
+      <ChartPageClient
+        initialChart={serialized}
+        birthTimeKnown={profile.birthTimeKnown}
+        jhoraChart={jhoraChart}
+      />
     </PageLayout>
   );
 }

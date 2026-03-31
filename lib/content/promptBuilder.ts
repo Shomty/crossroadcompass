@@ -44,6 +44,7 @@ export const PROMPT_VARIABLE_MAP: Record<string, string[]> = {
   "life.health":  ["name", "hdType", "hdAuthority", "hdProfile", "hdCenters", "dasha"],
   "life.jyotish": ["name", "hdType", "hdAuthority", "hdProfile", "d1Planets", "d9Summary", "d10Summary", "dasha"],
   "transit.base": ["userName", "today", "ascendant", "moonSign", "dashaLord", "natalPlanets", "transitPlanets"],
+  "todayMoon.base": ["userName", "today", "localYmd", "timezone", "factsJson"],
 };
 
 /**
@@ -195,6 +196,29 @@ export async function buildTransitReadingPrompt(
   }
 
   console.warn('[promptBuilder] No DB prompt for "transit.base", using hardcoded fallback');
+  return fallbackFn();
+}
+
+/**
+ * Today's Moon Gemini prompt. DB key `todayMoon.base` — vars: userName, today, localYmd, timezone, factsJson.
+ */
+export async function buildTodayMoonPrompt(
+  vars: Record<string, string>,
+  fallbackFn: () => string
+): Promise<string> {
+  let template: Awaited<ReturnType<typeof getPrompt>> = null;
+  try {
+    template = await getPrompt("todayMoon.base");
+  } catch (e) {
+    console.warn('[promptBuilder] getPrompt("todayMoon.base") failed:', e);
+    return fallbackFn();
+  }
+
+  if (template?.userPromptTemplate) {
+    return interpolate(template.userPromptTemplate, vars);
+  }
+
+  console.warn('[promptBuilder] No DB prompt for "todayMoon.base", using hardcoded fallback');
   return fallbackFn();
 }
 

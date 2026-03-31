@@ -156,12 +156,12 @@ export async function generateHDReport(
       type: "INITIAL",
       periodDate: today,
       content: JSON.stringify(report),
-      reviewedByConsultant: false,
+      reviewedByConsultant: true,
     },
     update: {
       content: JSON.stringify(report),
       generatedAt: new Date(),
-      reviewedByConsultant: false,
+      reviewedByConsultant: true,
     },
   });
 

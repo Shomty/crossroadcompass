@@ -2,6 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin/requireAdmin";
 import { writeAuditLog } from "@/lib/admin/auditLogger";
+import {
+  CHAT_INTRO_CONFIG_KEY,
+  CHAT_INTRO_MAX_LENGTH,
+  DEFAULT_CHAT_INTRO_MESSAGE,
+} from "@/lib/ai/chatWelcome";
 import { db } from "@/lib/db";
 
 const DEFAULT_CONFIG = [
@@ -10,6 +15,7 @@ const DEFAULT_CONFIG = [
   { key: "DAILY_MAX_TOKENS", value: "800" },
   { key: "WEEKLY_MAX_TOKENS", value: "1200" },
   { key: "MONTHLY_MAX_TOKENS", value: "1500" },
+  { key: CHAT_INTRO_CONFIG_KEY, value: DEFAULT_CHAT_INTRO_MESSAGE },
 ];
 
 export async function GET(request: NextRequest) {
@@ -39,6 +45,13 @@ export async function PATCH(request: NextRequest) {
 
   if (!key || value === undefined) {
     return NextResponse.json({ error: "key and value required" }, { status: 400 });
+  }
+
+  if (key === CHAT_INTRO_CONFIG_KEY && value.length > CHAT_INTRO_MAX_LENGTH) {
+    return NextResponse.json(
+      { error: `Value too long (max ${CHAT_INTRO_MAX_LENGTH} characters)` },
+      { status: 400 }
+    );
   }
 
   const before = await db.systemConfig.findUnique({ where: { key } });

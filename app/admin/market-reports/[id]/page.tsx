@@ -1,9 +1,5 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/admin/requireAdmin";
-import { db } from "@/lib/db";
-import { MarketReportEditor } from "@/components/admin/MarketReportEditor";
-
-export const dynamic = "force-dynamic";
 
 export default async function EditMarketReportPage({
   params,
@@ -12,10 +8,5 @@ export default async function EditMarketReportPage({
 }) {
   await requireAdminSession();
   const { id } = await params;
-  const exists = await db.reportProduct.findUnique({
-    where: { id },
-    select: { id: true },
-  });
-  if (!exists) notFound();
-  return <MarketReportEditor reportId={id} />;
+  redirect(`/admin/report-products/${id}/edit`);
 }

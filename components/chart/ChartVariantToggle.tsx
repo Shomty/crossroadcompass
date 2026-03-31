@@ -11,26 +11,18 @@ interface Props {
  */
 export function ChartVariantToggle({ variant, onChange }: Props) {
   return (
-    <div className="flex gap-1 rounded border border-indigo-500/20 p-0.5">
+    <div className="chart-variant-toggle">
       <button
         type="button"
         onClick={() => onChange("north-indian")}
-        className={`rounded px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.12em] transition ${
-          variant === "north-indian"
-            ? "bg-indigo-600 text-white"
-            : "text-[var(--mist)] hover:text-[var(--cream)]"
-        }`}
+        data-active={variant === "north-indian"}
       >
         North Indian
       </button>
       <button
         type="button"
         onClick={() => onChange("south-indian")}
-        className={`rounded px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.12em] transition ${
-          variant === "south-indian"
-            ? "bg-indigo-600 text-white"
-            : "text-[var(--mist)] hover:text-[var(--cream)]"
-        }`}
+        data-active={variant === "south-indian"}
       >
         South Indian
       </button>

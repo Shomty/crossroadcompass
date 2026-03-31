@@ -6,7 +6,8 @@ import { flushSync } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReportCategory } from "@/types";
-import { REPORT_TEMPLATE_VARIABLE_KEYS } from "@/lib/reports/reportTemplateVariableKeys";
+import { ReportVariablePalette } from "@/components/admin/ReportVariablePalette";
+import { ReportProductRestoreButton } from "@/components/admin/ReportProductRestoreButton";
 
 const CATEGORIES: ReportCategory[] = [
   "LIFE_PURPOSE",
@@ -71,7 +72,7 @@ const DEFAULT_INITIAL: ReportProductFormInitial = {
   geminiPrompt: `You are a deeply skilled Vedic astrologer and Human Design analyst.
 
 The user is a {{hd_type}} with {{hd_authority}} Authority and a {{hd_profile}} profile.
-Their Vedic Lagna is {{lagna}}, Moon Sign is in {{moon_sign}}, and they are currently in their {{current_dasha}} Mahadasha period.
+Their Vedic Lagna is {{lagna}}, Moon Sign is in {{moon_sign}}, and they are currently in {{current_dasha}}.
 
 Write a comprehensive, warm report for {{user_name}}.
 
@@ -100,10 +101,13 @@ export default function ReportProductForm({
   mode,
   productId,
   initial,
+  isSoftDeleted = false,
 }: {
   mode: "create" | "edit";
   productId?: string;
   initial?: Partial<ReportProductFormInitial>;
+  /** When true, fields are disabled; use Restore to clear soft-delete. */
+  isSoftDeleted?: boolean;
 }) {
   const router = useRouter();
   const base = { ...DEFAULT_INITIAL, ...initial };
@@ -282,6 +286,10 @@ export default function ReportProductForm({
     e.preventDefault();
     setErr("");
 
+    if (isSoftDeleted) {
+      return;
+    }
+
     if (!canSave) {
       setErr(
         "Run “Test report generation” successfully for a sample user before saving. Change the prompt or user? Run the test again."
@@ -375,6 +383,41 @@ export default function ReportProductForm({
         </Link>
       </div>
 
+      {isSoftDeleted && productId && (
+        <div
+          style={{
+            marginBottom: 20,
+            padding: 14,
+            borderRadius: 8,
+            background: "rgba(180,60,60,0.12)",
+            border: "1px solid rgba(232,112,90,0.35)",
+            color: "#e8c8c0",
+            fontFamily: "var(--font-body, 'Instrument Sans')",
+            fontSize: 13,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+            justifyContent: "space-between",
+          }}
+        >
+          <span>
+            This product is soft-deleted (hidden from /reports). Restore it to
+            edit or re-list.
+          </span>
+          <ReportProductRestoreButton productId={productId} title={title} />
+        </div>
+      )}
+
+      <fieldset
+        disabled={isSoftDeleted}
+        style={{
+          border: "none",
+          margin: 0,
+          padding: 0,
+          minWidth: 0,
+        }}
+      >
       {err && (
         <div
           style={{
@@ -545,57 +588,7 @@ export default function ReportProductForm({
           onBlur={syncGeminiCaretFromEl}
           required
         />
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 8,
-            border: "1px solid rgba(200,135,58,0.2)",
-            background: "rgba(200,135,58,0.04)",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "var(--font-mono, 'DM Mono')",
-              fontSize: 10,
-              color: "#c8873a",
-              letterSpacing: "0.12em",
-              marginBottom: 10,
-            }}
-          >
-            CLICK TO ADD TO GEMINI SYSTEM PROMPT
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 8,
-              maxHeight: 260,
-              overflowY: "auto",
-            }}
-          >
-            {REPORT_TEMPLATE_VARIABLE_KEYS.map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => insertGeminiVariable(v)}
-                title={`Insert {{${v}}} into Gemini system prompt`}
-                style={{
-                  background: "rgba(200,135,58,0.14)",
-                  border: "1px solid rgba(200,135,58,0.35)",
-                  borderRadius: 6,
-                  color: "#e8c078",
-                  fontSize: 10,
-                  padding: "6px 10px",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-mono, 'DM Mono')",
-                }}
-              >
-                {`{{${v}}}`}
-              </button>
-            ))}
-          </div>
-        </div>
+        <ReportVariablePalette onInsert={insertGeminiVariable} />
       </div>
 
       <div
@@ -730,18 +723,23 @@ export default function ReportProductForm({
       <div style={{ display: "flex", gap: 12 }}>
         <button
           type="submit"
-          disabled={saving || !canSave}
+          disabled={saving || !canSave || isSoftDeleted}
           style={{
             padding: "12px 24px",
             borderRadius: 8,
             border: "1px solid rgba(200,135,58,0.45)",
             background:
-              saving || !canSave ? "rgba(255,255,255,0.04)" : "rgba(200,135,58,0.2)",
-            color: saving || !canSave ? "rgba(232,185,106,0.4)" : "#e8b96a",
+              saving || !canSave || isSoftDeleted
+                ? "rgba(255,255,255,0.04)"
+                : "rgba(200,135,58,0.2)",
+            color:
+              saving || !canSave || isSoftDeleted
+                ? "rgba(232,185,106,0.4)"
+                : "#e8b96a",
             fontFamily: "var(--font-mono, 'DM Mono')",
             fontSize: 12,
             letterSpacing: "0.08em",
-            cursor: saving ? "wait" : !canSave ? "not-allowed" : "pointer",
+            cursor: saving ? "wait" : !canSave || isSoftDeleted ? "not-allowed" : "pointer",
           }}
         >
           {saving ? "SAVING…" : mode === "create" ? "CREATE PRODUCT" : "SAVE CHANGES"}
@@ -762,6 +760,7 @@ export default function ReportProductForm({
           Cancel
         </Link>
       </div>
+      </fieldset>
     </form>
   );
 }

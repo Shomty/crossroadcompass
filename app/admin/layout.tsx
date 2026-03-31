@@ -1,4 +1,5 @@
 // STATUS: done | Task Admin-2
+import Link from "next/link";
 import { requireAdminSession } from "@/lib/admin/requireAdmin";
 import { AdminSidebarNav } from "@/components/admin/AdminSidebarNav";
 import "@/styles/v2.css";
@@ -19,14 +20,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         flexShrink: 0,
       }}>
         {/* Logo / Title */}
-        <div style={{ padding: "0 20px 24px", borderBottom: "1px solid rgba(200,135,58,0.15)" }}>
+        <Link
+          href="/admin"
+          style={{
+            padding: "0 20px 24px",
+            borderBottom: "1px solid rgba(200,135,58,0.15)",
+            textDecoration: "none",
+            display: "block",
+          }}
+        >
           <div style={{ fontFamily: "var(--font-display, 'Cormorant Garamond')", fontSize: 16, color: "#e8b96a", letterSpacing: "0.1em" }}>
             CROSSROADS
           </div>
           <div style={{ fontFamily: "var(--font-mono, 'DM Mono')", fontSize: 10, color: "#c8873a", letterSpacing: "0.2em", marginTop: 2 }}>
             ADMIN PANEL
           </div>
-        </div>
+        </Link>
 
         <AdminSidebarNav />
 

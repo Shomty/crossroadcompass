@@ -55,9 +55,41 @@ export const envSchema = z.object({
   // Gemini AI — required in production (admin reports / generation)
   GEMINI_API_KEY: opt(z.string().min(1)),
   GEMINI_MODEL: optWithDefault(z.string().min(1), "gemini-2.5-flash"),
+  // Chat-specific model selection: Flash for free tier, Pro for premium
+  GEMINI_MODEL_PRO:   optWithDefault(z.string().min(1), "gemini-2.5-flash"),
+  GEMINI_MODEL_FLASH: optWithDefault(z.string().min(1), "gemini-2.5-flash"),
+
+  /** Optional caps for marketplace report Gemini calls (defaults applied in code when unset). */
+  GEMINI_REPORT_MAX_OUTPUT_TOKENS: z.preprocess(
+    (v) => {
+      if (v === "" || v === undefined) return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    },
+    z.number().int().positive().max(131072).optional()
+  ),
+  GEMINI_REPORT_MAX_INPUT_CHARS: z.preprocess(
+    (v) => {
+      if (v === "" || v === undefined) return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    },
+    z.number().int().positive().max(2_000_000).optional()
+  ),
+  GEMINI_REPORT_MAX_SYSTEM_CHARS: z.preprocess(
+    (v) => {
+      if (v === "" || v === undefined) return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    },
+    z.number().int().positive().max(2_000_000).optional()
+  ),
 
   /// Bypass purchase check on POST /api/reports/generate when session email matches
   ADMIN_EMAIL: opt(z.string().email()),
+
+  /// Query `?key=` for /chart/jhora when set; admins always allowed. Omit to restrict preview to admins only.
+  JHORA_CHART_PREVIEW_SECRET: opt(z.string().min(1)),
 
   /// Bank transfer details (admin payments — email only; optional until used)
   BANK_ACCOUNT_NAME: opt(z.string().min(1)),
