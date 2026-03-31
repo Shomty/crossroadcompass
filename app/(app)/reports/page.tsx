@@ -6,6 +6,7 @@ import Link from "next/link";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { V4GlassCard } from "@/components/v4/V4GlassCard";
 import { PurchaseReportButton } from "./PurchaseReportButton";
+import { TriggerGenerateButton } from "./TriggerGenerateButton";
 export default async function ReportsPage({
   searchParams,
 }: {
@@ -178,15 +179,17 @@ export default async function ReportsPage({
                         Read Report
                       </Link>
                     ) : isGenerating || isPaid ? (
-                      <button
-                        type="button"
-                        disabled
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/40"
-                      >
-                        {isGenerating
-                          ? "Generating your report..."
-                          : "Awaiting Generation"}
-                      </button>
+                      isPaid ? (
+                        <TriggerGenerateButton reportProductId={product.id} />
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/40"
+                        >
+                          Generating your report…
+                        </button>
+                      )
                     ) : (
                       <PurchaseReportButton
                         reportProductId={product.id}

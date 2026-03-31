@@ -30,6 +30,14 @@ export function PurchaseReportButton({
         throw new Error(data?.error ?? "Purchase failed");
       }
 
+      // Auto-trigger generation immediately after purchase so the user
+      // never lands in a permanent "Awaiting Generation" state.
+      await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportProductId }),
+      });
+
       const purchaseId = data.purchaseId as string | undefined;
       if (!purchaseId) throw new Error("Missing purchaseId in response");
       router.push(`/reports/${purchaseId}`);
@@ -49,7 +57,7 @@ export function PurchaseReportButton({
         className="w-full rounded-xl border border-amber-400/40 bg-amber-500/20 px-3 py-2 text-sm font-medium text-amber-200 transition-colors hover:bg-amber-500/30 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {loading
-          ? "Creating purchase..."
+          ? "Creating purchase…"
           : priceUsdCents != null
             ? `Get This Report — $${(priceUsdCents / 100).toFixed(0)}`
             : "Get This Report"}
