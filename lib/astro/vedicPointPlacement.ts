@@ -72,24 +72,20 @@ export function placementFromLongitude(
 }
 
 /**
- * Nirayana Bhav Chalit house for a point.
- * The ascendant degree (within its sign) acts as the cusp boundary for every house.
- * If a point's degrees-in-sign < ascendant's degrees-in-sign, it slides one house back.
+ * Nirayana Bhav Chalit (Sripati) house for a point.
+ * Each house is a 30° arc centered on its Bhava Madhya (midpoint).
+ * House 1 midpoint = ascendant → house 1 spans (asc − 15°) to (asc + 15°).
+ * This shifts all house boundaries by −15° relative to whole-sign.
  */
 function chalitHouseFromLagna(
-  lagnaSignNumber: SignNumber,
+  _lagnaSignNumber: SignNumber,
   lagnaAbsoluteLongitude: number,
   pointLongitude: number
 ): number {
-  const lagnaDegreesInSign = wrapLongitude(lagnaAbsoluteLongitude) % 30
-  const pointLon = wrapLongitude(pointLongitude)
-  const { sign: pointSign } = longitudeToSignAndDegree(pointLon)
-  const pointDegreesInSign = pointLon % 30
-  const wholeSignHouse = countSignsBetween(lagnaSignNumber, pointSign)
-  if (pointDegreesInSign < lagnaDegreesInSign) {
-    return wholeSignHouse === 1 ? 12 : wholeSignHouse - 1
-  }
-  return wholeSignHouse
+  const startOfHouse1 = (wrapLongitude(lagnaAbsoluteLongitude) - 15 + 360) % 360
+  const relativePos   = (wrapLongitude(pointLongitude) - startOfHouse1 + 360) % 360
+  const house = Math.floor(relativePos / 30) + 1
+  return house > 12 ? house - 12 : house
 }
 
 function signCuspLongitude(sign: SignNumber): number {
