@@ -329,19 +329,16 @@ export async function GET(request: NextRequest) {
 
   // ── Layer 2: DB durable store ────────────────────────────────────────
   if (!allowed) {
-    const dbRow = await db.periodicReport.findUnique({
-      where: { userId_period_periodKey: { userId, period, periodKey: pKey } },
-    });
-    if (dbRow && dbRow.expiresAt > new Date()) {
-      // Re-warm KV from DB so next hit is instant
-      await kvSet(key, { text: dbRow.text, generatedAt: dbRow.generatedAt.toISOString() }, CACHE_TTL[period]);
-      return NextResponse.json({
-        text: dbRow.text,
-        generatedAt: dbRow.generatedAt.toISOString(),
-        cached: true,
-        period,
-        nextGenerationDate,
-      });
+    const rows = await db.$queryRaw<Array<{ text: string; generatedAt: string; expiresAt: string }>>`
+      SELECT text, generatedAt, expiresAt FROM periodic_reports
+      WHERE userId = ${userId} AND period = ${period} AND periodKey = ${pKey}
+      LIMIT 1
+    `;
+    const dbRow = rows[0];
+    if (dbRow && new Date(dbRow.expiresAt) > new Date()) {
+      const generatedAt = new Date(dbRow.generatedAt).toISOString();
+      await kvSet(key, { text: dbRow.text, generatedAt }, CACHE_TTL[period]);
+      return NextResponse.json({ text: dbRow.text, generatedAt, cached: true, period, nextGenerationDate });
     }
   }
 
@@ -353,24 +350,21 @@ export async function GET(request: NextRequest) {
 
     const generatedAt = new Date();
     const expiresAt = new Date(generatedAt.getTime() + CACHE_TTL[period] * 1000);
+    const id = `pr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    // Persist to DB (upsert — replaces any expired row for the same period key)
-    await db.periodicReport.upsert({
-      where: { userId_period_periodKey: { userId, period, periodKey: pKey } },
-      create: { userId, period, periodKey: pKey, text, generatedAt, expiresAt },
-      update: { text, generatedAt, expiresAt },
-    });
+    // Upsert via raw SQL — works regardless of Prisma client generation state
+    await db.$executeRaw`
+      INSERT INTO periodic_reports (id, userId, period, periodKey, text, generatedAt, expiresAt)
+      VALUES (${id}, ${userId}, ${period}, ${pKey}, ${text}, ${generatedAt.toISOString()}, ${expiresAt.toISOString()})
+      ON CONFLICT (userId, period, periodKey) DO UPDATE
+        SET text = excluded.text,
+            generatedAt = excluded.generatedAt,
+            expiresAt = excluded.expiresAt
+    `;
 
-    // Warm KV
     await kvSet(key, { text, generatedAt: generatedAt.toISOString() }, CACHE_TTL[period]);
 
-    return NextResponse.json({
-      text,
-      generatedAt: generatedAt.toISOString(),
-      period,
-      cached: false,
-      nextGenerationDate,
-    });
+    return NextResponse.json({ text, generatedAt: generatedAt.toISOString(), period, cached: false, nextGenerationDate });
   } catch (e) {
     console.error("[GET /api/synthesis/periodic-report]", e);
     const message = e instanceof Error ? e.message : "Report generation failed";

@@ -70,34 +70,34 @@ function AlignmentBadge({ level }: { level: "HIGH" | "MEDIUM" | "LOW" }) {
   );
 }
 
-function ScoreBar({ score, label }: { score: number; label: string }) {
+/** Compact score + bar for alignment table cells */
+function TableScoreCell({ score, vedic }: { score: number; vedic: boolean }) {
   const pct = Math.round(score * 100);
-  const isWarm = label === "V";
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex flex-col items-end gap-1">
       <span
-        className="w-4 shrink-0 text-[9px] font-medium"
+        className="text-sm font-medium tabular-nums leading-none tracking-tight"
         style={{
           ...synthesisLabelStyle,
-          color: isWarm ? "var(--amber, #c8873a)" : "rgba(255,255,255,0.35)",
+          color: vedic ? "var(--gold, #e8b96a)" : "rgba(240,220,160,0.62)",
         }}
       >
-        {label}
+        {pct}
       </span>
-      <div className="h-1.5 flex-1 rounded-full bg-[rgba(13,18,32,0.55)]">
+      <div
+        className="h-1 w-full max-w-[5.5rem] rounded-full bg-[rgba(13,18,32,0.55)]"
+        role="presentation"
+        aria-hidden
+      >
         <div
-          className={`h-full rounded-full transition-all ${
-            isWarm ? "bg-gradient-to-r from-[color:var(--amber,#c8873a)] to-[color:var(--gold,#e8b96a)]" : "bg-white/25"
+          className={`h-full rounded-full ${
+            vedic
+              ? "bg-gradient-to-r from-[color:var(--amber,#c8873a)] to-[color:var(--gold,#e8b96a)]"
+              : "bg-white/28"
           }`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span
-        className="w-6 shrink-0 text-right text-[9px] tabular-nums"
-        style={{ ...synthesisLabelStyle, color: "rgba(255,255,255,0.35)" }}
-      >
-        {pct}
-      </span>
     </div>
   );
 }
@@ -196,35 +196,87 @@ function SystemCard({
 function AlignmentTable({ scores }: { scores: TraitScore[] }) {
   return (
     <div className={synthesisInnerPanel}>
-      <p className={synthesisLabelClass} style={synthesisLabelStyle}>◇ Layer 3 — Trait Alignment (Vedic vs Western)</p>
-      <div className="mt-4 space-y-4">
-        {scores.map(s => (
-          <div key={s.trait}>
-            <div className="mb-1.5 flex items-center justify-between gap-3">
-              <span className="font-serif text-xs font-medium" style={synthesisTitleCinzel}>
-                {s.label}
-              </span>
-              <div className="flex items-center gap-2">
-                {s.contradiction && (
-                  <span
-                    className="rounded-md border border-red-500/30 bg-red-950/20 px-2 py-0.5 text-[10px] text-red-400"
-                    style={synthesisLabelStyle}
-                    title="Contradiction — one system > 0.7, other < 0.4"
-                  >
-                    conflict
-                  </span>
-                )}
-                <AlignmentBadge level={s.alignment} />
-              </div>
-            </div>
-            <div className="space-y-1 pl-0">
-              <ScoreBar score={s.vedic_score} label="V" />
-              <ScoreBar score={s.western_score} label="W" />
-            </div>
-          </div>
-        ))}
+      <p className={synthesisLabelClass} style={synthesisLabelStyle}>
+        ◇ Layer 3 — Trait alignment
+      </p>
+      <p className="mt-1 max-w-2xl text-xs leading-relaxed" style={synthesisBodyMuted}>
+        Scores are 0–100 per system. Match reflects how closely both systems agree on each trait.
+      </p>
+
+      <div className="mt-4 overflow-x-auto rounded-[8px] ring-1 ring-[rgba(200,135,58,0.1)]">
+        <table className="w-full min-w-[32rem] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-[rgba(200,135,58,0.15)]">
+              <th
+                scope="col"
+                className="px-3 py-3 text-left text-[9px] font-normal uppercase tracking-[0.16em] text-[rgba(200,135,58,0.65)] sm:px-4"
+                style={synthesisLabelStyle}
+              >
+                Trait
+              </th>
+              <th
+                scope="col"
+                className="w-[1%] whitespace-nowrap px-2 py-3 text-right text-[9px] font-normal uppercase tracking-[0.16em] text-[rgba(200,135,58,0.65)] sm:px-3"
+                style={synthesisLabelStyle}
+              >
+                Vedic
+              </th>
+              <th
+                scope="col"
+                className="w-[1%] whitespace-nowrap px-2 py-3 text-right text-[9px] font-normal uppercase tracking-[0.16em] text-[rgba(200,135,58,0.65)] sm:px-3"
+                style={synthesisLabelStyle}
+              >
+                Western
+              </th>
+              <th
+                scope="col"
+                className="w-[1%] whitespace-nowrap px-3 py-3 pl-2 text-right text-[9px] font-normal uppercase tracking-[0.16em] text-[rgba(200,135,58,0.65)] sm:pl-4"
+                style={synthesisLabelStyle}
+              >
+                Match
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {scores.map((s) => (
+              <tr
+                key={s.trait}
+                className="border-b border-[rgba(200,135,58,0.08)] transition-colors even:bg-white/[0.02] hover:bg-[rgba(200,135,58,0.04)]"
+              >
+                <td className="align-middle px-3 py-3 sm:px-4">
+                  <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+                    <span className="font-serif text-sm font-medium leading-snug" style={synthesisTitleCinzel}>
+                      {s.label}
+                    </span>
+                    {s.contradiction ? (
+                      <span
+                        className="w-fit shrink-0 rounded-md border border-red-500/30 bg-red-950/20 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-red-400/95"
+                        style={synthesisLabelStyle}
+                        title="Contradiction — one system > 0.7, other < 0.4"
+                      >
+                        conflict
+                      </span>
+                    ) : null}
+                  </div>
+                </td>
+                <td className="align-middle px-2 py-3 sm:px-3">
+                  <TableScoreCell score={s.vedic_score} vedic />
+                </td>
+                <td className="align-middle px-2 py-3 sm:px-3">
+                  <TableScoreCell score={s.western_score} vedic={false} />
+                </td>
+                <td className="align-middle px-3 py-3 sm:pl-4">
+                  <div className="flex justify-end">
+                    <AlignmentBadge level={s.alignment} />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <div className="mt-4 flex items-center gap-4 border-t border-[rgba(200,135,58,0.12)] pt-3">
+
+      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[rgba(200,135,58,0.12)] pt-3">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium text-[color:var(--amber,#c8873a)]">V</span>
           <span className="text-[10px]" style={synthesisBodyMuted}>
@@ -232,7 +284,7 @@ function AlignmentTable({ scores }: { scores: TraitScore[] }) {
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-medium text-white/30">W</span>
+          <span className="text-xs font-medium text-white/35">W</span>
           <span className="text-[10px]" style={synthesisBodyMuted}>
             Western (Tropical)
           </span>
