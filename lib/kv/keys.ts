@@ -60,6 +60,8 @@ export const kvKeys = {
   dashaTimeline: (userId: string) => `dasha-timeline:${userId}`,
   /** Full synthesis result (Western + Vedic + merged) — 24h TTL */
   synthesis: (userId: string, dateRange: string) => `synthesis:${userId}:${dateRange}`,
+  /** Western (tropical) natal chart — permanent, invalidated when birth data changes */
+  westernNatalChart: (userId: string) => `chart:western:natal:${userId}`,
 } as const;
 
 export const KV_TTL_CHAT = {

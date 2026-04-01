@@ -52,6 +52,7 @@ export const REPORT_VARIABLE_META: Record<
   shadow_growth_theme:  { label: "Shadow & Growth Theme",     description: "AI narrative: not-self patterns and the growth edge through them",         dataSource: "ai" },
   monthly_focus:        { label: "Monthly Focus",             description: "AI narrative: energetic theme and opportunity for this calendar month",    dataSource: "ai" },
   custom_note:          { label: "Consultant's Note",         description: "A personalised note written by the consultant for this report",            dataSource: "manual" },
+  synthesis_aha:        { label: "3-Layer Synthesis AHA",     description: "AI narrative: 3-layer Western/Vedic divergence synthesis with AHA insight formula", dataSource: "ai" },
 };
 
 // ─── AI variables ─────────────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ const AI_VARIABLES = new Set<ReportVariable>([
   "relationship_theme",
   "shadow_growth_theme",
   "monthly_focus",
+  "synthesis_aha",
 ]);
 
 // ─── Assembler ────────────────────────────────────────────────────────────────

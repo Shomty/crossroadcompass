@@ -519,6 +519,7 @@ export type ReportVariable =
   | 'active_transits' | 'sade_sati_status'
   | 'career_purpose_theme' | 'relationship_theme'
   | 'shadow_growth_theme' | 'monthly_focus' | 'custom_note'
+  | 'synthesis_aha'
 
 export interface CustomReportConfig {
   userId: string
@@ -973,6 +974,18 @@ export interface ConvergenceEvent {
   convergenceScore: number       // 0-100
   matchedRules: IfThenRule[]
   reasoning: string[]
+}
+
+/** Opportunity scores per life area (0-100) */
+export interface OpportunityScores {
+  career: number
+  love: number
+  relocation: number
+  health: number
+  spirituality: number
+  overall: number       // Average of all 5
+  bestArea: string      // Highest scoring area
+  risky: string[]       // Areas below 40
 }
 
 /** Complete synthesis result (Western + Vedic + merged) */

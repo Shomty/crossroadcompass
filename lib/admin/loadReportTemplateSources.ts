@@ -6,6 +6,7 @@ import {
   getOrCreateExtendedSpecialPoints,
   getOrCreateSpecialPoints,
 } from "@/lib/astro/chartService";
+import { getOrCreateWesternNatalChart } from "@/lib/astro/westernChartService";
 import type { BirthProfile } from "@prisma/client";
 import type { HDChartData } from "@/types";
 import type { BuildReportTemplateVarsInput } from "@/lib/reports/reportTemplateVars";
@@ -88,6 +89,11 @@ export async function loadReportTemplateSources(
     });
   }
 
+  // Fetch Western natal chart — requires birthProfile to be resolved first
+  const westernNatalData = birthProfile
+    ? await getOrCreateWesternNatalChart(userId, birthProfile).catch(() => null)
+    : null;
+
   const [activeMaha, activeAntar] = await Promise.all([
     db.dasha.findFirst({
       where: {
@@ -134,6 +140,7 @@ export async function loadReportTemplateSources(
   return {
     hdData,
     vedicData,
+    westernNatalData,
     dashasData,
     transitData,
     birthProfile: bp,

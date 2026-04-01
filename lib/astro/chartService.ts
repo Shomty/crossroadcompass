@@ -83,6 +83,7 @@ export async function invalidateChartCache(userId: string): Promise<void> {
       kvKeys.currentDasha(userId),
       kvKeys.yogas(userId),
       kvKeys.ashtakavarga(userId),
+      kvKeys.westernNatalChart(userId),
     ]),
     db.insight.deleteMany({
       where: { userId, type: InsightType.SPECIAL_POINTS },

@@ -5,11 +5,17 @@ import type {
   ExtendedSpecialPointsResult,
   SignNumber,
 } from "@/types";
+import type { WesternChartCalculations } from "openastrology-library";
 import { applySpecialPointTemplateScalars } from "./applySpecialPointTemplateScalars";
 import {
   REPORT_TEMPLATE_VARIABLE_KEYS,
   type ReportTemplateVariableKey,
 } from "./reportTemplateVariableKeys";
+import {
+  computeNatalSynthesisSeeds,
+  westernToSynthesisInput,
+  vedicToSynthesisInput,
+} from "@/lib/astro/natalSynthesisEngine";
 
 const ZODIAC_SIGN: Record<SignNumber, string> = {
   1: "Aries",
@@ -235,6 +241,8 @@ function extractDashaDateVars(
 export type BuildReportTemplateVarsInput = {
   hdData: HDChartData | null;
   vedicData: Record<string, unknown> | null;
+  /** Western (tropical) natal chart — used for synthesis layer comparison */
+  westernNatalData?: WesternChartCalculations | null;
   dashasData: unknown;
   transitData: unknown;
   birthProfile: {
@@ -274,6 +282,7 @@ export function buildReportTemplateVars(
   const {
     hdData,
     vedicData,
+    westernNatalData,
     dashasData,
     transitData,
     birthProfile,
@@ -496,6 +505,38 @@ export function buildReportTemplateVars(
     signLabel,
     formatLon
   );
+
+  // ── Western natal planet variables ──────────────────────────────────────────
+  if (westernNatalData) {
+    const wp = westernNatalData.planets
+    vars.western_sun_sign     = wp['sun']?.sign     ?? ""
+    vars.western_moon_sign    = wp['moon']?.sign    ?? ""
+    vars.western_asc_sign     = westernNatalData.ascendant?.sign ?? ""
+    vars.western_venus_sign   = wp['venus']?.sign   ?? ""
+    vars.western_mars_sign    = wp['mars']?.sign    ?? ""
+    vars.western_mercury_sign = wp['mercury']?.sign ?? ""
+  } else {
+    vars.western_sun_sign     = ""
+    vars.western_moon_sign    = ""
+    vars.western_asc_sign     = ""
+    vars.western_venus_sign   = ""
+    vars.western_mars_sign    = ""
+    vars.western_mercury_sign = ""
+  }
+
+  // ── Synthesis seeds (Western vs Vedic divergence map) ───────────────────────
+  if (westernNatalData && vedicData) {
+    try {
+      const wInput = westernToSynthesisInput(westernNatalData)
+      const vInput = vedicToSynthesisInput(vedicData)
+      const seeds  = computeNatalSynthesisSeeds({ western: wInput, vedic: vInput })
+      vars.synthesis_seeds_json = JSON.stringify(seeds)
+    } catch {
+      vars.synthesis_seeds_json = ""
+    }
+  } else {
+    vars.synthesis_seeds_json = ""
+  }
 
   for (const k of REPORT_TEMPLATE_VARIABLE_KEYS) {
     if (vars[k] === undefined) vars[k] = "";

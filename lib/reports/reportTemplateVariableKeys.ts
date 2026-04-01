@@ -99,6 +99,13 @@ const BASE_REPORT_TEMPLATE_VARIABLE_KEYS = [
   // Dasha period dates
   "dasha_mahadasha_start", "dasha_mahadasha_end",
   "dasha_antardasha_start", "dasha_antardasha_end",
+
+  // Western (tropical) natal planet signs — used for 3-layer synthesis comparison
+  "western_sun_sign", "western_moon_sign", "western_asc_sign",
+  "western_venus_sign", "western_mars_sign", "western_mercury_sign",
+
+  // Natal synthesis seeds JSON — structured divergence map for Gemini
+  "synthesis_seeds_json",
 ] as const;
 
 export const REPORT_TEMPLATE_VARIABLE_KEYS = [
