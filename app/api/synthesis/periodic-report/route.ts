@@ -25,6 +25,7 @@ import {
 import { getOrBuildDashaTimeline } from "@/lib/astro/dashaTimelineService";
 import { getWesternTransitTimeline } from "@/lib/astro/transitService";
 import { geminiGenerate } from "@/lib/ai/geminiClient";
+import { computeTraitScores } from "@/lib/astro/traitScoringEngine";
 import type { BirthProfile } from "@prisma/client";
 
 type Period = "daily" | "weekly" | "monthly";
@@ -130,6 +131,7 @@ function buildPrompt(
     antarDasha: string;
     mahaDashaEnd: string;
     topSeeds: string;
+    traitSummary: string;
     transitsText: string;
     dateContext: string;
   }
@@ -199,6 +201,7 @@ Active Transits: ${ctx.transitsText}
 
 Natal Synthesis Seeds (Western vs Vedic divergence per planet):
 ${ctx.topSeeds}
+${ctx.traitSummary ? `\nTrait Profile (scored 0–100 across both systems):\n${ctx.traitSummary}` : ""}
 === END CONTEXT ===
 
 Please generate a ${period} synthesis report covering ${w.horizon}.
@@ -228,6 +231,7 @@ async function buildContext(
 
   // Build synthesis seeds
   let topSeeds = "No synthesis seeds available.";
+  let traitSummary = "";
   try {
     const wInput = westernToSynthesisInput(westernChart);
     const vInput = vedicToSynthesisInput(vedicChart as unknown as Record<string, unknown>);
@@ -241,6 +245,23 @@ async function buildContext(
           `• ${s.planet.charAt(0).toUpperCase() + s.planet.slice(1)}: ${s.westernSign} → ${s.vedicSign} | ${s.conflictType}`
         ).join("\n");
   } catch { /* skip if calc fails */ }
+
+  // Trait scoring (engine3.md §3–6)
+  try {
+    const ta = computeTraitScores(vedicChart, westernChart as any);
+    const strengths = ta.topStrengths.slice(0, 3)
+      .map(s => `${s.label} (Vedic ${Math.round(s.vedic_score * 100)}, Western ${Math.round(s.western_score * 100)}, ${s.alignment})`)
+      .join("; ");
+    const contradictions = ta.contradictions.slice(0, 2)
+      .map(s => `${s.label}: Vedic ${Math.round(s.vedic_score * 100)} vs Western ${Math.round(s.western_score * 100)}`)
+      .join("; ");
+    const summaryBullets = ta.unifiedSummary.slice(0, 3).map(b => `• ${b}`).join("\n");
+    traitSummary = [
+      strengths ? `Top strengths: ${strengths}` : "",
+      contradictions ? `Internal tensions: ${contradictions}` : "",
+      summaryBullets ? `Unified profile:\n${summaryBullets}` : "",
+    ].filter(Boolean).join("\n");
+  } catch { /* non-fatal */ }
 
   // Get dasha timeline
   const dashaTimeline = await getOrBuildDashaTimeline(userId, profile, vedicChart);
@@ -269,7 +290,7 @@ async function buildContext(
     ? `Week of ${today.toLocaleDateString("en-US", { month: "long", day: "numeric" })} – ${endDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`
     : today.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-  return { mahaDasha, antarDasha, mahaDashaEnd, topSeeds, transitsText, dateContext };
+  return { mahaDasha, antarDasha, mahaDashaEnd, topSeeds, traitSummary, transitsText, dateContext };
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
