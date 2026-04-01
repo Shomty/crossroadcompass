@@ -25,7 +25,7 @@ function getConvergenceColor(score: number): string {
   if (score >= 80) return 'bg-emerald-500/30 border-emerald-400';
   if (score >= 60) return 'bg-amber-500/30 border-amber-400';
   if (score >= 40) return 'bg-yellow-500/30 border-yellow-400';
-  return "border-white/10 bg-[rgba(13,18,32,0.45)]";
+  return "border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.42)]";
 }
 
 export function ConvergenceTimeline({ events }: ConvergenceTimelineProps) {
@@ -46,7 +46,7 @@ export function ConvergenceTimeline({ events }: ConvergenceTimelineProps) {
       {events.map((event) => (
         <div
           key={event.date}
-          className={`overflow-hidden rounded-[14px] border transition-all ${getConvergenceColor(
+          className={`overflow-hidden rounded-[12px] border transition-all ${getConvergenceColor(
             event.convergenceScore,
           )}`}
         >
@@ -63,14 +63,14 @@ export function ConvergenceTimeline({ events }: ConvergenceTimelineProps) {
               </p>
             </div>
             <ChevronDown
-              className={`h-4 w-4 transition-transform text-white/45 ${
+              className={`h-4 w-4 transition-transform text-[rgba(240,220,160,0.45)] ${
                 expandedDate === event.date ? "rotate-180" : ""
               }`}
             />
           </button>
 
           {expandedDate === event.date && (
-            <div className="space-y-3 border-t border-white/10 bg-white/[0.02] px-4 py-3">
+            <div className="space-y-3 border-t border-[rgba(200,135,58,0.1)] bg-white/[0.02] px-4 py-3">
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <p className={synthesisLabelClass} style={synthesisLabelStyle}>
@@ -134,7 +134,7 @@ export function ConvergenceTimeline({ events }: ConvergenceTimelineProps) {
               )}
 
               {event.reasoning.length > 0 && (
-                <div className="border-t border-white/10 pt-2">
+                <div className="border-t border-[rgba(200,135,58,0.1)] pt-2">
                   <p className="text-xs italic leading-relaxed" style={synthesisBodyMuted}>
                     {event.reasoning[0]}
                   </p>

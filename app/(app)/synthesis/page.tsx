@@ -1,7 +1,7 @@
 // STATUS: done | Synthesis Engine Phase 4.6
 /**
  * app/(app)/synthesis/page.tsx
- * Full-page synthesis dashboard — STYLE_GUIDE.md (PageLayout, V4GlassCard violetGlow, inner panels).
+ * PageLayout + Life Blueprint rhythm: section gap 14, chart-variant-toggle tabs, ChapterCard-style tab headers.
  */
 
 "use client";
@@ -9,7 +9,6 @@
 import { useState, useEffect } from "react";
 import type { SynthesisResult, OpportunityScores, TransitTimeline, VedicDashaTimeline } from "@/types";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { V4GlassCard } from "@/components/v4/V4GlassCard";
 import { SynthesisDashboard } from "@/components/synthesis/SynthesisDashboard";
 import { WesternTransitView } from "@/components/synthesis/WesternTransitView";
 import { VedicDashaView } from "@/components/synthesis/VedicDashaView";
@@ -17,13 +16,86 @@ import { ConvergenceTimeline } from "@/components/synthesis/ConvergenceTimeline"
 import { OpportunityScorecardView } from "@/components/synthesis/OpportunityScorecardView";
 import { SynthesisPeriodicReport } from "@/components/synthesis/SynthesisPeriodicReport";
 import { NatalAnalysisView } from "@/components/synthesis/NatalAnalysisView";
+import { SynthesisTabBar, type SynthesisTabId } from "@/components/synthesis/SynthesisTabBar";
+import { SynthesisTabHeader } from "@/components/synthesis/SynthesisTabHeader";
 import { calculateOpportunityScores } from "@/lib/astro/opportunityScoreService";
-import { synthesisPrimaryCta, synthesisTitleCinzel } from "@/components/synthesis/synthesisPanelClasses";
+import {
+  synthesisBodyMuted,
+  synthesisPrimaryCta,
+} from "@/components/synthesis/synthesisPanelClasses";
 
-type TabType = "dashboard" | "natal-analysis" | "western" | "vedic" | "convergence" | "scorecard" | "reports";
+const BP_PANEL = {
+  borderRadius: 12,
+  background: "rgba(13,18,32,0.5)",
+  border: "1px solid rgba(200,135,58,0.12)",
+} as const;
 
-const TAB_BAR_BTN =
-  "whitespace-nowrap rounded-t-lg border-b-2 px-3 py-2.5 text-[11px] uppercase tracking-[0.12em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(212,175,95,0.35)]";
+const BP_PANEL_SOFT = {
+  borderRadius: 12,
+  background: "rgba(13,18,32,0.5)",
+  border: "1px solid rgba(200,135,58,0.12)",
+} as const;
+
+const TAB_BAR_ITEMS: Array<{ id: SynthesisTabId; label: string }> = [
+  { id: "dashboard", label: "◆ Dashboard" },
+  { id: "natal-analysis", label: "◈ Natal Analysis" },
+  { id: "reports", label: "✦ Reports" },
+  { id: "western", label: "◇ Western Transits" },
+  { id: "vedic", label: "◇ Vedic Dasha" },
+  { id: "convergence", label: "◇ Convergence" },
+  { id: "scorecard", label: "◆ Opportunities" },
+];
+
+const TAB_HEADERS: Record<
+  SynthesisTabId,
+  { glyph: string; eyebrow: string; title: string; subtitle?: string }
+> = {
+  dashboard: {
+    glyph: "◆",
+    eyebrow: "Overview",
+    title: "Dashboard",
+    subtitle:
+      "Current timing, convergence snapshot, and upcoming synthesis events at a glance.",
+  },
+  "natal-analysis": {
+    glyph: "◈",
+    eyebrow: "Trait engine",
+    title: "Natal analysis",
+    subtitle:
+      "Dual-system trait scores, alignment, and narrative layers from your Western and Vedic charts.",
+  },
+  reports: {
+    glyph: "✦",
+    eyebrow: "Reports",
+    title: "Synthesis reports",
+    subtitle:
+      "AI-generated insights bridging your Western and Vedic charts across different time horizons.",
+  },
+  western: {
+    glyph: "◇",
+    eyebrow: "Tropical",
+    title: "Western transits",
+    subtitle: "30-day transit timeline with key life-stage events and daily aspects.",
+  },
+  vedic: {
+    glyph: "◇",
+    eyebrow: "Jyotish",
+    title: "Vedic dasha",
+    subtitle: "Vimshottari timeline with current mahadasha, antardasha, and period strength.",
+  },
+  convergence: {
+    glyph: "◇",
+    eyebrow: "Merged window",
+    title: "Convergence",
+    subtitle: "Dates where Western transits and Vedic timing reinforce the same themes.",
+  },
+  scorecard: {
+    glyph: "◆",
+    eyebrow: "Life areas",
+    title: "Opportunities",
+    subtitle: "Relative timing strength across career, love, relocation, health, and spirituality.",
+  },
+};
 
 export default function SynthesisPage() {
   const [synthesis, setSynthesis] = useState<SynthesisResult | null>(null);
@@ -31,7 +103,7 @@ export default function SynthesisPage() {
   const [dashaTimeline, setDashaTimeline] = useState<VedicDashaTimeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const [activeTab, setActiveTab] = useState<SynthesisTabId>("dashboard");
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
@@ -78,13 +150,18 @@ export default function SynthesisPage() {
   if (loading) {
     return (
       <PageLayout {...layoutProps}>
-        <section className="animate-enter animate-enter-2 flex flex-col items-center justify-center gap-4 py-24">
+        <section
+          className="animate-enter animate-enter-2 flex flex-col items-center justify-center gap-5 py-20"
+          style={{ ...BP_PANEL_SOFT, textAlign: "center", padding: "4rem 1.5rem" }}
+        >
           <div
             className="h-9 w-9 animate-spin rounded-full border-2 border-t-transparent"
             style={{ borderColor: "rgba(200,135,58,0.45)" }}
             aria-hidden
           />
-          <p className="page-subtitle text-center text-sm">Loading synthesis…</p>
+          <p className="text-sm leading-relaxed" style={{ ...synthesisBodyMuted, margin: 0 }}>
+            Loading synthesis…
+          </p>
         </section>
       </PageLayout>
     );
@@ -93,8 +170,22 @@ export default function SynthesisPage() {
   if (error || !synthesis) {
     return (
       <PageLayout {...layoutProps}>
-        <section className="animate-enter animate-enter-2 flex flex-col items-center justify-center gap-4 py-16">
-          <p className="text-center text-sm text-red-300/90">{error || "Failed to load synthesis"}</p>
+        <section
+          className="animate-enter animate-enter-2 flex flex-col items-center justify-center gap-5 py-16"
+          style={{ ...BP_PANEL_SOFT, textAlign: "center", padding: "3rem 1.5rem" }}
+        >
+          <p
+            className="text-sm leading-relaxed"
+            style={{
+              fontFamily: synthesisBodyMuted.fontFamily,
+              lineHeight: 1.65,
+              margin: 0,
+              maxWidth: 420,
+              color: "rgba(248,113,113,0.92)",
+            }}
+          >
+            {error || "Failed to load synthesis"}
+          </p>
           <button type="button" style={synthesisPrimaryCta} onClick={() => setRefresh((r) => r + 1)}>
             Try again
           </button>
@@ -104,47 +195,24 @@ export default function SynthesisPage() {
   }
 
   const opportunityScores: OpportunityScores = calculateOpportunityScores(synthesis);
-
-  const tabs: Array<{ id: TabType; label: string; icon: string }> = [
-    { id: "dashboard", label: "Dashboard", icon: "◆" },
-    { id: "natal-analysis", label: "Natal Analysis", icon: "◈" },
-    { id: "reports", label: "Reports", icon: "✦" },
-    { id: "western", label: "Western Transits", icon: "◇" },
-    { id: "vedic", label: "Vedic Dasha", icon: "◇" },
-    { id: "convergence", label: "Convergence", icon: "◇" },
-    { id: "scorecard", label: "Opportunities", icon: "◆" },
-  ];
+  const header = TAB_HEADERS[activeTab];
 
   return (
     <PageLayout {...layoutProps}>
-      <section className="animate-enter animate-enter-2 flex flex-col gap-6">
-        <V4GlassCard violetGlow>
-          <div className="mb-6 flex flex-wrap gap-1 border-b border-white/10 pb-px">
-            {tabs.map((tab) => {
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={TAB_BAR_BTN}
-                  style={{
-                    fontFamily: "'DM Mono', monospace",
-                    borderBottomColor: active ? "rgba(200,135,58,0.5)" : "transparent",
-                    background: active ? "rgba(200,135,58,0.08)" : "transparent",
-                    color: active
-                      ? "var(--cream, rgba(255,255,255,0.92))"
-                      : "var(--mist, rgba(255,255,255,0.5))",
-                  }}
-                >
-                  <span className="mr-1 opacity-90">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+      <section className="animate-enter animate-enter-2 flex flex-col" style={{ gap: 14 }}>
+        <div style={{ ...BP_PANEL, padding: "12px 14px 14px" }}>
+          <SynthesisTabBar tabs={TAB_BAR_ITEMS} activeTab={activeTab} onChange={setActiveTab} />
+        </div>
 
-          <div className="flex flex-col gap-6">
+        <div style={{ ...BP_PANEL, padding: "16px 16px 20px" }}>
+          <SynthesisTabHeader
+            glyph={header.glyph}
+            eyebrow={header.eyebrow}
+            title={header.title}
+            subtitle={header.subtitle}
+          />
+
+          <div className="flex flex-col gap-4">
             {activeTab === "dashboard" && (
               <SynthesisDashboard
                 synthesis={synthesis}
@@ -153,28 +221,18 @@ export default function SynthesisPage() {
               />
             )}
 
-            {activeTab === "natal-analysis" && (
-              <NatalAnalysisView synthesis={synthesis} />
-            )}
+            {activeTab === "natal-analysis" && <NatalAnalysisView synthesis={synthesis} />}
 
-            {activeTab === "reports" && (
-              <div>
-                <h2 className="mb-1 text-lg font-normal" style={synthesisTitleCinzel}>
-                  Synthesis reports
-                </h2>
-                <p className="page-subtitle mb-6 text-sm">
-                  AI-generated insights bridging your Western and Vedic charts across different time horizons.
-                </p>
-                <SynthesisPeriodicReport />
-              </div>
-            )}
+            {activeTab === "reports" && <SynthesisPeriodicReport />}
 
             {activeTab === "western" && transitTimeline && (
               <WesternTransitView transitTimeline={transitTimeline} />
             )}
 
             {activeTab === "western" && !transitTimeline && (
-              <p className="page-subtitle text-sm">Western transit data is not available yet.</p>
+              <p className="text-sm" style={{ ...synthesisBodyMuted, margin: 0 }}>
+                Western transit data is not available yet.
+              </p>
             )}
 
             {activeTab === "vedic" && dashaTimeline && (
@@ -186,7 +244,9 @@ export default function SynthesisPage() {
             )}
 
             {activeTab === "vedic" && !dashaTimeline && (
-              <p className="page-subtitle text-sm">Vedic dasha timeline is not available yet.</p>
+              <p className="text-sm" style={{ ...synthesisBodyMuted, margin: 0 }}>
+                Vedic dasha timeline is not available yet.
+              </p>
             )}
 
             {activeTab === "convergence" && (
@@ -197,7 +257,7 @@ export default function SynthesisPage() {
               <OpportunityScorecardView scores={opportunityScores} />
             )}
           </div>
-        </V4GlassCard>
+        </div>
       </section>
     </PageLayout>
   );

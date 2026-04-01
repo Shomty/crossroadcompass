@@ -14,7 +14,7 @@ model User {
   image           String?
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
-  role            UserRole              @default("USER")
+  role            UserRole              @default(USER)
   /// Mirrors role === ADMIN when set; kept in sync by admin user PATCH.
   isAdmin         Boolean               @default(false)
   reportPurchases ReportPurchase[]
@@ -28,6 +28,7 @@ model User {
   subscription    Subscription?
   transits        Transit[]
   astroSnapshot   UserAstroSnapshot?
+  periodicReports PeriodicReport[]
   chatState       UserChatState?
 
   @@map("users")
@@ -339,7 +340,7 @@ model ConsultationBooking {
   id                 String           @id @default(cuid())
   userId             String
   tier               ConsultationTier
-  status             BookingStatus    @default("PENDING")
+  status             BookingStatus    @default(PENDING)
   scheduledAt        DateTime?
   calendlyEventId    String?
   stripePaymentId    String?
@@ -357,8 +358,8 @@ model ConsultationBooking {
 model Subscription {
   id                   String             @id @default(cuid())
   userId               String             @unique
-  tier                 SubscriptionTier   @default("FREE")
-  status               SubscriptionStatus @default("ACTIVE")
+  tier                 SubscriptionTier   @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
   stripeCustomerId     String?            @unique
   stripeSubscriptionId String?            @unique
   stripePriceId        String?
@@ -507,7 +508,7 @@ model ReportPurchase {
   reportProductId String
   stripePaymentId String?              @unique
   amountPaidUsd   Int
-  status          ReportPurchaseStatus @default("PENDING")
+  status          ReportPurchaseStatus @default(PENDING)
   purchasedAt     DateTime             @default(now())
   generatedReport GeneratedReport?
   reportProduct   ReportProduct        @relation(fields: [reportProductId], references: [id], onDelete: Cascade)
@@ -519,7 +520,7 @@ model ReportPurchase {
 model GeneratedReport {
   id               String                 @id @default(cuid())
   purchaseId       String                 @unique
-  status           ReportGenerationStatus @default("DONE")
+  status           ReportGenerationStatus @default(DONE)
   errorMsg         String?
   regeneratedAt    DateTime?
   content          String                 @default("")
@@ -528,6 +529,25 @@ model GeneratedReport {
   geminiModel      String                 @default("")
   generationTimeMs Int?
   purchase         ReportPurchase         @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+}
+
+/// Periodic AI synthesis reports (daily / weekly / monthly).
+/// Keyed by userId + period + periodKey (e.g. "2026-04-01", "2026-W14", "2026-04").
+/// expiresAt controls server-side invalidation; KV is still used as hot cache.
+model PeriodicReport {
+  id          String   @id @default(cuid())
+  userId      String
+  period      String   // "daily" | "weekly" | "monthly"
+  periodKey   String   // e.g. "2026-04-01", "2026-W14", "2026-04"
+  text        String
+  generatedAt DateTime @default(now())
+  expiresAt   DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period, periodKey])
+  @@index([userId, period])
+  @@map("periodic_reports")
 }
 
 enum UserRole {

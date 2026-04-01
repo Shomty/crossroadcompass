@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   synthesisBodyMuted,
+  synthesisCream,
   synthesisInnerPanel,
   synthesisPrimaryCta,
   synthesisTitleCinzel,
@@ -43,25 +44,19 @@ function MarkdownReport({ text }: { text: string }) {
           ),
           h2: ({ children }) => (
             <h2
-              className="mb-3 mt-8 border-b border-white/10 pb-2 text-lg font-normal"
+              className="mb-3 mt-8 border-b border-[rgba(200,135,58,0.12)] pb-2 text-lg font-normal"
               style={synthesisTitleCinzel}
             >
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3
-              className="mb-2 mt-5 text-base font-medium"
-              style={{
-                fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-                color: "var(--cream, rgba(255,255,255,0.88))",
-              }}
-            >
+            <h3 className="mb-2 mt-5 text-base font-medium" style={synthesisCream}>
               {children}
             </h3>
           ),
           p: ({ children }) => (
-            <p className="mb-4 text-sm leading-relaxed" style={synthesisBodyMuted}>
+            <p className="mb-4 text-sm leading-[1.8]" style={synthesisBodyMuted}>
               {children}
             </p>
           ),
@@ -70,14 +65,14 @@ function MarkdownReport({ text }: { text: string }) {
           ),
           li: ({ children }) => (
             <li
-              className="list-none text-sm leading-relaxed before:mr-2 before:text-[color:var(--gold-solar,#D4AF37)] before:opacity-50 before:content-['◆']"
+              className="list-none text-sm leading-[1.8] before:mr-2 before:text-[color:var(--gold-solar,#D4AF37)] before:opacity-50 before:content-['◆']"
               style={synthesisBodyMuted}
             >
               {children}
             </li>
           ),
           strong: ({ children }) => (
-            <strong style={{ color: "var(--cream, rgba(255,255,255,0.92))", fontWeight: 600 }}>
+            <strong style={{ color: "rgba(240,220,160,0.95)", fontWeight: 600 }}>
               {children}
             </strong>
           ),
@@ -97,7 +92,7 @@ function MarkdownReport({ text }: { text: string }) {
               {children}
             </blockquote>
           ),
-          hr: () => <hr className="my-6 border-white/10" />,
+          hr: () => <hr className="my-6 border-[rgba(200,135,58,0.12)]" />,
         }}
       >
         {text}
@@ -175,24 +170,17 @@ export function SynthesisPeriodicReport() {
   const isLoading = loading === activePeriod;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div
-        className="flex w-fit flex-wrap items-center gap-1 rounded-[14px] border border-white/10 p-1"
-        style={{ background: "rgba(13,18,32,0.45)" }}
-      >
+    <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 max-w-full flex-wrap gap-2">
         {(Object.entries(PERIOD_CONFIG) as [Period, typeof PERIOD_CONFIG.daily][]).map(([period, config]) => (
           <button
             key={period}
             type="button"
+            data-active={activePeriod === period}
+            className="btn-toggle"
             onClick={() => handlePeriodChange(period)}
-            className={`flex items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-medium transition-colors ${
-              activePeriod === period
-                ? "border border-[rgba(200,135,58,0.35)] bg-[rgba(200,135,58,0.1)] text-[color:var(--cream,rgba(255,255,255,0.92))]"
-                : "border border-transparent text-[color:var(--mist,rgba(255,255,255,0.5))] hover:bg-white/5 hover:text-[color:var(--cream,rgba(255,255,255,0.85))]"
-            }`}
-            style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" }}
           >
-            <span className="text-base">{config.icon}</span>
+            <span aria-hidden>{config.icon}</span>
             {config.label}
           </button>
         ))}
@@ -201,11 +189,14 @@ export function SynthesisPeriodicReport() {
       {/* Description + schedule meta */}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-sm" style={synthesisBodyMuted}>
+          <p className="text-sm leading-relaxed" style={synthesisBodyMuted}>
             {PERIOD_CONFIG[activePeriod].description}
           </p>
           {currentReport?.nextGenerationDate && activePeriod !== 'daily' && (
-            <p className="mt-1 text-xs" style={{ color: 'var(--faint, rgba(232,224,208,0.28))' }}>
+            <p
+              className="mt-1 text-xs"
+              style={{ color: "rgba(240,220,160,0.38)", fontFamily: synthesisBodyMuted.fontFamily }}
+            >
               Next report ◈{' '}
               {new Date(`${currentReport.nextGenerationDate}T12:00:00Z`).toLocaleDateString('en-US', {
                 weekday: 'short', month: 'short', day: 'numeric',
@@ -216,9 +207,17 @@ export function SynthesisPeriodicReport() {
         {currentReport && (
           <div className="flex flex-wrap items-center gap-3">
             {currentReport.cached && (
-              <span className="text-xs" style={{ color: 'var(--faint, rgba(232,224,208,0.22))' }}>Cached</span>
+              <span
+                className="text-xs"
+                style={{ color: "rgba(240,220,160,0.35)", fontFamily: synthesisBodyMuted.fontFamily }}
+              >
+                Cached
+              </span>
             )}
-            <span className="text-xs" style={{ color: 'var(--faint, rgba(232,224,208,0.22))' }}>
+            <span
+              className="text-xs"
+              style={{ color: "rgba(240,220,160,0.35)", fontFamily: synthesisBodyMuted.fontFamily }}
+            >
               {activePeriod === 'daily'
                 ? new Date(currentReport.generatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                 : new Date(currentReport.generatedAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -237,7 +236,10 @@ export function SynthesisPeriodicReport() {
             ) : (
               <span
                 className="text-xs"
-                style={{ color: 'var(--faint, rgba(232,224,208,0.22))' }}
+                style={{
+                  color: "rgba(240,220,160,0.35)",
+                  fontFamily: synthesisBodyMuted.fontFamily,
+                }}
                 title={`${activePeriod === 'weekly' ? 'Weekly reports generate every Sunday' : 'Monthly reports generate on the last Friday of each month'}`}
               >
                 {activePeriod === 'weekly' ? 'Refreshes Sundays' : 'Refreshes last Friday'}
@@ -247,12 +249,17 @@ export function SynthesisPeriodicReport() {
         )}
       </div>
 
-      <div className={`${synthesisInnerPanel} min-h-64 p-6`}>
+      <div className={`${synthesisInnerPanel} min-h-64`}>
         {isLoading && <ReportSkeleton />}
 
         {!isLoading && error && (
           <div className="flex h-40 flex-col items-center justify-center gap-3">
-            <p className="text-center text-sm text-red-300/90">{error}</p>
+            <p
+              className="text-center text-sm leading-relaxed"
+              style={{ fontFamily: synthesisBodyMuted.fontFamily, color: "rgba(248,113,113,0.92)" }}
+            >
+              {error}
+            </p>
             <button type="button" style={synthesisPrimaryCta} onClick={() => fetchReport(activePeriod, true)}>
               Try again
             </button>

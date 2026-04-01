@@ -13,6 +13,8 @@ import {
   synthesisBodyMuted,
   synthesisCream,
   synthesisInnerPanel,
+  synthesisInnerPanelAccent,
+  synthesisInnerPanelDense,
   synthesisLabelClass,
   synthesisLabelStyle,
   synthesisTitleCinzel,
@@ -66,11 +68,9 @@ export function SynthesisDashboard({
   const isRecalculating = recalcStatus && recalcStatus.status === "pending";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {isRecalculating && (
-        <div
-          className={`${synthesisInnerPanel} border-[rgba(200,135,58,0.35)] bg-[rgba(200,135,58,0.06)]`}
-        >
+        <div className={synthesisInnerPanelAccent}>
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <RefreshCw
@@ -82,11 +82,17 @@ export function SynthesisDashboard({
                 Synthesis engine recalculating
               </p>
             </div>
-            <p className="text-xs" style={synthesisBodyMuted}>
+            <p
+              className="text-xs tabular-nums"
+              style={{
+                fontFamily: synthesisBodyMuted.fontFamily,
+                color: synthesisBodyMuted.color,
+              }}
+            >
               {recalcStatus.progress || 0}%
             </p>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[rgba(13,18,32,0.55)]">
             <div
               className="h-full transition-all"
               style={{
@@ -99,7 +105,7 @@ export function SynthesisDashboard({
       )}
 
       {recalcStatus?.status === "error" && (
-        <div className={`${synthesisInnerPanel} border-red-500/30 bg-red-950/20`}>
+        <div className="rounded-[12px] border border-red-500/30 bg-red-950/25 p-5">
           <p className="text-sm text-red-200/95">
             {recalcStatus.errorMessage || "Recalculation failed. Try again."}
           </p>
@@ -107,7 +113,7 @@ export function SynthesisDashboard({
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className={synthesisInnerPanel}>
+        <div className={synthesisInnerPanelDense}>
           <p className={synthesisLabelClass} style={synthesisLabelStyle}>
             Current period
           </p>
@@ -122,7 +128,7 @@ export function SynthesisDashboard({
           </p>
         </div>
 
-        <div className={synthesisInnerPanel}>
+        <div className={synthesisInnerPanelDense}>
           <p className={synthesisLabelClass} style={synthesisLabelStyle}>
             Convergence
           </p>
@@ -143,7 +149,7 @@ export function SynthesisDashboard({
           </p>
         </div>
 
-        <div className={synthesisInnerPanel}>
+        <div className={synthesisInnerPanelDense}>
           <p className={synthesisLabelClass} style={synthesisLabelStyle}>
             Best opportunity
           </p>

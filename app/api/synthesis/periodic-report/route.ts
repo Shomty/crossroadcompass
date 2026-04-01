@@ -107,6 +107,14 @@ function cacheKey(userId: string, period: Period): string {
   return `synthesis:periodic:${userId}:monthly:${getActiveMonthlyDate(now)}`;
 }
 
+/** DB lookup key — the bare segment without userId prefix (stored in periodKey column). */
+function periodKey(_userId: string, period: Period): string {
+  const now = new Date();
+  if (period === "daily")   return now.toISOString().split("T")[0];
+  if (period === "weekly")  return getWeekStartSunday(now);
+  return getActiveMonthlyDate(now);
+}
+
 // ─── Prompt builder ───────────────────────────────────────────────────────────
 
 const SYSTEM_INSTRUCTION = `You are a synthesis astrologer and life coach who bridges Western (tropical) and Vedic (sidereal) astrology.
@@ -278,32 +286,70 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid period" }, { status: 400 });
   }
   const force = searchParams.get("force") === "1";
+  const userId = session.user.id;
 
-  const profile = await db.birthProfile.findUnique({
-    where: { userId: session.user.id },
-  });
+  const profile = await db.birthProfile.findUnique({ where: { userId } });
   if (!profile) {
     return NextResponse.json({ error: "No birth profile found" }, { status: 404 });
   }
 
-  const key = cacheKey(session.user.id, period);
+  const key = cacheKey(userId, period);
+  const pKey = periodKey(userId, period);
   const nextGenerationDate = getNextGenerationDate(period);
+  const allowed = canForceRefresh(period, force);
 
-  // Serve from cache unless this is an allowed force-refresh
-  const cached = await kvGet<{ text: string; generatedAt: string }>(key);
-  if (cached && !canForceRefresh(period, force)) {
-    return NextResponse.json({ ...cached, cached: true, period, nextGenerationDate });
+  // ── Layer 1: KV hot cache ────────────────────────────────────────────
+  if (!allowed) {
+    const cached = await kvGet<{ text: string; generatedAt: string }>(key);
+    if (cached) {
+      return NextResponse.json({ ...cached, cached: true, period, nextGenerationDate });
+    }
   }
 
+  // ── Layer 2: DB durable store ────────────────────────────────────────
+  if (!allowed) {
+    const dbRow = await db.periodicReport.findUnique({
+      where: { userId_period_periodKey: { userId, period, periodKey: pKey } },
+    });
+    if (dbRow && dbRow.expiresAt > new Date()) {
+      // Re-warm KV from DB so next hit is instant
+      await kvSet(key, { text: dbRow.text, generatedAt: dbRow.generatedAt.toISOString() }, CACHE_TTL[period]);
+      return NextResponse.json({
+        text: dbRow.text,
+        generatedAt: dbRow.generatedAt.toISOString(),
+        cached: true,
+        period,
+        nextGenerationDate,
+      });
+    }
+  }
+
+  // ── Layer 3: Generate fresh ──────────────────────────────────────────
   try {
-    const ctx = await buildContext(session.user.id, profile, period);
+    const ctx = await buildContext(userId, profile, period);
     const prompt = buildPrompt(period, ctx);
     const text = await geminiGenerate("flash", prompt, SYSTEM_INSTRUCTION);
 
-    const result = { text, generatedAt: new Date().toISOString(), period, cached: false, nextGenerationDate };
-    await kvSet(key, { text, generatedAt: result.generatedAt }, CACHE_TTL[period]);
+    const generatedAt = new Date();
+    const expiresAt = new Date(generatedAt.getTime() + CACHE_TTL[period] * 1000);
 
-    return NextResponse.json(result);
+    // Persist to DB (upsert — replaces any expired row for the same period key)
+    await db.periodicReport.upsert({
+      where: { userId_period_periodKey: { userId, period, periodKey: pKey } },
+      create: { userId, period, periodKey: pKey, text, generatedAt, expiresAt },
+      update: { text, generatedAt, expiresAt },
+    });
+
+    // Warm KV
+    await kvSet(key, { text, generatedAt: generatedAt.toISOString() }, CACHE_TTL[period]);
+
+    return NextResponse.json({
+      text,
+      generatedAt: generatedAt.toISOString(),
+      period,
+      cached: false,
+      nextGenerationDate,
+    });
   } catch (e) {
     console.error("[GET /api/synthesis/periodic-report]", e);
     const message = e instanceof Error ? e.message : "Report generation failed";

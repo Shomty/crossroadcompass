@@ -29,7 +29,7 @@ export function SynthesisCard({ synthesis, isRecalculating }: SynthesisCardProps
   const nextCritical = synthesis.criticalDates[0];
 
   return (
-    <div className="rounded-[14px] border border-[rgba(200,135,58,0.22)] bg-[rgba(13,18,32,0.55)] p-6 backdrop-blur-sm">
+    <div className="rounded-[12px] border border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.5)] p-5 backdrop-blur-sm">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg" style={synthesisTitleCinzel}>
           Synthesis

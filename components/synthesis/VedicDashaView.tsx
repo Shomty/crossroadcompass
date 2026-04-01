@@ -13,6 +13,8 @@ import {
   synthesisBodyMuted,
   synthesisCream,
   synthesisInnerPanel,
+  synthesisInnerPanelAccent,
+  synthesisInnerPanelDense,
   synthesisLabelClass,
   synthesisLabelStyle,
 } from "@/components/synthesis/synthesisPanelClasses";
@@ -24,7 +26,7 @@ interface VedicDashaViewProps {
 }
 
 function getActivationColor(strength?: number): string {
-  if (!strength) return "border-white/10 bg-[rgba(13,18,32,0.45)]";
+  if (!strength) return "border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.42)]";
   if (strength >= 80) return 'bg-emerald-500/30 border-emerald-400/50';
   if (strength >= 60) return 'bg-amber-500/30 border-amber-400/50';
   if (strength >= 40) return 'bg-yellow-500/30 border-yellow-400/50';
@@ -68,7 +70,7 @@ export function VedicDashaView({
         </p>
       </div>
 
-      <div className="rounded-[14px] border border-[rgba(200,135,58,0.35)] bg-[rgba(200,135,58,0.08)] p-4">
+      <div className={synthesisInnerPanelAccent}>
         <p className={`${synthesisLabelClass} mb-3 font-medium text-[color:var(--amber,#c8873a)]`} style={synthesisLabelStyle}>
           Current major period
         </p>
@@ -138,7 +140,7 @@ export function VedicDashaView({
             return (
               <div
                 key={idx}
-                className={`overflow-hidden rounded-[14px] border border-solid transition-all ${
+                className={`overflow-hidden rounded-[12px] border border-solid transition-all ${
                   isCurrent
                     ? "border-[rgba(200,135,58,0.35)] bg-[rgba(13,18,32,0.65)] ring-2 ring-[color:var(--amber,#c8873a)]"
                     : getActivationColor(dasha.overallStrength)
@@ -168,7 +170,7 @@ export function VedicDashaView({
 
                 {/* Antardasha Sub-periods */}
                 {dasha.antardashas && dasha.antardashas.length > 0 && (
-                  <div className="border-t border-white/10 bg-white/[0.02] px-3 py-2">
+                  <div className="border-t border-[rgba(200,135,58,0.1)] bg-white/[0.02] px-3 py-2">
                     <p className={`${synthesisLabelClass} mb-1 opacity-80`} style={synthesisLabelStyle}>
                       Sub-periods ({dasha.antardashas.length})
                     </p>
@@ -176,7 +178,7 @@ export function VedicDashaView({
                       {dasha.antardashas.slice(0, 4).map((antar: any, aidx: number) => (
                         <span
                           key={aidx}
-                          className="rounded-md border border-white/10 bg-[rgba(13,18,32,0.55)] px-2 py-1 text-xs text-white/70"
+                          className="rounded-md border border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.5)] px-2 py-1 text-xs text-[rgba(240,220,160,0.72)]"
                         >
                           {antar.antardashaPlanet}
                         </span>
@@ -195,7 +197,7 @@ export function VedicDashaView({
         </div>
       </div>
 
-      <div className={`${synthesisInnerPanel} p-3`}>
+      <div className={synthesisInnerPanelDense}>
         <p className={`${synthesisLabelClass} mb-2`} style={synthesisLabelStyle}>
           Activation strength
         </p>

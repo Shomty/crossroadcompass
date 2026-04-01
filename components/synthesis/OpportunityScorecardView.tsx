@@ -59,7 +59,7 @@ export function OpportunityScorecardView({ scores }: OpportunityScorecardViewPro
         <div className="mb-2 text-5xl" style={synthesisTitleCinzel}>
           {scores.overall}
         </div>
-        <p className="text-sm" style={synthesisBodyMuted}>
+        <p className="text-sm leading-relaxed" style={synthesisBodyMuted}>
           {scores.overall >= 70
             ? "Excellent alignment"
             : scores.overall >= 50
@@ -77,7 +77,7 @@ export function OpportunityScorecardView({ scores }: OpportunityScorecardViewPro
           return (
             <div
               key={area.key}
-              className={`rounded-[14px] border bg-gradient-to-br p-4 ${getScoreColor(score)} ${
+              className={`rounded-[12px] border bg-gradient-to-br p-5 ${getScoreColor(score)} ${
                 isBest ? "ring-2 ring-[color:var(--amber,#c8873a)]" : ""
               }`}
             >
@@ -126,7 +126,7 @@ export function OpportunityScorecardView({ scores }: OpportunityScorecardViewPro
 
       {/* Risk Areas */}
       {scores.risky.length > 0 && (
-        <div className="rounded-[14px] border border-red-500/30 bg-red-950/25 p-4">
+        <div className="rounded-[12px] border border-red-500/30 bg-red-950/25 p-5">
           <p className="mb-2 text-xs font-medium text-red-400">Areas to watch</p>
           <p className="text-sm text-red-200">
             {scores.risky.map((a) => a.charAt(0).toUpperCase() + a.slice(1)).join(", ")}{" "}

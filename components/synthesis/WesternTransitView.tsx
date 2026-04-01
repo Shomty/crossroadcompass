@@ -14,6 +14,7 @@ import {
   synthesisInnerPanel,
   synthesisLabelClass,
   synthesisLabelStyle,
+  synthesisNestedPanelBase,
 } from "@/components/synthesis/synthesisPanelClasses";
 
 interface WesternTransitViewProps {
@@ -42,9 +43,9 @@ function getEventTypeColor(type: string): string {
     'uranus-opposition': 'bg-cyan-500/30 border-cyan-400/50',
     'jupiter-return': 'bg-amber-500/30 border-amber-400/50',
     'neptune-transit-begin': 'bg-purple-500/30 border-purple-400/50',
-    other: "border-white/10 bg-[rgba(13,18,32,0.45)]",
+    other: "border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.42)]",
   };
-  return colors[type] || "border-white/10 bg-[rgba(13,18,32,0.45)]";
+  return colors[type] || "border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.42)]";
 }
 
 function formatPlanetName(planet: string): string {
@@ -67,7 +68,7 @@ export function WesternTransitView({
             {keyEvents.slice(0, 3).map((event, idx) => (
               <div
                 key={idx}
-                className={`border rounded p-3 ${getEventTypeColor(event.type)}`}
+                className={`rounded-[12px] border p-3 ${getEventTypeColor(event.type)}`}
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -106,13 +107,13 @@ export function WesternTransitView({
             return (
               <div
                 key={idx}
-                className={`overflow-hidden rounded-[14px] border transition-all ${
+                className={`overflow-hidden border transition-all ${
                   hasKeyEvent
-                    ? "border-[rgba(200,135,58,0.35)] bg-[rgba(200,135,58,0.08)]"
-                    : "border-white/5 bg-[rgba(13,18,32,0.45)]"
+                    ? "rounded-[12px] border-[rgba(200,135,58,0.35)] bg-[rgba(200,135,58,0.08)]"
+                    : synthesisNestedPanelBase
                 }`}
               >
-                <div className="border-b border-white/10 px-4 py-3">
+                <div className="border-b border-[rgba(200,135,58,0.1)] px-4 py-3">
                   <p className="text-sm font-medium" style={synthesisCream}>
                     {transit.date}
                   </p>
@@ -123,7 +124,7 @@ export function WesternTransitView({
 
                 {/* Planets */}
                 {transit.planets && transit.planets.length > 0 && (
-                  <div className="space-y-2 border-b border-white/10 px-4 py-3">
+                  <div className="space-y-2 border-b border-[rgba(200,135,58,0.1)] px-4 py-3">
                     <p className={synthesisLabelClass} style={synthesisLabelStyle}>
                       Planets
                     </p>
