@@ -29,28 +29,82 @@ import type { BirthProfile } from "@prisma/client";
 
 type Period = "daily" | "weekly" | "monthly";
 
-// ─── Cache TTLs ───────────────────────────────────────────────────────────────
+// ─── Schedule helpers ─────────────────────────────────────────────────────────
 
+/** ISO date of the Sunday that begins the current week (week starts Sunday). */
+function getWeekStartSunday(d: Date): string {
+  const date = new Date(d);
+  date.setUTCDate(date.getUTCDate() - date.getUTCDay());
+  return date.toISOString().split("T")[0];
+}
+
+/** ISO date of the last Friday of the given month (1-indexed). */
+function getLastFriday(year: number, month: number): string {
+  const lastDay = new Date(Date.UTC(year, month, 0)); // day 0 = last day of prev month
+  const dow = lastDay.getUTCDay(); // 0=Sun … 5=Fri … 6=Sat
+  // Steps back: Sun→5, Mon→4, Tue→3, Wed→2, Thu→1, Fri→0, Sat→1
+  const stepsBack = dow === 5 ? 0 : dow === 6 ? 1 : (dow + 2) % 7 === 0 ? 0 : (dow + 2) % 7;
+  lastDay.setUTCDate(lastDay.getUTCDate() - stepsBack);
+  return lastDay.toISOString().split("T")[0];
+}
+
+/**
+ * The monthly report belongs to the last Friday of the current month.
+ * If today is before that date, fall back to last month's last Friday
+ * so there's always a valid report to show.
+ */
+function getActiveMonthlyDate(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = d.getUTCMonth() + 1;
+  const today = d.toISOString().split("T")[0];
+  const thisFriday = getLastFriday(y, m);
+  if (today >= thisFriday) return thisFriday;
+  return getLastFriday(m === 1 ? y - 1 : y, m === 1 ? 12 : m - 1);
+}
+
+/** The next scheduled generation date for display in the UI. */
+function getNextGenerationDate(period: Period): string {
+  const now = new Date();
+  if (period === "daily") {
+    const tomorrow = new Date(now);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  }
+  if (period === "weekly") {
+    const day = now.getUTCDay();
+    const daysUntil = day === 0 ? 7 : 7 - day; // next Sunday (not today even if Sunday)
+    const next = new Date(now);
+    next.setUTCDate(next.getUTCDate() + daysUntil);
+    return next.toISOString().split("T")[0];
+  }
+  // monthly: next last Friday (this month if not yet reached, else next month)
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth() + 1;
+  const today = now.toISOString().split("T")[0];
+  const thisFriday = getLastFriday(y, m);
+  if (today < thisFriday) return thisFriday;
+  return getLastFriday(m === 12 ? y + 1 : y, m === 12 ? 1 : m + 1);
+}
+
+/** Only daily reports may be force-refreshed by the user. */
+function canForceRefresh(period: Period, force: boolean): boolean {
+  return force && period === "daily";
+}
+
+// ─── Cache keys & TTLs ────────────────────────────────────────────────────────
+
+/** TTL is generous — the key itself encodes which period the report belongs to. */
 const CACHE_TTL: Record<Period, number> = {
-  daily:   60 * 60 * 24,          // 24h
-  weekly:  60 * 60 * 24 * 7,      // 7d
-  monthly: 60 * 60 * 24 * 30,     // 30d
+  daily:   60 * 60 * 24 * 2,   // 2 days (buffer if clock skew)
+  weekly:  60 * 60 * 24 * 8,   // 8 days
+  monthly: 60 * 60 * 24 * 35,  // 35 days
 };
 
 function cacheKey(userId: string, period: Period): string {
   const now = new Date();
   if (period === "daily")   return `synthesis:periodic:${userId}:daily:${now.toISOString().split("T")[0]}`;
-  if (period === "weekly")  return `synthesis:periodic:${userId}:weekly:${getISOWeek(now)}`;
-  return `synthesis:periodic:${userId}:monthly:${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function getISOWeek(d: Date): string {
-  const date = new Date(d);
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
-  const week1 = new Date(date.getFullYear(), 0, 4);
-  const weekNum = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
-  return `${date.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+  if (period === "weekly")  return `synthesis:periodic:${userId}:weekly:${getWeekStartSunday(now)}`;
+  return `synthesis:periodic:${userId}:monthly:${getActiveMonthlyDate(now)}`;
 }
 
 // ─── Prompt builder ───────────────────────────────────────────────────────────
@@ -223,6 +277,7 @@ export async function GET(request: NextRequest) {
   if (!["daily", "weekly", "monthly"].includes(period)) {
     return NextResponse.json({ error: "Invalid period" }, { status: 400 });
   }
+  const force = searchParams.get("force") === "1";
 
   const profile = await db.birthProfile.findUnique({
     where: { userId: session.user.id },
@@ -232,11 +287,12 @@ export async function GET(request: NextRequest) {
   }
 
   const key = cacheKey(session.user.id, period);
+  const nextGenerationDate = getNextGenerationDate(period);
 
-  // Check cache
+  // Serve from cache unless this is an allowed force-refresh
   const cached = await kvGet<{ text: string; generatedAt: string }>(key);
-  if (cached) {
-    return NextResponse.json({ ...cached, cached: true, period });
+  if (cached && !canForceRefresh(period, force)) {
+    return NextResponse.json({ ...cached, cached: true, period, nextGenerationDate });
   }
 
   try {
@@ -244,7 +300,7 @@ export async function GET(request: NextRequest) {
     const prompt = buildPrompt(period, ctx);
     const text = await geminiGenerate("flash", prompt, SYSTEM_INSTRUCTION);
 
-    const result = { text, generatedAt: new Date().toISOString(), period, cached: false };
+    const result = { text, generatedAt: new Date().toISOString(), period, cached: false, nextGenerationDate };
     await kvSet(key, { text, generatedAt: result.generatedAt }, CACHE_TTL[period]);
 
     return NextResponse.json(result);
