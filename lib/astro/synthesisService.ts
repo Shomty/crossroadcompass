@@ -202,7 +202,7 @@ export async function synthesizeCharts(
   if (cached) return cached;
 
   // 1. Get Western transits
-  const westernTimeline = getWesternTransitTimeline(userId, birthProfile, start, end);
+  const westernTimeline = await getWesternTransitTimeline(userId, birthProfile, start, end);
 
   // 2. Get Vedic Dasha timeline
   const vedicTimeline = await getOrBuildDashaTimeline(userId, birthProfile, natalChart);

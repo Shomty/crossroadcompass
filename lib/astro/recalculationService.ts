@@ -124,7 +124,7 @@ async function runRecalculation(userId: string, profile: BirthProfile): Promise<
     in30Days.setDate(in30Days.getDate() + 30);
     const end30Days = in30Days.toISOString().split('T')[0];
 
-    getWesternTransitTimeline(userId, profile, today, end30Days);
+    await getWesternTransitTimeline(userId, profile, today, end30Days);
 
     // 3. Recalculate Dasha timeline
     await updateRecalcStatus(userId, {

@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get transits
-    const timeline: TransitTimeline = getWesternTransitTimeline(
+    const timeline: TransitTimeline = await getWesternTransitTimeline(
       session.user.id,
       profile,
       start,
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         .filter(m => m.date.toISOString().split('T')[0] >= start && m.date.toISOString().split('T')[0] <= end)
         .map(m => ({
           date: m.date.toISOString().split('T')[0],
-          planet: 'Saturn' as const, // Simplified for MVP
+        planet: 'saturn' as const,
           type: m.type as any,
           description: m.description,
           strength: m.strength,

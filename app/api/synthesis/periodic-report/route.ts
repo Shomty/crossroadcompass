@@ -191,7 +191,7 @@ async function buildContext(
   // Get western transits
   let transitsText = "No active transits";
   try {
-    const transitTimeline = getWesternTransitTimeline(userId, profile, todayStr, endStr);
+    const transitTimeline = await getWesternTransitTimeline(userId, profile, todayStr, endStr);
     const todayTransit = transitTimeline.transits.find(t => t.date === todayStr);
     if (todayTransit?.aspects?.length) {
       transitsText = todayTransit.aspects.slice(0, 3)

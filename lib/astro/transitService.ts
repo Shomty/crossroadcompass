@@ -102,24 +102,18 @@ function mapAspectType(angle: number): WesternAspectType {
  * @param transitDate  - Target date for transits (YYYY-MM-DD)
  * @returns WesternTransit snapshot
  */
-export function getWesternTransitsForDate(
+export async function getWesternTransitsForDate(
   birthInfo: BirthInfo,
   transitDate: string
-): WesternTransit {
+): Promise<WesternTransit> {
   const calculator = getWesternCalculator();
 
-  // Parse date: YYYY-MM-DD → Date object at noon UTC
-  const [year, month, day] = transitDate.split('-').map(Number);
-
-  const transitChart = calculator.calculateChart({
-    year,
-    month,
-    day,
-    hour: 12,
-    minute: 0,
-    second: 0,
+  const transitChart = await calculator.calculateChart({
+    dateOfBirth: transitDate,
+    timeOfBirth: '12:00',
     latitude: birthInfo.latitude,
     longitude: birthInfo.longitude,
+    timezone: (birthInfo as any).timezone ?? 'UTC',
   } as any);
 
   // Extract planet positions
@@ -206,12 +200,12 @@ export function getWesternTransitsForDate(
  * @param endDate      - End date (YYYY-MM-DD)
  * @returns TransitTimeline with 30-day forecast
  */
-export function getWesternTransitTimeline(
+export async function getWesternTransitTimeline(
   userId: string,
   birthProfile: BirthProfile,
   startDate: string,
   endDate: string
-): TransitTimeline {
+): Promise<TransitTimeline> {
   const birthInfo = prismaProfileToBirthInfo(birthProfile);
   const transits: WesternTransit[] = [];
 
@@ -223,8 +217,7 @@ export function getWesternTransitTimeline(
   while (current <= end) {
     const dateStr = current.toISOString().split('T')[0];
 
-    // Calculate transit (cache lookup deferred to async wrapper if needed)
-    const transit = getWesternTransitsForDate(birthInfo as any, dateStr);
+    const transit = await getWesternTransitsForDate(birthInfo as any, dateStr);
     transits.push(transit);
     current.setDate(current.getDate() + 1);
   }
