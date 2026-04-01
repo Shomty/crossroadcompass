@@ -42,17 +42,19 @@ function bhavaLagnaAbsoluteLongitude(result: {
   return ((result.bhavaLagnaSignNumber - 1) * 30 + result.bhavaLagnaDegree + 360) % 360;
 }
 
-function shortArcMidpointDeg(lam: number, lar: number): number {
-  const a = ((lam % 360) + 360) % 360;
-  const b = ((lar % 360) + 360) % 360;
-  let d = b - a;
-  if (d > 180) d -= 360;
-  if (d < -180) d += 360;
-  return ((a + d / 2) % 360 + 360) % 360;
+function shortArcMidpointDeg(_lam: number, _lar: number): number {
+  // Kept for reference only — BB now uses rahuToMoonMidpointDeg
+  return 0
+}
+
+function rahuToMoonMidpointDeg(lam: number, lar: number): number {
+  // Arc from Rahu to Moon going forward (Nirayana Bhav Chalit direction)
+  const arcRahuToMoon = ((lam - lar) + 360) % 360;
+  return ((lar + arcRahuToMoon / 2) % 360 + 360) % 360;
 }
 
 describe("Milos / Jagannatha Hora PDF — Bhrigu Bindu (pure)", () => {
-  it("calculateBhriguBindu — short-arc midpoint with DMS", () => {
+  it("calculateBhriguBindu — Rahu→Moon direction midpoint (Nirayana Bhav Chalit)", () => {
     const planets = milosPdfPlanetPositions();
     const bb = calculateBhriguBindu(planets);
     const moon = planets.find((p) => p.planet === "Moon")!;
@@ -61,7 +63,7 @@ describe("Milos / Jagannatha Hora PDF — Bhrigu Bindu (pure)", () => {
     const lar = planetAbsoluteLongitude(rahu);
     expect(lam).toBeCloseTo(MILOS_JH_ABSOLUTE_LONGITUDE.moon, 2);
     expect(lar).toBeCloseTo(MILOS_JH_ABSOLUTE_LONGITUDE.rahu, 2);
-    const expected = shortArcMidpointDeg(lam, lar);
+    const expected = rahuToMoonMidpointDeg(lam, lar);
     expect(bb.bhriguBinduLongitude).toBeCloseTo(expected, 4);
     expect(bb.moonLongitudeUsed).toBeCloseTo(lam, 4);
     expect(bb.rahuLongitudeUsed).toBeCloseTo(lar, 4);

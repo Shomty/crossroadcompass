@@ -737,6 +737,12 @@ function shortestLongitudeDeltaDeg(lambdaA: number, lambdaB: number): number {
   return d
 }
 
+/**
+ * Bhrigu Bindu = midpoint in the Rahu→Moon direction (Nirayana Bhav Chalit method).
+ * We travel from Rahu forward (increasing longitude) to Moon — the arc that
+ * passes through the signs ahead of Rahu — and place BB at the halfway point.
+ * This gives the "active karma" side of the axis (opposite of the short-arc point).
+ */
 export function calculateBhriguBindu(planets: PlanetPosition[]): BhriguBinduResult {
   const moon = planets.find(p => p.planet === 'Moon')
   const rahu = planets.find(p => p.planet === 'Rahu')
@@ -744,7 +750,9 @@ export function calculateBhriguBindu(planets: PlanetPosition[]): BhriguBinduResu
   if (!rahu) throw new Error('[calculateBhriguBindu] Rahu not found')
   const λMoon = planetAbsoluteLongitude(moon)
   const λRahu = planetAbsoluteLongitude(rahu)
-  const longitude = wrapLongitude(λMoon + shortestLongitudeDeltaDeg(λMoon, λRahu) / 2)
+  // Arc from Rahu to Moon going forward (mod 360 so always 0–360)
+  const arcRahuToMoon = ((λMoon - λRahu) + 360) % 360
+  const longitude = wrapLongitude(λRahu + arcRahuToMoon / 2)
   return {
     bhriguBinduLongitude: longitude,
     bhriguBinduSign:      (Math.floor(longitude / 30) + 1) as SignNumber,

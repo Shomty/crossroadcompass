@@ -71,6 +71,27 @@ export function placementFromLongitude(
   }
 }
 
+/**
+ * Nirayana Bhav Chalit house for a point.
+ * The ascendant degree (within its sign) acts as the cusp boundary for every house.
+ * If a point's degrees-in-sign < ascendant's degrees-in-sign, it slides one house back.
+ */
+function chalitHouseFromLagna(
+  lagnaSignNumber: SignNumber,
+  lagnaAbsoluteLongitude: number,
+  pointLongitude: number
+): number {
+  const lagnaDegreesInSign = wrapLongitude(lagnaAbsoluteLongitude) % 30
+  const pointLon = wrapLongitude(pointLongitude)
+  const { sign: pointSign } = longitudeToSignAndDegree(pointLon)
+  const pointDegreesInSign = pointLon % 30
+  const wholeSignHouse = countSignsBetween(lagnaSignNumber, pointSign)
+  if (pointDegreesInSign < lagnaDegreesInSign) {
+    return wholeSignHouse === 1 ? 12 : wholeSignHouse - 1
+  }
+  return wholeSignHouse
+}
+
 function signCuspLongitude(sign: SignNumber): number {
   return wrapLongitude((sign - 1) * 30)
 }
@@ -181,7 +202,17 @@ export function attachExtendedPlacements(
     pranapada: placementFromLongitude(L, ppλ),
     upapadaLagna: placementFromLongitude(L, signCuspLongitude(upapadaLagna.upapadaSignNumber)),
     sreeLagna: placementFromLongitude(L, signCuspLongitude(sreeLagna.sreeLagnaSignNumber)),
-    bhriguBindu: placementFromLongitude(L, bhriguBindu.bhriguBinduLongitude),
+    bhriguBindu: (() => {
+      const base = placementFromLongitude(L, bhriguBindu.bhriguBinduLongitude)
+      return {
+        ...base,
+        houseFromLagna: chalitHouseFromLagna(
+          L,
+          inputs.lagnaAbsoluteLongitude,
+          bhriguBindu.bhriguBinduLongitude
+        ),
+      }
+    })(),
     beejaSphuta: placementFromLongitude(L, beejaSphuata.beejaSphutaLongitude),
     kshetraSphuta: placementFromLongitude(L, kshetraSphuata.kshetraSphutaLongitude),
     trisphuta: trisphuta ? placementFromLongitude(L, trisphuta.triSphutaLongitude) : null,

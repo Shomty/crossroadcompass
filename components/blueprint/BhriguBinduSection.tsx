@@ -197,7 +197,12 @@ export function BhriguBinduSection({ extended }: Props) {
             </span>
             <span style={{ fontFamily: "DM Mono, monospace", fontSize: 11, color: "rgba(200,135,58,0.6)" }}>
               {bbSign.degree}
-              {house ? <span style={{ marginLeft: 8, color: "rgba(255,255,255,0.4)" }}>· House {house}</span> : null}
+              {house ? (
+                <>
+                  <span style={{ marginLeft: 8, color: "rgba(255,255,255,0.4)" }}>· House {house}</span>
+                  <span style={{ marginLeft: 6, color: "rgba(255,255,255,0.22)", fontSize: 10 }}>Bhav Chalit</span>
+                </>
+              ) : null}
             </span>
           </div>
         </div>
@@ -212,7 +217,7 @@ export function BhriguBinduSection({ extended }: Props) {
       {/* ── Card 3: House interpretation ── */}
       {interp && house && (
         <div style={cardStyle}>
-          <div style={dimLabel}>Your Bhrigu Bindu · House {house}</div>
+          <div style={dimLabel}>Your Bhrigu Bindu · House {house} <span style={{ opacity: 0.5, fontSize: 9 }}>Nirayana Bhav Chalit</span></div>
           <h3 style={{ ...headingStyle, fontSize: 16, marginBottom: 10 }}>{interp.title}</h3>
           <p style={bodyStyle}>{interp.body}</p>
           <div style={divider} />
