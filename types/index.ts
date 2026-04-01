@@ -988,6 +988,49 @@ export interface OpportunityScores {
   risky: string[]       // Areas below 40
 }
 
+// ─── Trait Scoring (engine3.md §3–6) ─────────────────────────────────────────
+
+export type TraitCategory =
+  | 'identity'
+  | 'emotional_profile'
+  | 'discipline'
+  | 'social_orientation'
+  | 'risk_ambition'
+  | 'communication'
+  | 'relationship_patterns'
+  | 'energy_burnout'
+  | 'life_direction'
+
+export const TRAIT_LABELS: Record<TraitCategory, string> = {
+  identity:              'Identity & Self-Expression',
+  emotional_profile:     'Emotional Profile',
+  discipline:            'Discipline & Structure',
+  social_orientation:    'Social Orientation',
+  risk_ambition:         'Risk & Ambition',
+  communication:         'Communication Style',
+  relationship_patterns: 'Relationship Patterns',
+  energy_burnout:        'Energy & Burnout Cycles',
+  life_direction:        'Life Direction & Purpose',
+}
+
+export interface TraitScore {
+  trait: TraitCategory
+  label: string
+  vedic_score: number           // 0.0–1.0
+  western_score: number         // 0.0–1.0
+  alignment: 'HIGH' | 'MEDIUM' | 'LOW'
+  contradiction: boolean        // one > 0.7, other < 0.4
+  vedic_sources: string[]       // e.g. ["Sun exalted in Aries"]
+  western_sources: string[]     // e.g. ["Sun in Leo (domicile)"]
+}
+
+export interface TraitAnalysis {
+  scores: TraitScore[]
+  topStrengths: TraitScore[]    // alignment HIGH + both scores > 0.65
+  contradictions: TraitScore[]  // contradiction = true
+  unifiedSummary: string[]      // 5–7 bullets derived from topStrengths + contradictions
+}
+
 /** Complete synthesis result (Western + Vedic + merged) */
 export interface SynthesisResult {
   // Current moment snapshot
@@ -1005,6 +1048,9 @@ export interface SynthesisResult {
     module: 'western' | 'vedic' | 'both'
     strength: number             // 0-100
   }>
+
+  // engine3.md §3–6: Trait scoring, alignment engine, contradiction detection
+  traitAnalysis?: TraitAnalysis
 
   // Optional: AI-generated synthesis (Phase 4)
   aiSynthesis?: string

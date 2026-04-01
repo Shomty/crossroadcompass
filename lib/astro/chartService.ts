@@ -13,14 +13,14 @@
 
 import { InsightType, type BirthProfile } from "@prisma/client";
 import { calculateHDChart } from "@/lib/astro/hdCalculator";
-import { getVedicCalculator } from "@/lib/astro/calculatorService";
+import { getVedicCalculator, getWesternCalculator } from "@/lib/astro/calculatorService";
 import { prismaProfileToBirthInfo } from "@/lib/astro/birthInfoMapper";
 import { storeDashasFromChart } from "@/lib/astro/dashaService";
 import { kvGet, kvSet, kvDeleteMany } from "@/lib/kv/helpers";
 import { kvKeys, KV_TTL } from "@/lib/kv/keys";
 import { db } from "@/lib/db";
 import type { BirthInfo, HDChartData, SpecialPointsResult, ExtendedSpecialPointsResult, KaalVelaSetResult, SignNumber, YogaDetectionResult, PlanetName } from "@/types";
-import type { VedicChartCalculations, PlanetDasha } from "openastrology-library";
+import type { VedicChartCalculations, WesternChartCalculations, PlanetDasha } from "openastrology-library";
 import {
   calculateSpecialPoints,
   calculateExtendedSpecialPoints,
@@ -219,6 +219,32 @@ export async function getOrCreateVedicChart(
 }
 
 // ─── OA transit — Today's transit chart ─────────────────────────────────
+
+/**
+ * Western natal chart for a user, using KV cache.
+ * Calculated using WesternAstrologyCalculator with birth date/time/location.
+ * Cached permanently — invalidated only when birth data changes.
+ */
+export async function getOrCreateWesternNatalChart(
+  userId: string,
+  birthProfile: BirthProfile
+): Promise<WesternChartCalculations> {
+  const cached = await kvGet<WesternChartCalculations>(kvKeys.westernNatalChart(userId));
+  if (cached !== null) return cached;
+
+  const birthInfo = prismaProfileToBirthInfo(birthProfile);
+  const calculator = getWesternCalculator();
+  const chart = await calculator.calculateChart({
+    dateOfBirth: birthInfo.dateOfBirth,
+    timeOfBirth: birthInfo.timeOfBirth ?? '12:00',
+    latitude: birthInfo.latitude,
+    longitude: birthInfo.longitude,
+    timezone: birthInfo.timezone ?? 'UTC',
+  } as Parameters<typeof calculator.calculateChart>[0]);
+
+  await kvSet(kvKeys.westernNatalChart(userId), chart, KV_TTL.NATAL_CHART);
+  return chart;
+}
 
 export type TransitCacheOptions = {
   latOverride?: number

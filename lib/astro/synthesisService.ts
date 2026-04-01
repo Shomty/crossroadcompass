@@ -18,6 +18,8 @@ import { kvKeys, KV_TTL } from "@/lib/kv/keys";
 import { prismaProfileToBirthInfo } from "@/lib/astro/birthInfoMapper";
 import { getWesternTransitTimeline, identifyLifeStageMilestones } from "@/lib/astro/transitService";
 import { getOrBuildDashaTimeline, getNextDashaTransition } from "@/lib/astro/dashaTimelineService";
+import { getOrCreateWesternNatalChart } from "@/lib/astro/chartService";
+import { computeTraitScores } from "@/lib/astro/traitScoringEngine";
 import type {
   SynthesisResult,
   ConvergenceEvent,
@@ -291,6 +293,14 @@ export async function synthesizeCharts(
     convergenceWindow: convergenceWindow.slice(0, 30), // Limit to 30 days
     criticalDates: criticalDates.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 10),
   };
+
+  // Trait analysis (engine3.md §3–6) — computed fresh (pure, fast, no API cost)
+  try {
+    const westernNatal = await getOrCreateWesternNatalChart(userId, birthProfile);
+    result.traitAnalysis = computeTraitScores(natalChart, westernNatal as any);
+  } catch (err) {
+    console.warn('[synthesizeCharts] trait scoring failed (non-fatal):', err);
+  }
 
   // Cache result
   await kvSet(cacheKey, result, KV_TTL.SYNTHESIS_SECONDS);
