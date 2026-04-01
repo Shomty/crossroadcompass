@@ -844,3 +844,155 @@ export interface ChatErrorResponse {
   error: string
   detail?: string
 }
+
+// ─── Synthesis Engine (Western + Vedic) ───────────────────────────────────
+// STATUS: done | Synthesis Engine Phase 1.1
+
+/** Western astrology planet names (tropical zodiac) */
+export type WesternPlanetName =
+  | 'sun' | 'moon' | 'mercury' | 'venus' | 'mars'
+  | 'jupiter' | 'saturn' | 'uranus' | 'neptune' | 'pluto'
+
+/** Western aspect types */
+export type WesternAspectType = 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition'
+
+/** Western planet position in tropical zodiac */
+export interface WesternPlanetPosition {
+  name: WesternPlanetName
+  longitude: number              // 0-360 degrees tropical
+  latitude: number
+  house: number                  // 1-12 (Placidus)
+  sign: string                   // 'aries' ... 'pisces'
+  signDegree: number             // 0-29.99 within sign
+  isRetrograde: boolean
+  speed: number                  // degrees/day
+  dignity?: string               // 'Exalted' | 'Ruler' | 'Debilitated' | null
+}
+
+/** Aspect between two planets */
+export interface WesternAspect {
+  planet1: WesternPlanetName
+  planet2: WesternPlanetName
+  angle: number                  // 0, 60, 90, 120, 180
+  angleName: WesternAspectType
+  orb: number                    // degrees of error (typically 0-6)
+  isApplying: boolean            // moving toward exact
+  strength: number               // 0-100 scale (100 = exact)
+}
+
+/** Daily transit snapshot */
+export interface WesternTransit {
+  date: string                   // ISO date YYYY-MM-DD
+  planets: WesternPlanetPosition[]
+  aspects: WesternAspect[]
+  slowPlanetEvents?: Array<{
+    planet: WesternPlanetName
+    natalPlanetName?: WesternPlanetName
+    eventType: 'exact' | 'within-2deg' | 'retrograde-station'
+    aspectAngle?: number
+    description?: string
+  }>
+}
+
+/** 30-day transit timeline with key events */
+export interface TransitTimeline {
+  startDate: string              // YYYY-MM-DD
+  endDate: string
+  transits: WesternTransit[]
+  keyEvents: Array<{
+    date: string                 // YYYY-MM-DD
+    planet: WesternPlanetName
+    type: 'saturn-return' | 'uranus-opposition' | 'jupiter-return' | 'neptune-transit-begin' | 'other'
+    description: string
+    strength: number             // 0-100 scale
+  }>
+}
+
+/** Dasha period (Maha or Antar) */
+export interface DashaPeriod {
+  startDate: Date
+  endDate: Date
+  planetName: string             // Planet ruling the period
+  level: 'MAHADASHA' | 'ANTARDASHA'
+  remainingDays?: number         // Calculated at reference date
+  strength?: number              // 0-100 activation score
+}
+
+/** Antardasha window with activation scoring */
+export interface AntardashaWindow {
+  antardashaPlanet: string
+  startDate: Date
+  endDate: Date
+  strength: number               // 0-100: activation strength
+  activates: string[]            // e.g., ['rajayoga', 'bhava-strength']
+}
+
+/** Mahadasha block containing Antardasha periods */
+export interface MahadashaBlock {
+  mahadashaPlanet: string
+  startDate: Date
+  endDate: Date
+  antardashas: AntardashaWindow[]
+  totalYears: number
+  overallStrength: number        // 0-100: aggregate strength
+  keyEvents?: string[]
+}
+
+/** Full 120-year Vedic Dasha timeline */
+export interface VedicDashaTimeline {
+  birthDate: Date
+  currentDate: Date
+  currentMahaDasha: DashaPeriod
+  currentAntarDasha: DashaPeriod
+  timeline: MahadashaBlock[]      // Birth to age 120
+  nextTransition?: {
+    date: Date
+    type: 'antardasha-change' | 'mahadasha-change'
+    newPlanetName: string
+  }
+}
+
+/** If-Then rule match */
+export interface IfThenRule {
+  id: string
+  condition: string              // e.g., 'Saturn transit to Sun + Rahu Dasha'
+  verdict: string                // e.g., 'A period of great testing...'
+  strength: number               // 0-100
+}
+
+/** Single day's convergence event */
+export interface ConvergenceEvent {
+  date: string                   // YYYY-MM-DD
+  dashaPhase: 'maha-start' | 'antar-start' | 'mid-period' | 'ending'
+  dasha: DashaPeriod
+  transitEvent?: {
+    planet: WesternPlanetName
+    type: string
+    description: string
+  } | null
+  convergenceScore: number       // 0-100
+  matchedRules: IfThenRule[]
+  reasoning: string[]
+}
+
+/** Complete synthesis result (Western + Vedic + merged) */
+export interface SynthesisResult {
+  // Current moment snapshot
+  currentMahaDasha: DashaPeriod
+  currentAntarDasha: DashaPeriod
+  currentTransits: WesternTransit     // Today only
+
+  // 30-day outlook
+  convergenceWindow: ConvergenceEvent[]
+
+  // Key dates to monitor
+  criticalDates: Array<{
+    date: string                 // YYYY-MM-DD
+    reason: string
+    module: 'western' | 'vedic' | 'both'
+    strength: number             // 0-100
+  }>
+
+  // Optional: AI-generated synthesis (Phase 4)
+  aiSynthesis?: string
+}

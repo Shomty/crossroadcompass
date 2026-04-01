@@ -51,6 +51,15 @@ export const kvKeys = {
   /** Crossroads Oracle reading — theme + antardasha label (stable until sub-period changes) */
   oracleReading: (userId: string, theme: string, antardashaLabel: string) =>
     `oracle:${userId}:${theme}:${antardashaLabel}`,
+  // Synthesis Engine (Phase 1)
+  /** Western transits for a single day — tropical planets + aspects */
+  westernTransit: (userId: string, date: string) => `western-transit:${userId}:${date}`,
+  /** Prefix for scanning all Western transit keys for a user */
+  westernTransitPrefix: (userId: string) => `western-transit:${userId}:`,
+  /** Full Dasha timeline (120 years) — permanent, invalidated on profile change */
+  dashaTimeline: (userId: string) => `dasha-timeline:${userId}`,
+  /** Full synthesis result (Western + Vedic + merged) — 24h TTL */
+  synthesis: (userId: string, dateRange: string) => `synthesis:${userId}:${dateRange}`,
 } as const;
 
 export const KV_TTL_CHAT = {
@@ -79,4 +88,10 @@ export const KV_TTL = {
   MUHURTA_PERSONALIZED_SECONDS: 7 * 24 * 60 * 60,
   /** Oracle cache upper bound — actual TTL is min(time-to-antardasha-end, this) */
   ORACLE_READING_MAX_SECONDS: 30 * 24 * 60 * 60,
+  /** Western transits (24h TTL, same as existing transit cache) */
+  WESTERN_TRANSIT_SECONDS: 86_400,
+  /** Full synthesis result (24h TTL) */
+  SYNTHESIS_SECONDS: 86_400,
+  /** Dasha timeline (permanent until profile change) */
+  DASHA_TIMELINE: undefined,
 } as const;

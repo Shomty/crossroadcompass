@@ -23,6 +23,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { invalidateChartCache } from "@/lib/astro/chartService";
 import { buildProfileOnlySnapshot } from "@/lib/astro/snapshotFromChart";
+import { triggerRecalculation, getRecalcStatus } from "@/lib/astro/recalculationService";
 
 // ─── Validation schema ─────────────────────────────────────────────────────
 
@@ -226,10 +227,20 @@ export async function PATCH(req: NextRequest) {
     update: buildProfileOnlySnapshot(updatedProfile, true),
   });
 
+  // Phase 3: Trigger async recalculation (Vedic + Western + Synthesis)
+  // Returns immediately; actual work happens in background
+  try {
+    await triggerRecalculation(userId, updatedProfile);
+  } catch (recalcError) {
+    console.error("[PATCH /api/birth-profile] Recalculation trigger failed:", recalcError);
+    // Don't fail the response — user got the profile update
+  }
+
   // AC-04: notify user that past insights were based on prior birth data
   return NextResponse.json({
     updated: true,
     notice:
-      "Your chart has been updated. Past insights were generated using your previous birth data.",
+      "Your chart has been updated. Past insights were generated using your previous birth data. We're recalculating your charts in the background.",
+    recalculationStarted: true,
   });
 }
