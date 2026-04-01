@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { CHARAKA_LABELS, ARUDHA_LABEL } from "@/lib/astro/specialPointsLabels";
 import { formatPlacementLine } from "@/lib/astro/vedicPointPlacementFormat";
+import { BHRIGU_BINDU_HOUSE_INTERPRETATIONS } from "@/lib/astro/bhriguBinduInterpretations";
 import type {
   ArudhaLagnaResult,
   Charakaraka,
   CharakarakaSetResult,
+  ExtendedSpecialPointsResult,
   FoundationSpecialPointsPlacements,
   SignNumber,
 } from "@/types";
@@ -86,6 +88,7 @@ function KarakaRow({
 export function SpecialPointsSection() {
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [extData, setExtData] = useState<ExtendedSpecialPointsResult | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,9 +105,21 @@ export function SpecialPointsSection() {
         if (!cancelled) setErr("Failed to load");
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/chart/special-points/extended");
+        if (res.status === 202) return;
+        if (!res.ok) return;
+        const json = (await res.json()) as ExtendedSpecialPointsResult;
+        if (!cancelled) setExtData(json);
+      } catch { /* silent */ }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   if (err) {
@@ -227,6 +242,38 @@ export function SpecialPointsSection() {
           </ul>
         </div>
       )}
+
+      {extData?.bhriguBindu && extData.placements?.bhriguBindu && (() => {
+        const bb = extData.bhriguBindu!;
+        const house = extData.placements!.bhriguBindu!.houseFromLagna ?? 0;
+        const interp = BHRIGU_BINDU_HOUSE_INTERPRETATIONS[house];
+        const signName = extData.placements!.bhriguBindu!.rasiName ?? "";
+        const deg = Math.floor(bb.bhriguBinduDegree ?? 0);
+        const min = Math.round(((bb.bhriguBinduDegree ?? 0) - deg) * 60);
+        return (
+          <div className="chart-bp-card">
+            <div className="chart-bp-section-title">Bhrigu Bindu</div>
+            <p className="chart-bp-muted mb-3">
+              Moon–Rahu midpoint — your karmic hotspot where destiny unfolds most strongly.
+            </p>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-md border border-[rgba(200,135,58,0.25)] bg-[rgba(200,135,58,0.08)] px-2.5 py-1 font-mono text-[11px] text-[rgba(200,135,58,0.9)]">
+                {signName} {deg}°{min.toString().padStart(2, "0")}′
+              </span>
+              <span className="text-[var(--muted)] text-[11px]">·</span>
+              <span className="rounded-md border border-[rgba(200,135,58,0.18)] bg-[rgba(200,135,58,0.05)] px-2.5 py-1 font-mono text-[11px] text-[rgba(200,135,58,0.7)]">
+                House {house}
+              </span>
+            </div>
+            {interp && (
+              <p className="chart-bp-body text-[var(--cream)] font-medium mb-1">{interp.title}</p>
+            )}
+            {interp && (
+              <p className="chart-bp-muted line-clamp-3">{interp.body}</p>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

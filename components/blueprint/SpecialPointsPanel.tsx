@@ -15,6 +15,7 @@ import type {
   VedicPointPlacement,
 } from '@/types'
 import { ExtendedSpecialPointsSection } from '@/components/blueprint/ExtendedSpecialPointsSection'
+import { BhriguBinduSection } from '@/components/blueprint/BhriguBinduSection'
 import { formatPlacementLine } from '@/lib/astro/vedicPointPlacementFormat'
 
 // ─── Lookup tables ─────────────────────────────────────────────────────────
@@ -596,6 +597,7 @@ export function SpecialPointsPanel({ specialPoints, extendedPoints, insights, us
       )}
 
       <ExtendedSpecialPointsSection extended={extendedPoints ?? null} />
+      <BhriguBinduSection extended={extendedPoints ?? null} />
 
     </div>
   )
