@@ -100,9 +100,43 @@ const BASE_REPORT_TEMPLATE_VARIABLE_KEYS = [
   "dasha_mahadasha_start", "dasha_mahadasha_end",
   "dasha_antardasha_start", "dasha_antardasha_end",
 
-  // Western (tropical) natal planet signs — used for 3-layer synthesis comparison
-  "western_sun_sign", "western_moon_sign", "western_asc_sign",
-  "western_venus_sign", "western_mars_sign", "western_mercury_sign",
+  // Western (tropical) natal — planet scalars (sign, degree, house, retrograde, dignity, DMS)
+  "western_sun_sign",     "western_sun_degree",     "western_sun_house",     "western_sun_retro",     "western_sun_dignity",     "western_sun_dms",
+  "western_moon_sign",    "western_moon_degree",    "western_moon_house",    "western_moon_retro",    "western_moon_dignity",    "western_moon_dms",
+  "western_mercury_sign", "western_mercury_degree", "western_mercury_house", "western_mercury_retro", "western_mercury_dignity", "western_mercury_dms",
+  "western_venus_sign",   "western_venus_degree",   "western_venus_house",   "western_venus_retro",   "western_venus_dignity",   "western_venus_dms",
+  "western_mars_sign",    "western_mars_degree",    "western_mars_house",    "western_mars_retro",    "western_mars_dignity",    "western_mars_dms",
+  "western_jupiter_sign", "western_jupiter_degree", "western_jupiter_house", "western_jupiter_retro", "western_jupiter_dignity", "western_jupiter_dms",
+  "western_saturn_sign",  "western_saturn_degree",  "western_saturn_house",  "western_saturn_retro",  "western_saturn_dignity",  "western_saturn_dms",
+  "western_uranus_sign",  "western_uranus_degree",  "western_uranus_house",  "western_uranus_retro",  "western_uranus_dignity",  "western_uranus_dms",
+  "western_neptune_sign", "western_neptune_degree", "western_neptune_house", "western_neptune_retro", "western_neptune_dignity", "western_neptune_dms",
+  "western_pluto_sign",   "western_pluto_degree",   "western_pluto_house",   "western_pluto_retro",   "western_pluto_dignity",   "western_pluto_dms",
+  "western_chiron_sign",  "western_chiron_degree",  "western_chiron_house",  "western_chiron_retro",  "western_chiron_dignity",  "western_chiron_dms",
+  "western_true_node_sign", "western_true_node_degree", "western_true_node_house", "western_true_node_retro", "western_true_node_dignity", "western_true_node_dms",
+
+  // Western — house scalars (sign on cusp, cusp degree, lord, planets in house)
+  "western_house_1_sign",  "western_house_1_degree",  "western_house_1_lord",  "western_house_1_planets",
+  "western_house_2_sign",  "western_house_2_degree",  "western_house_2_lord",  "western_house_2_planets",
+  "western_house_3_sign",  "western_house_3_degree",  "western_house_3_lord",  "western_house_3_planets",
+  "western_house_4_sign",  "western_house_4_degree",  "western_house_4_lord",  "western_house_4_planets",
+  "western_house_5_sign",  "western_house_5_degree",  "western_house_5_lord",  "western_house_5_planets",
+  "western_house_6_sign",  "western_house_6_degree",  "western_house_6_lord",  "western_house_6_planets",
+  "western_house_7_sign",  "western_house_7_degree",  "western_house_7_lord",  "western_house_7_planets",
+  "western_house_8_sign",  "western_house_8_degree",  "western_house_8_lord",  "western_house_8_planets",
+  "western_house_9_sign",  "western_house_9_degree",  "western_house_9_lord",  "western_house_9_planets",
+  "western_house_10_sign", "western_house_10_degree", "western_house_10_lord", "western_house_10_planets",
+  "western_house_11_sign", "western_house_11_degree", "western_house_11_lord", "western_house_11_planets",
+  "western_house_12_sign", "western_house_12_degree", "western_house_12_lord", "western_house_12_planets",
+
+  // Western — ascendant detail
+  "western_asc_sign", "western_asc_degree", "western_asc_dms",
+
+  // Western — aspects & chart patterns
+  "western_aspects_json", "western_aspects_summary",
+  "western_patterns_json", "western_chart_patterns",
+
+  // Western — JSON bundles
+  "western_planets_json", "western_houses_json",
 
   // Natal synthesis seeds JSON — structured divergence map for Gemini
   "synthesis_seeds_json",

@@ -12,9 +12,8 @@ import { RefreshCw } from "lucide-react";
 import {
   synthesisBodyMuted,
   synthesisCream,
-  synthesisInnerPanel,
-  synthesisInnerPanelAccent,
-  synthesisInnerPanelDense,
+  synthesisCardStyle,
+  synthesisCardStyleAccent,
   synthesisLabelClass,
   synthesisLabelStyle,
   synthesisTitleCinzel,
@@ -68,9 +67,9 @@ export function SynthesisDashboard({
   const isRecalculating = recalcStatus && recalcStatus.status === "pending";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {isRecalculating && (
-        <div className={synthesisInnerPanelAccent}>
+        <div style={synthesisCardStyleAccent}>
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <RefreshCw
@@ -112,14 +111,28 @@ export function SynthesisDashboard({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div className={synthesisInnerPanelDense}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div
+          style={{
+            background: "rgba(13,18,32,0.6)",
+            border: "1px solid rgba(200,135,58,0.15)",
+            borderRadius: 12,
+            padding: "10px 16px 14px",
+          }}
+        >
           <p className={synthesisLabelClass} style={synthesisLabelStyle}>
             Current period
           </p>
-          <p className="text-sm font-medium" style={synthesisCream}>
+          <p
+            style={{
+              fontFamily: "Cinzel, serif",
+              fontSize: 18,
+              fontWeight: 400,
+              color: "rgba(240,220,160,0.95)",
+            }}
+          >
             {synthesis.currentMahaDasha.planetName}{" "}
-            <span className="text-xs font-normal opacity-70">
+            <span style={{ fontSize: 12, opacity: 0.6 }}>
               / {synthesis.currentAntarDasha.planetName}
             </span>
           </p>
@@ -128,12 +141,27 @@ export function SynthesisDashboard({
           </p>
         </div>
 
-        <div className={synthesisInnerPanelDense}>
+        <div
+          style={{
+            background: "rgba(13,18,32,0.6)",
+            border: "1px solid rgba(200,135,58,0.15)",
+            borderRadius: 12,
+            padding: "10px 16px 14px",
+          }}
+        >
           <p className={synthesisLabelClass} style={synthesisLabelStyle}>
             Convergence
           </p>
           <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-normal" style={synthesisTitleCinzel}>
+            <p
+              style={{
+                fontFamily: "Cinzel, serif",
+                fontSize: 28,
+                fontWeight: 400,
+                color: "#e8b96a",
+                lineHeight: 1,
+              }}
+            >
               {opportunityScores.overall}
             </p>
             <p className="text-xs" style={synthesisBodyMuted}>
@@ -149,15 +177,23 @@ export function SynthesisDashboard({
           </p>
         </div>
 
-        <div className={synthesisInnerPanelDense}>
+        <div
+          style={{
+            background: "rgba(13,18,32,0.6)",
+            border: "1px solid rgba(200,135,58,0.15)",
+            borderRadius: 12,
+            padding: "10px 16px 14px",
+          }}
+        >
           <p className={synthesisLabelClass} style={synthesisLabelStyle}>
             Best opportunity
           </p>
           <p
-            className="text-sm font-medium"
             style={{
-              fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-              color: "var(--amber, #c8873a)",
+              fontFamily: "Cinzel, serif",
+              fontSize: 18,
+              fontWeight: 400,
+              color: "#c8873a",
             }}
           >
             {opportunityScores.bestArea.charAt(0).toUpperCase() + opportunityScores.bestArea.slice(1)}
@@ -169,7 +205,7 @@ export function SynthesisDashboard({
       </div>
 
       {synthesis.criticalDates.length > 0 && (
-        <div className={synthesisInnerPanel}>
+        <div style={synthesisCardStyle}>
           <p className={`${synthesisLabelClass} mb-3`} style={synthesisLabelStyle}>
             Next event
           </p>
@@ -177,7 +213,7 @@ export function SynthesisDashboard({
             {synthesis.criticalDates.slice(0, 2).map((date, idx) => (
               <div key={idx} className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium" style={synthesisCream}>
+                  <p className="text-base font-medium" style={synthesisCream}>
                     {date.date}
                   </p>
                   <p className="mt-1 text-xs" style={synthesisBodyMuted}>

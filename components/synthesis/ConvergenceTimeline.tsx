@@ -22,9 +22,8 @@ interface ConvergenceTimelineProps {
 }
 
 function getConvergenceColor(score: number): string {
-  if (score >= 80) return 'bg-emerald-500/30 border-emerald-400';
-  if (score >= 60) return 'bg-amber-500/30 border-amber-400';
-  if (score >= 40) return 'bg-yellow-500/30 border-yellow-400';
+  if (score >= 70) return 'bg-[rgba(200,135,58,0.10)] border-[rgba(200,135,58,0.35)]';
+  if (score >= 40) return 'bg-[rgba(200,135,58,0.05)] border-[rgba(200,135,58,0.18)]';
   return "border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.42)]";
 }
 
@@ -42,7 +41,7 @@ export function ConvergenceTimeline({ events }: ConvergenceTimelineProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-5">
       {events.map((event) => (
         <div
           key={event.date}
@@ -125,7 +124,7 @@ export function ConvergenceTimeline({ events }: ConvergenceTimelineProps) {
                   </p>
                   <div className="space-y-2">
                     {event.matchedRules.slice(0, 2).map((rule) => (
-                      <p key={rule.id} className="text-xs leading-relaxed" style={synthesisBodyMuted}>
+                      <p key={rule.id} className="text-sm leading-relaxed" style={synthesisBodyMuted}>
                         <span className="text-[color:var(--amber,#c8873a)]">→</span> {rule.verdict}
                       </p>
                     ))}
@@ -135,7 +134,7 @@ export function ConvergenceTimeline({ events }: ConvergenceTimelineProps) {
 
               {event.reasoning.length > 0 && (
                 <div className="border-t border-[rgba(200,135,58,0.1)] pt-2">
-                  <p className="text-xs italic leading-relaxed" style={synthesisBodyMuted}>
+                  <p className="text-sm italic leading-relaxed" style={synthesisBodyMuted}>
                     {event.reasoning[0]}
                   </p>
                 </div>

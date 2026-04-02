@@ -19,22 +19,6 @@ import { NatalAnalysisView } from "@/components/synthesis/NatalAnalysisView";
 import { SynthesisTabBar, type SynthesisTabId } from "@/components/synthesis/SynthesisTabBar";
 import { SynthesisTabHeader } from "@/components/synthesis/SynthesisTabHeader";
 import { calculateOpportunityScores } from "@/lib/astro/opportunityScoreService";
-import {
-  synthesisBodyMuted,
-  synthesisPrimaryCta,
-} from "@/components/synthesis/synthesisPanelClasses";
-
-const BP_PANEL = {
-  borderRadius: 12,
-  background: "rgba(13,18,32,0.5)",
-  border: "1px solid rgba(200,135,58,0.12)",
-} as const;
-
-const BP_PANEL_SOFT = {
-  borderRadius: 12,
-  background: "rgba(13,18,32,0.5)",
-  border: "1px solid rgba(200,135,58,0.12)",
-} as const;
 
 const TAB_BAR_ITEMS: Array<{ id: SynthesisTabId; label: string }> = [
   { id: "dashboard", label: "◆ Dashboard" },
@@ -151,17 +135,44 @@ export default function SynthesisPage() {
     return (
       <PageLayout {...layoutProps}>
         <section
-          className="animate-enter animate-enter-2 flex flex-col items-center justify-center gap-5 py-20"
-          style={{ ...BP_PANEL_SOFT, textAlign: "center", padding: "4rem 1.5rem" }}
+          className="animate-enter animate-enter-2"
+          style={{
+            textAlign: "center",
+            padding: "5rem 1rem",
+            background: "rgba(13,18,32,0.5)",
+            borderRadius: 16,
+            border: "1px solid rgba(200,135,58,0.12)",
+          }}
         >
+          <div style={{ fontSize: 40, marginBottom: 20, color: "rgba(200,135,58,0.4)" }}>◈</div>
+          <h2
+            style={{
+              fontFamily: "Cinzel, serif",
+              fontSize: 22,
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.9)",
+              marginBottom: 12,
+            }}
+          >
+            Aligning your charts
+          </h2>
+          <p
+            style={{
+              fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+              fontSize: 14,
+              color: "rgba(255,255,255,0.5)",
+              lineHeight: 1.65,
+              maxWidth: 400,
+              margin: "0 auto 28px",
+            }}
+          >
+            Synthesising your Western and Vedic data…
+          </p>
           <div
-            className="h-9 w-9 animate-spin rounded-full border-2 border-t-transparent"
+            className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-t-transparent"
             style={{ borderColor: "rgba(200,135,58,0.45)" }}
             aria-hidden
           />
-          <p className="text-sm leading-relaxed" style={{ ...synthesisBodyMuted, margin: 0 }}>
-            Loading synthesis…
-          </p>
         </section>
       </PageLayout>
     );
@@ -171,22 +182,57 @@ export default function SynthesisPage() {
     return (
       <PageLayout {...layoutProps}>
         <section
-          className="animate-enter animate-enter-2 flex flex-col items-center justify-center gap-5 py-16"
-          style={{ ...BP_PANEL_SOFT, textAlign: "center", padding: "3rem 1.5rem" }}
+          className="animate-enter animate-enter-2"
+          style={{
+            textAlign: "center",
+            padding: "5rem 1rem",
+            background: "rgba(13,18,32,0.5)",
+            borderRadius: 16,
+            border: "1px solid rgba(200,135,58,0.12)",
+          }}
         >
-          <p
-            className="text-sm leading-relaxed"
+          <div style={{ fontSize: 40, marginBottom: 20, color: "rgba(200,135,58,0.4)" }}>◇</div>
+          <h2
             style={{
-              fontFamily: synthesisBodyMuted.fontFamily,
-              lineHeight: 1.65,
-              margin: 0,
-              maxWidth: 420,
-              color: "rgba(248,113,113,0.92)",
+              fontFamily: "Cinzel, serif",
+              fontSize: 22,
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.9)",
+              marginBottom: 12,
             }}
           >
-            {error || "Failed to load synthesis"}
+            Synthesis unavailable
+          </h2>
+          <p
+            style={{
+              fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+              fontSize: 14,
+              color: "rgba(248,113,113,0.75)",
+              lineHeight: 1.65,
+              maxWidth: 420,
+              margin: "0 auto 28px",
+            }}
+          >
+            {error || "Unable to load your synthesis data. Check your birth profile and try again."}
           </p>
-          <button type="button" style={synthesisPrimaryCta} onClick={() => setRefresh((r) => r + 1)}>
+          <button
+            type="button"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "12px 28px",
+              borderRadius: 10,
+              border: "none",
+              cursor: "pointer",
+              background: "linear-gradient(135deg, #c8873a, #e8b96a)",
+              color: "#0d1220",
+              fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+            onClick={() => setRefresh((r) => r + 1)}
+          >
             Try again
           </button>
         </section>
@@ -199,20 +245,17 @@ export default function SynthesisPage() {
 
   return (
     <PageLayout {...layoutProps}>
-      <section className="animate-enter animate-enter-2 flex flex-col" style={{ gap: 14 }}>
-        <div style={{ ...BP_PANEL, padding: "12px 14px 14px" }}>
-          <SynthesisTabBar tabs={TAB_BAR_ITEMS} activeTab={activeTab} onChange={setActiveTab} />
-        </div>
+      <section className="animate-enter animate-enter-2 flex flex-col" style={{ gap: 20 }}>
+        <SynthesisTabBar tabs={TAB_BAR_ITEMS} activeTab={activeTab} onChange={setActiveTab} />
 
-        <div style={{ ...BP_PANEL, padding: "16px 16px 20px" }}>
-          <SynthesisTabHeader
-            glyph={header.glyph}
-            eyebrow={header.eyebrow}
-            title={header.title}
-            subtitle={header.subtitle}
-          />
+        <SynthesisTabHeader
+          glyph={header.glyph}
+          eyebrow={header.eyebrow}
+          title={header.title}
+          subtitle={header.subtitle}
+        />
 
-          <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
             {activeTab === "dashboard" && (
               <SynthesisDashboard
                 synthesis={synthesis}
@@ -230,9 +273,40 @@ export default function SynthesisPage() {
             )}
 
             {activeTab === "western" && !transitTimeline && (
-              <p className="text-sm" style={{ ...synthesisBodyMuted, margin: 0 }}>
-                Western transit data is not available yet.
-              </p>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "3rem 1rem",
+                  background: "rgba(13,18,32,0.5)",
+                  borderRadius: 12,
+                  border: "1px solid rgba(200,135,58,0.12)",
+                }}
+              >
+                <div style={{ fontSize: 32, marginBottom: 16, color: "rgba(200,135,58,0.4)" }}>◇</div>
+                <p
+                  style={{
+                    fontFamily: "Cinzel, serif",
+                    fontSize: 16,
+                    fontWeight: 400,
+                    color: "rgba(255,255,255,0.9)",
+                    marginBottom: 8,
+                  }}
+                >
+                  Transit data unavailable
+                </p>
+                <p
+                  style={{
+                    fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.5)",
+                    lineHeight: 1.65,
+                    maxWidth: 360,
+                    margin: "0 auto",
+                  }}
+                >
+                  Western transit data will appear once your birth profile is complete.
+                </p>
+              </div>
             )}
 
             {activeTab === "vedic" && dashaTimeline && (
@@ -244,9 +318,40 @@ export default function SynthesisPage() {
             )}
 
             {activeTab === "vedic" && !dashaTimeline && (
-              <p className="text-sm" style={{ ...synthesisBodyMuted, margin: 0 }}>
-                Vedic dasha timeline is not available yet.
-              </p>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "3rem 1rem",
+                  background: "rgba(13,18,32,0.5)",
+                  borderRadius: 12,
+                  border: "1px solid rgba(200,135,58,0.12)",
+                }}
+              >
+                <div style={{ fontSize: 32, marginBottom: 16, color: "rgba(200,135,58,0.4)" }}>◉</div>
+                <p
+                  style={{
+                    fontFamily: "Cinzel, serif",
+                    fontSize: 16,
+                    fontWeight: 400,
+                    color: "rgba(255,255,255,0.9)",
+                    marginBottom: 8,
+                  }}
+                >
+                  Dasha timeline unavailable
+                </p>
+                <p
+                  style={{
+                    fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.5)",
+                    lineHeight: 1.65,
+                    maxWidth: 360,
+                    margin: "0 auto",
+                  }}
+                >
+                  Vedic dasha data will appear once your Jyotish chart is generated.
+                </p>
+              </div>
             )}
 
             {activeTab === "convergence" && (
@@ -257,7 +362,6 @@ export default function SynthesisPage() {
               <OpportunityScorecardView scores={opportunityScores} />
             )}
           </div>
-        </div>
       </section>
     </PageLayout>
   );

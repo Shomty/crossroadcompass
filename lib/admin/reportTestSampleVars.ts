@@ -52,4 +52,45 @@ export const SAMPLE_REPORT_VARIABLES: Record<string, string> = {
   user_name: "sample",
   birth_date: "March 15, 1988",
   birth_location: "Sample City, Earth",
+
+  // Western natal — planet scalars
+  western_sun_sign: "Sagittarius",        western_sun_degree: "23.5",   western_sun_house: "1",  western_sun_retro: "No",  western_sun_dignity: "Peregrine",   western_sun_dms: "23:30:00",
+  western_moon_sign: "Gemini",            western_moon_degree: "11.2",  western_moon_house: "7", western_moon_retro: "No", western_moon_dignity: "Peregrine",  western_moon_dms: "11:12:00",
+  western_mercury_sign: "Sagittarius",    western_mercury_degree: "5.8",western_mercury_house: "1",western_mercury_retro: "No", western_mercury_dignity: "Peregrine", western_mercury_dms: "05:48:00",
+  western_venus_sign: "Scorpio",          western_venus_degree: "18.0", western_venus_house: "12",western_venus_retro: "No", western_venus_dignity: "Detriment", western_venus_dms: "18:00:00",
+  western_mars_sign: "Aries",             western_mars_degree: "7.4",   western_mars_house: "5", western_mars_retro: "No", western_mars_dignity: "Domicile",   western_mars_dms: "07:24:00",
+  western_jupiter_sign: "Taurus",         western_jupiter_degree: "14.9",western_jupiter_house: "6",western_jupiter_retro: "No", western_jupiter_dignity: "Peregrine", western_jupiter_dms: "14:54:00",
+  western_saturn_sign: "Capricorn",       western_saturn_degree: "28.3",western_saturn_house: "2",western_saturn_retro: "No", western_saturn_dignity: "Domicile",  western_saturn_dms: "28:18:00",
+  western_uranus_sign: "Sagittarius",     western_uranus_degree: "25.1",western_uranus_house: "1",western_uranus_retro: "No", western_uranus_dignity: "Peregrine", western_uranus_dms: "25:06:00",
+  western_neptune_sign: "Capricorn",      western_neptune_degree: "8.7",western_neptune_house: "2",western_neptune_retro: "No", western_neptune_dignity: "Peregrine", western_neptune_dms: "08:42:00",
+  western_pluto_sign: "Scorpio",          western_pluto_degree: "11.0", western_pluto_house: "12",western_pluto_retro: "No", western_pluto_dignity: "Domicile",  western_pluto_dms: "11:00:00",
+  western_chiron_sign: "Gemini",          western_chiron_degree: "22.6",western_chiron_house: "7",western_chiron_retro: "No", western_chiron_dignity: "Peregrine", western_chiron_dms: "22:36:00",
+  western_true_node_sign: "Pisces",       western_true_node_degree: "16.0",western_true_node_house: "4",western_true_node_retro: "Yes", western_true_node_dignity: "Peregrine", western_true_node_dms: "16:00:00",
+
+  // Western natal — house scalars
+  western_house_1_sign: "Sagittarius",  western_house_1_degree: "22.0", western_house_1_lord: "Jupiter", western_house_1_planets: "Sun, Mercury, Uranus",
+  western_house_2_sign: "Capricorn",    western_house_2_degree: "17.0", western_house_2_lord: "Saturn",  western_house_2_planets: "Saturn, Neptune",
+  western_house_3_sign: "Aquarius",     western_house_3_degree: "13.0", western_house_3_lord: "Saturn",  western_house_3_planets: "",
+  western_house_4_sign: "Pisces",       western_house_4_degree: "12.0", western_house_4_lord: "Jupiter", western_house_4_planets: "True Node",
+  western_house_5_sign: "Aries",        western_house_5_degree: "14.0", western_house_5_lord: "Mars",    western_house_5_planets: "Mars",
+  western_house_6_sign: "Taurus",       western_house_6_degree: "17.0", western_house_6_lord: "Venus",   western_house_6_planets: "Jupiter",
+  western_house_7_sign: "Gemini",       western_house_7_degree: "22.0", western_house_7_lord: "Mercury", western_house_7_planets: "Moon, Chiron",
+  western_house_8_sign: "Cancer",       western_house_8_degree: "17.0", western_house_8_lord: "Moon",    western_house_8_planets: "",
+  western_house_9_sign: "Leo",          western_house_9_degree: "13.0", western_house_9_lord: "Sun",     western_house_9_planets: "",
+  western_house_10_sign: "Virgo",       western_house_10_degree: "12.0",western_house_10_lord: "Mercury",western_house_10_planets: "",
+  western_house_11_sign: "Libra",       western_house_11_degree: "14.0",western_house_11_lord: "Venus",  western_house_11_planets: "",
+  western_house_12_sign: "Scorpio",     western_house_12_degree: "17.0",western_house_12_lord: "Mars",   western_house_12_planets: "Venus, Pluto",
+
+  // Western natal — ascendant
+  western_asc_sign: "Sagittarius", western_asc_degree: "22.5", western_asc_dms: "22:30:00",
+
+  // Western natal — aspects & patterns
+  western_aspects_summary: "sun trine moon, sun conjunction mercury, moon square mars, venus sextile jupiter",
+  western_aspects_json: "[]",
+  western_chart_patterns: "Grand Trine in Fire signs (Sun, Mars, Uranus)",
+  western_patterns_json: "[]",
+
+  // Western natal — JSON bundles
+  western_planets_json: "{}",
+  western_houses_json: "{}",
 };

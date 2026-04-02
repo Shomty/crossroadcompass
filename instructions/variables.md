@@ -451,3 +451,203 @@ Each upagraha has: sign, longitude, portion_number, start_min, end_min, house, n
 | Mrityu | `{{sp_mrityu_sign}}` `{{sp_mrityu_longitude}}` `{{sp_mrityu_portion_number}}` `{{sp_mrityu_start_min}}` `{{sp_mrityu_end_min}}` `{{sp_mrityu_house}}` `{{sp_mrityu_nakshatra}}` `{{sp_mrityu_pada}}` `{{sp_mrityu_rasi_name}}` |
 | Ardhaprahara | `{{sp_ardhaprahara_sign}}` `{{sp_ardhaprahara_longitude}}` `{{sp_ardhaprahara_portion_number}}` `{{sp_ardhaprahara_start_min}}` `{{sp_ardhaprahara_end_min}}` `{{sp_ardhaprahara_house}}` `{{sp_ardhaprahara_nakshatra}}` `{{sp_ardhaprahara_pada}}` `{{sp_ardhaprahara_rasi_name}}` |
 | Yamaghantaka | `{{sp_yamaghantaka_sign}}` `{{sp_yamaghantaka_longitude}}` `{{sp_yamaghantaka_portion_number}}` `{{sp_yamaghantaka_start_min}}` `{{sp_yamaghantaka_end_min}}` `{{sp_yamaghantaka_house}}` `{{sp_yamaghantaka_nakshatra}}` `{{sp_yamaghantaka_pada}}` `{{sp_yamaghantaka_rasi_name}}` |
+
+---
+
+## Western Astrology — Planet Positions
+
+For each of the 12 planets: sign, degree within sign, house placement, retrograde status, dignity, and degree in DMS format.
+
+Planets: `sun` · `moon` · `mercury` · `venus` · `mars` · `jupiter` · `saturn` · `uranus` · `neptune` · `pluto` · `chiron` · `true_node`
+
+| Variable pattern | Description |
+|-----------------|-------------|
+| `{{western_{planet}_sign}}` | Zodiac sign (e.g. `western_sun_sign`) |
+| `{{western_{planet}_degree}}` | Degree within sign, 0–30 (e.g. `western_sun_degree`) |
+| `{{western_{planet}_house}}` | House placement, 1–12 (e.g. `western_sun_house`) |
+| `{{western_{planet}_retro}}` | Retrograde status — `Yes` or `No` (e.g. `western_sun_retro`) |
+| `{{western_{planet}_dignity}}` | Dignity string, e.g. Domicile, Exalted, Detriment, Fall, Peregrine (e.g. `western_sun_dignity`) |
+| `{{western_{planet}_dms}}` | Degree formatted as `DD:MM:SS` (e.g. `western_sun_dms`) |
+
+Full list of planet sign variables:
+
+| Variable | Description |
+|----------|-------------|
+| `{{western_sun_sign}}` | Sun sign |
+| `{{western_sun_degree}}` | Sun degree |
+| `{{western_sun_house}}` | Sun house |
+| `{{western_sun_retro}}` | Sun retrograde |
+| `{{western_sun_dignity}}` | Sun dignity |
+| `{{western_sun_dms}}` | Sun degree DMS |
+| `{{western_moon_sign}}` | Moon sign |
+| `{{western_moon_degree}}` | Moon degree |
+| `{{western_moon_house}}` | Moon house |
+| `{{western_moon_retro}}` | Moon retrograde |
+| `{{western_moon_dignity}}` | Moon dignity |
+| `{{western_moon_dms}}` | Moon degree DMS |
+| `{{western_mercury_sign}}` | Mercury sign |
+| `{{western_mercury_degree}}` | Mercury degree |
+| `{{western_mercury_house}}` | Mercury house |
+| `{{western_mercury_retro}}` | Mercury retrograde |
+| `{{western_mercury_dignity}}` | Mercury dignity |
+| `{{western_mercury_dms}}` | Mercury degree DMS |
+| `{{western_venus_sign}}` | Venus sign |
+| `{{western_venus_degree}}` | Venus degree |
+| `{{western_venus_house}}` | Venus house |
+| `{{western_venus_retro}}` | Venus retrograde |
+| `{{western_venus_dignity}}` | Venus dignity |
+| `{{western_venus_dms}}` | Venus degree DMS |
+| `{{western_mars_sign}}` | Mars sign |
+| `{{western_mars_degree}}` | Mars degree |
+| `{{western_mars_house}}` | Mars house |
+| `{{western_mars_retro}}` | Mars retrograde |
+| `{{western_mars_dignity}}` | Mars dignity |
+| `{{western_mars_dms}}` | Mars degree DMS |
+| `{{western_jupiter_sign}}` | Jupiter sign |
+| `{{western_jupiter_degree}}` | Jupiter degree |
+| `{{western_jupiter_house}}` | Jupiter house |
+| `{{western_jupiter_retro}}` | Jupiter retrograde |
+| `{{western_jupiter_dignity}}` | Jupiter dignity |
+| `{{western_jupiter_dms}}` | Jupiter degree DMS |
+| `{{western_saturn_sign}}` | Saturn sign |
+| `{{western_saturn_degree}}` | Saturn degree |
+| `{{western_saturn_house}}` | Saturn house |
+| `{{western_saturn_retro}}` | Saturn retrograde |
+| `{{western_saturn_dignity}}` | Saturn dignity |
+| `{{western_saturn_dms}}` | Saturn degree DMS |
+| `{{western_uranus_sign}}` | Uranus sign |
+| `{{western_uranus_degree}}` | Uranus degree |
+| `{{western_uranus_house}}` | Uranus house |
+| `{{western_uranus_retro}}` | Uranus retrograde |
+| `{{western_uranus_dignity}}` | Uranus dignity |
+| `{{western_uranus_dms}}` | Uranus degree DMS |
+| `{{western_neptune_sign}}` | Neptune sign |
+| `{{western_neptune_degree}}` | Neptune degree |
+| `{{western_neptune_house}}` | Neptune house |
+| `{{western_neptune_retro}}` | Neptune retrograde |
+| `{{western_neptune_dignity}}` | Neptune dignity |
+| `{{western_neptune_dms}}` | Neptune degree DMS |
+| `{{western_pluto_sign}}` | Pluto sign |
+| `{{western_pluto_degree}}` | Pluto degree |
+| `{{western_pluto_house}}` | Pluto house |
+| `{{western_pluto_retro}}` | Pluto retrograde |
+| `{{western_pluto_dignity}}` | Pluto dignity |
+| `{{western_pluto_dms}}` | Pluto degree DMS |
+| `{{western_chiron_sign}}` | Chiron sign |
+| `{{western_chiron_degree}}` | Chiron degree |
+| `{{western_chiron_house}}` | Chiron house |
+| `{{western_chiron_retro}}` | Chiron retrograde |
+| `{{western_chiron_dignity}}` | Chiron dignity |
+| `{{western_chiron_dms}}` | Chiron degree DMS |
+| `{{western_true_node_sign}}` | True Node (North Node) sign |
+| `{{western_true_node_degree}}` | True Node degree |
+| `{{western_true_node_house}}` | True Node house |
+| `{{western_true_node_retro}}` | True Node retrograde |
+| `{{western_true_node_dignity}}` | True Node dignity |
+| `{{western_true_node_dms}}` | True Node degree DMS |
+
+---
+
+## Western Astrology — House Positions
+
+For each of the 12 houses: sign on cusp, cusp degree, house lord (ruling planet), and planets occupying the house.
+
+| Variable | Description |
+|----------|-------------|
+| `{{western_house_1_sign}}` | 1st house cusp sign (Ascendant) |
+| `{{western_house_1_degree}}` | 1st house cusp degree |
+| `{{western_house_1_lord}}` | 1st house ruling planet |
+| `{{western_house_1_planets}}` | Planets in 1st house (comma-separated) |
+| `{{western_house_2_sign}}` | 2nd house cusp sign |
+| `{{western_house_2_degree}}` | 2nd house cusp degree |
+| `{{western_house_2_lord}}` | 2nd house ruling planet |
+| `{{western_house_2_planets}}` | Planets in 2nd house |
+| `{{western_house_3_sign}}` | 3rd house cusp sign |
+| `{{western_house_3_degree}}` | 3rd house cusp degree |
+| `{{western_house_3_lord}}` | 3rd house ruling planet |
+| `{{western_house_3_planets}}` | Planets in 3rd house |
+| `{{western_house_4_sign}}` | 4th house cusp sign (IC) |
+| `{{western_house_4_degree}}` | 4th house cusp degree |
+| `{{western_house_4_lord}}` | 4th house ruling planet |
+| `{{western_house_4_planets}}` | Planets in 4th house |
+| `{{western_house_5_sign}}` | 5th house cusp sign |
+| `{{western_house_5_degree}}` | 5th house cusp degree |
+| `{{western_house_5_lord}}` | 5th house ruling planet |
+| `{{western_house_5_planets}}` | Planets in 5th house |
+| `{{western_house_6_sign}}` | 6th house cusp sign |
+| `{{western_house_6_degree}}` | 6th house cusp degree |
+| `{{western_house_6_lord}}` | 6th house ruling planet |
+| `{{western_house_6_planets}}` | Planets in 6th house |
+| `{{western_house_7_sign}}` | 7th house cusp sign (Descendant) |
+| `{{western_house_7_degree}}` | 7th house cusp degree |
+| `{{western_house_7_lord}}` | 7th house ruling planet |
+| `{{western_house_7_planets}}` | Planets in 7th house |
+| `{{western_house_8_sign}}` | 8th house cusp sign |
+| `{{western_house_8_degree}}` | 8th house cusp degree |
+| `{{western_house_8_lord}}` | 8th house ruling planet |
+| `{{western_house_8_planets}}` | Planets in 8th house |
+| `{{western_house_9_sign}}` | 9th house cusp sign |
+| `{{western_house_9_degree}}` | 9th house cusp degree |
+| `{{western_house_9_lord}}` | 9th house ruling planet |
+| `{{western_house_9_planets}}` | Planets in 9th house |
+| `{{western_house_10_sign}}` | 10th house cusp sign (Midheaven) |
+| `{{western_house_10_degree}}` | 10th house cusp degree |
+| `{{western_house_10_lord}}` | 10th house ruling planet |
+| `{{western_house_10_planets}}` | Planets in 10th house |
+| `{{western_house_11_sign}}` | 11th house cusp sign |
+| `{{western_house_11_degree}}` | 11th house cusp degree |
+| `{{western_house_11_lord}}` | 11th house ruling planet |
+| `{{western_house_11_planets}}` | Planets in 11th house |
+| `{{western_house_12_sign}}` | 12th house cusp sign |
+| `{{western_house_12_degree}}` | 12th house cusp degree |
+| `{{western_house_12_lord}}` | 12th house ruling planet |
+| `{{western_house_12_planets}}` | Planets in 12th house |
+
+---
+
+## Western Astrology — Ascendant
+
+| Variable | Description |
+|----------|-------------|
+| `{{western_asc_sign}}` | Ascendant zodiac sign |
+| `{{western_asc_degree}}` | Ascendant degree within sign (0–30) |
+| `{{western_asc_dms}}` | Ascendant degree formatted as `DD:MM:SS` |
+
+---
+
+## Western Astrology — Aspects
+
+| Variable | Description |
+|----------|-------------|
+| `{{western_aspects_summary}}` | Major aspects as readable text (conjunction, opposition, trine, square, sextile only) e.g. `sun trine moon, mars square saturn` |
+| `{{western_aspects_json}}` | All aspects as JSON array — each entry: `{ planet1, planet2, type, angle, orb, maxOrb, isApplying }` |
+
+Aspect types in the system: `conjunction` · `semi-sextile` · `semi-square` · `sextile` · `quintile` · `square` · `trine` · `sesquiquadrate` · `biquintile` · `quincunx` · `opposition`
+
+---
+
+## Western Astrology — Chart Patterns
+
+| Variable | Description |
+|----------|-------------|
+| `{{western_chart_patterns}}` | Detected chart patterns as readable text, e.g. `Grand Trine in Fire signs (Sun, Mars, Uranus)` |
+| `{{western_patterns_json}}` | Chart patterns as JSON array — each entry: `{ type, planets[], description, element? }` |
+
+Pattern types: `grand-trine` · `t-square` · `grand-cross` · `stellium` · `yod`
+
+---
+
+## Western Astrology — JSON Bundles
+
+| Variable | Description |
+|----------|-------------|
+| `{{western_planets_json}}` | All 12 planet positions as JSON (full `WesternPlanetaryPositions` object) |
+| `{{western_houses_json}}` | All 12 houses as JSON (full `HousePositions` object) |
+
+---
+
+## Synthesis
+
+| Variable | Description |
+|----------|-------------|
+| `{{synthesis_seeds_json}}` | Western vs Vedic divergence map — structured JSON used for 3-layer synthesis prompts |

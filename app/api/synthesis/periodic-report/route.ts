@@ -329,14 +329,12 @@ export async function GET(request: NextRequest) {
 
   // ── Layer 2: DB durable store ────────────────────────────────────────
   if (!allowed) {
-    const rows = await db.$queryRaw<Array<{ text: string; generatedAt: string; expiresAt: string }>>`
-      SELECT text, generatedAt, expiresAt FROM periodic_reports
-      WHERE userId = ${userId} AND period = ${period} AND periodKey = ${pKey}
-      LIMIT 1
-    `;
-    const dbRow = rows[0];
-    if (dbRow && new Date(dbRow.expiresAt) > new Date()) {
-      const generatedAt = new Date(dbRow.generatedAt).toISOString();
+    const dbRow = await db.periodicReport.findFirst({
+      where: { userId, period, periodKey: pKey },
+      select: { text: true, generatedAt: true, expiresAt: true },
+    });
+    if (dbRow && dbRow.expiresAt > new Date()) {
+      const generatedAt = dbRow.generatedAt.toISOString();
       await kvSet(key, { text: dbRow.text, generatedAt }, CACHE_TTL[period]);
       return NextResponse.json({ text: dbRow.text, generatedAt, cached: true, period, nextGenerationDate });
     }
@@ -350,17 +348,12 @@ export async function GET(request: NextRequest) {
 
     const generatedAt = new Date();
     const expiresAt = new Date(generatedAt.getTime() + CACHE_TTL[period] * 1000);
-    const id = `pr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    // Upsert via raw SQL — works regardless of Prisma client generation state
-    await db.$executeRaw`
-      INSERT INTO periodic_reports (id, userId, period, periodKey, text, generatedAt, expiresAt)
-      VALUES (${id}, ${userId}, ${period}, ${pKey}, ${text}, ${generatedAt.toISOString()}, ${expiresAt.toISOString()})
-      ON CONFLICT (userId, period, periodKey) DO UPDATE
-        SET text = excluded.text,
-            generatedAt = excluded.generatedAt,
-            expiresAt = excluded.expiresAt
-    `;
+    await db.periodicReport.upsert({
+      where: { userId_period_periodKey: { userId, period, periodKey: pKey } },
+      create: { userId, period, periodKey: pKey, text, generatedAt, expiresAt },
+      update: { text, generatedAt, expiresAt },
+    });
 
     await kvSet(key, { text, generatedAt: generatedAt.toISOString() }, CACHE_TTL[period]);
 

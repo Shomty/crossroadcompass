@@ -12,11 +12,12 @@ import type { VedicDashaTimeline, DashaPeriod } from "@/types";
 import {
   synthesisBodyMuted,
   synthesisCream,
-  synthesisInnerPanel,
-  synthesisInnerPanelAccent,
-  synthesisInnerPanelDense,
+  synthesisCardStyle,
+  synthesisCardStyleAccent,
+  synthesisCardStyleDense,
   synthesisLabelClass,
   synthesisLabelStyle,
+  synthesisSectionHeading,
 } from "@/components/synthesis/synthesisPanelClasses";
 
 interface VedicDashaViewProps {
@@ -27,18 +28,16 @@ interface VedicDashaViewProps {
 
 function getActivationColor(strength?: number): string {
   if (!strength) return "border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.42)]";
-  if (strength >= 80) return 'bg-emerald-500/30 border-emerald-400/50';
-  if (strength >= 60) return 'bg-amber-500/30 border-amber-400/50';
-  if (strength >= 40) return 'bg-yellow-500/30 border-yellow-400/50';
-  return 'bg-red-500/30 border-red-400/50';
+  if (strength >= 70) return 'bg-[rgba(200,135,58,0.10)] border-[rgba(200,135,58,0.35)]';
+  if (strength >= 40) return 'bg-[rgba(200,135,58,0.05)] border-[rgba(200,135,58,0.18)]';
+  return 'bg-[rgba(13,18,32,0.42)] border-[rgba(200,135,58,0.07)]';
 }
 
 function getTextColor(strength?: number): string {
-  if (!strength) return "text-white/55";
-  if (strength >= 80) return 'text-emerald-400';
-  if (strength >= 60) return 'text-amber-400';
-  if (strength >= 40) return 'text-yellow-400';
-  return 'text-red-400';
+  if (!strength) return "text-[rgba(240,220,160,0.45)]";
+  if (strength >= 70) return 'text-[color:var(--gold,#e8b96a)]';
+  if (strength >= 40) return 'text-[color:var(--amber,#c8873a)]';
+  return 'text-[rgba(240,220,160,0.45)]';
 }
 
 function formatDate(date: Date | undefined | string): string {
@@ -56,8 +55,8 @@ export function VedicDashaView({
   const totalDashas = dashaTimeline.timeline.length;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className={synthesisInnerPanel}>
+    <div className="flex flex-col gap-6">
+      <div style={synthesisCardStyle}>
         <p className={`${synthesisLabelClass} mb-2`} style={synthesisLabelStyle}>
           Vimshottari dasha system
         </p>
@@ -70,16 +69,16 @@ export function VedicDashaView({
         </p>
       </div>
 
-      <div className={synthesisInnerPanelAccent}>
-        <p className={`${synthesisLabelClass} mb-3 font-medium text-[color:var(--amber,#c8873a)]`} style={synthesisLabelStyle}>
-          Current major period
-        </p>
+      <div style={synthesisCardStyleAccent}>
+        <div className="mb-3">
+          <p className={synthesisLabelClass} style={synthesisLabelStyle}>Active period</p>
+          <h3 style={{ ...synthesisSectionHeading, color: "var(--amber, #c8873a)" }}>
+            {currentMahaDasha.planetName} Mahadasha
+          </h3>
+        </div>
 
         <div className="flex flex-col gap-3">
           <div>
-            <p className="font-serif text-sm text-[color:var(--amber,#c8873a)]">
-              {currentMahaDasha.planetName}
-            </p>
             <p className="mt-1 text-xs" style={synthesisBodyMuted}>
               {formatDate(currentMahaDasha.startDate)} to{' '}
               {formatDate(currentMahaDasha.endDate)}
@@ -197,26 +196,22 @@ export function VedicDashaView({
         </div>
       </div>
 
-      <div className={synthesisInnerPanelDense}>
+      <div style={synthesisCardStyleDense}>
         <p className={`${synthesisLabelClass} mb-2`} style={synthesisLabelStyle}>
           Activation strength
         </p>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-emerald-500/50" />
-            <span style={synthesisBodyMuted}>80-100: Strong</span>
+            <div className="h-3 w-3 rounded-full bg-[rgba(200,135,58,0.70)]" />
+            <span style={synthesisBodyMuted}>70-100: Strong</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-amber-500/50" />
-            <span style={synthesisBodyMuted}>60-79: Moderate</span>
+            <div className="h-3 w-3 rounded-full bg-[rgba(200,135,58,0.40)]" />
+            <span style={synthesisBodyMuted}>40-69: Moderate</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-yellow-500/50" />
-            <span style={synthesisBodyMuted}>40-59: Weak</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-red-500/50" />
-            <span style={synthesisBodyMuted}>&lt;40: Challenged</span>
+            <div className="h-3 w-3 rounded-full bg-[rgba(200,135,58,0.20)]" />
+            <span style={synthesisBodyMuted}>&lt;40: Subdued</span>
           </div>
         </div>
       </div>

@@ -508,20 +508,97 @@ export function buildReportTemplateVars(
 
   // ── Western natal planet variables ──────────────────────────────────────────
   if (westernNatalData) {
-    const wp = westernNatalData.planets
-    vars.western_sun_sign     = wp['sun']?.sign     ?? ""
-    vars.western_moon_sign    = wp['moon']?.sign    ?? ""
-    vars.western_asc_sign     = westernNatalData.ascendant?.sign ?? ""
-    vars.western_venus_sign   = wp['venus']?.sign   ?? ""
-    vars.western_mars_sign    = wp['mars']?.sign    ?? ""
-    vars.western_mercury_sign = wp['mercury']?.sign ?? ""
+    const wp  = westernNatalData.planets
+    const wh  = westernNatalData.houses
+    const asc = westernNatalData.ascendant
+
+    type WP = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn' |
+              'uranus' | 'neptune' | 'pluto' | 'chiron' | 'true_node'
+
+    const WESTERN_PLANETS: WP[] = [
+      'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
+      'uranus', 'neptune', 'pluto', 'chiron', 'true_node',
+    ]
+
+    // Planet scalars
+    for (const p of WESTERN_PLANETS) {
+      const pos = wp[p]
+      const key = p === 'true_node' ? 'western_true_node' : `western_${p}`
+      vars[`${key}_sign` as ReportTemplateVariableKey]    = pos?.sign               ?? ""
+      vars[`${key}_degree` as ReportTemplateVariableKey]  = pos?.degree != null ? String(Math.round(pos.degree * 100) / 100) : ""
+      vars[`${key}_house` as ReportTemplateVariableKey]   = pos?.house != null ? String(pos.house) : ""
+      vars[`${key}_retro` as ReportTemplateVariableKey]   = pos?.isRetrograde != null ? (pos.isRetrograde ? "Yes" : "No") : ""
+      vars[`${key}_dignity` as ReportTemplateVariableKey] = pos?.dignity             ?? ""
+      vars[`${key}_dms` as ReportTemplateVariableKey]     = pos?.degreeDMSFormatted  ?? ""
+    }
+
+    // House scalars
+    for (let n = 1; n <= 12; n++) {
+      const h = wh[n as keyof typeof wh]
+      const prefix = `western_house_${n}` as const
+      vars[`${prefix}_sign` as ReportTemplateVariableKey]    = h?.sign                        ?? ""
+      vars[`${prefix}_degree` as ReportTemplateVariableKey]  = h?.cusp != null ? String(Math.round(h.cusp * 100) / 100) : ""
+      vars[`${prefix}_lord` as ReportTemplateVariableKey]    = h?.lord                        ?? ""
+      vars[`${prefix}_planets` as ReportTemplateVariableKey] = h?.planets?.join(", ")         ?? ""
+    }
+
+    // Ascendant
+    vars.western_asc_sign   = asc?.sign               ?? ""
+    vars.western_asc_degree = asc?.degree != null ? String(Math.round(asc.degree * 100) / 100) : ""
+    vars.western_asc_dms    = asc?.degreeDMSFormatted  ?? ""
+
+    // Aspects
+    const MAJOR_ASPECTS = new Set(['conjunction', 'opposition', 'trine', 'square', 'sextile'])
+    const allAspects    = westernNatalData.aspects ?? []
+    const majorAspects  = allAspects.filter(a => MAJOR_ASPECTS.has(a.type))
+    vars.western_aspects_json    = JSON.stringify(allAspects)
+    vars.western_aspects_summary = majorAspects.length > 0
+      ? majorAspects.map(a => `${a.planet1} ${a.type} ${a.planet2}`).join(", ")
+      : ""
+
+    // Chart patterns
+    const allPatterns = westernNatalData.patterns ?? []
+    vars.western_patterns_json  = JSON.stringify(allPatterns)
+    vars.western_chart_patterns = allPatterns.length > 0
+      ? allPatterns.map(p => p.description ?? p.type).join("; ")
+      : ""
+
+    // JSON bundles
+    vars.western_planets_json = JSON.stringify(westernNatalData.planets)
+    vars.western_houses_json  = JSON.stringify(westernNatalData.houses)
   } else {
-    vars.western_sun_sign     = ""
-    vars.western_moon_sign    = ""
-    vars.western_asc_sign     = ""
-    vars.western_venus_sign   = ""
-    vars.western_mars_sign    = ""
-    vars.western_mercury_sign = ""
+    // Empty fallbacks when no Western chart data is available
+    type WP = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn' |
+              'uranus' | 'neptune' | 'pluto' | 'chiron' | 'true_node'
+    const WESTERN_PLANETS: WP[] = [
+      'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
+      'uranus', 'neptune', 'pluto', 'chiron', 'true_node',
+    ]
+    for (const p of WESTERN_PLANETS) {
+      const key = p === 'true_node' ? 'western_true_node' : `western_${p}`
+      vars[`${key}_sign` as ReportTemplateVariableKey]    = ""
+      vars[`${key}_degree` as ReportTemplateVariableKey]  = ""
+      vars[`${key}_house` as ReportTemplateVariableKey]   = ""
+      vars[`${key}_retro` as ReportTemplateVariableKey]   = ""
+      vars[`${key}_dignity` as ReportTemplateVariableKey] = ""
+      vars[`${key}_dms` as ReportTemplateVariableKey]     = ""
+    }
+    for (let n = 1; n <= 12; n++) {
+      const prefix = `western_house_${n}` as const
+      vars[`${prefix}_sign` as ReportTemplateVariableKey]    = ""
+      vars[`${prefix}_degree` as ReportTemplateVariableKey]  = ""
+      vars[`${prefix}_lord` as ReportTemplateVariableKey]    = ""
+      vars[`${prefix}_planets` as ReportTemplateVariableKey] = ""
+    }
+    vars.western_asc_sign        = ""
+    vars.western_asc_degree      = ""
+    vars.western_asc_dms         = ""
+    vars.western_aspects_json    = ""
+    vars.western_aspects_summary = ""
+    vars.western_patterns_json   = ""
+    vars.western_chart_patterns  = ""
+    vars.western_planets_json    = ""
+    vars.western_houses_json     = ""
   }
 
   // ── Synthesis seeds (Western vs Vedic divergence map) ───────────────────────

@@ -23,19 +23,17 @@ interface SynthesisTabBarProps {
 
 export function SynthesisTabBar({ tabs, activeTab, onChange }: SynthesisTabBarProps) {
   return (
-    <div className="min-w-0 max-w-full overflow-x-auto">
-      <div className="chart-variant-toggle flex w-full flex-wrap gap-0.5">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            data-active={tab.id === activeTab}
-            onClick={() => onChange(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+    <div className="synthesis-tab-rail">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          data-active={tab.id === activeTab}
+          onClick={() => onChange(tab.id)}
+        >
+          {tab.label}
+        </button>
+      ))}
     </div>
   );
 }

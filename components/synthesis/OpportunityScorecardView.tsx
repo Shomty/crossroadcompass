@@ -14,6 +14,7 @@ import {
   synthesisCream,
   synthesisLabelClass,
   synthesisLabelStyle,
+  synthesisSectionHeading,
   synthesisTitleCinzel,
 } from "@/components/synthesis/synthesisPanelClasses";
 
@@ -28,25 +29,17 @@ interface AreaConfig {
 }
 
 const AREAS: AreaConfig[] = [
-  { key: 'career', label: 'Career', icon: '🏢' },
-  { key: 'love', label: 'Love', icon: '❤️' },
-  { key: 'relocation', label: 'Relocation', icon: '🏠' },
-  { key: 'health', label: 'Health', icon: '💚' },
-  { key: 'spirituality', label: 'Spirituality', icon: '✨' },
+  { key: 'career', label: 'Career', icon: '◆' },
+  { key: 'love', label: 'Love', icon: '◈' },
+  { key: 'relocation', label: 'Relocation', icon: '◇' },
+  { key: 'health', label: 'Health', icon: '◉' },
+  { key: 'spirituality', label: 'Spirituality', icon: '✦' },
 ];
 
-function getScoreColor(score: number): string {
-  if (score >= 80) return 'from-emerald-900/30 to-emerald-800/10 border-emerald-500/30';
-  if (score >= 60) return 'from-amber-900/30 to-amber-800/10 border-amber-500/30';
-  if (score >= 40) return 'from-yellow-900/30 to-yellow-800/10 border-yellow-500/30';
-  return 'from-red-900/30 to-red-800/10 border-red-500/30';
-}
-
 function getScoreTextColor(score: number): string {
-  if (score >= 80) return 'text-emerald-400';
-  if (score >= 60) return 'text-amber-400';
-  if (score >= 40) return 'text-yellow-400';
-  return 'text-red-400';
+  if (score >= 70) return 'text-[color:var(--gold,#e8b96a)]';
+  if (score >= 40) return 'text-[color:var(--amber,#c8873a)]';
+  return 'text-[rgba(240,220,160,0.45)]';
 }
 
 export function OpportunityScorecardView({ scores }: OpportunityScorecardViewProps) {
@@ -77,16 +70,24 @@ export function OpportunityScorecardView({ scores }: OpportunityScorecardViewPro
           return (
             <div
               key={area.key}
-              className={`rounded-[12px] border bg-gradient-to-br p-5 ${getScoreColor(score)} ${
-                isBest ? "ring-2 ring-[color:var(--amber,#c8873a)]" : ""
-              }`}
+              style={{
+                padding: "12px 16px",
+                borderRadius: 10,
+                background: "rgba(200,135,58,0.06)",
+                border: isBest
+                  ? "1px solid rgba(200,135,58,0.55)"
+                  : "1px solid rgba(200,135,58,0.25)",
+                cursor: "pointer",
+                transition: "background 0.15s, border-color 0.15s",
+                opacity: isBest ? 1 : 0.65,
+              }}
             >
               <div className="mb-3 flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium" style={synthesisCream}>
-                    <span className="mr-2">{area.icon}</span>
-                    {area.label}
+                  <p className="mb-0.5 text-[9px] uppercase tracking-[0.16em]" style={{ ...synthesisLabelStyle, color: "rgba(200,135,58,0.65)" }}>
+                    {area.icon}
                   </p>
+                  <h4 style={{ ...synthesisSectionHeading, fontSize: 14 }}>{area.label}</h4>
                 </div>
                 <div className={`text-2xl font-serif ${getScoreTextColor(score)}`}>
                   {score}
@@ -96,15 +97,7 @@ export function OpportunityScorecardView({ scores }: OpportunityScorecardViewPro
               {/* Score Bar */}
               <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-[rgba(13,18,32,0.55)]">
                 <div
-                  className={`h-full transition-all ${
-                    score >= 80
-                      ? 'bg-emerald-400'
-                      : score >= 60
-                      ? 'bg-amber-400'
-                      : score >= 40
-                      ? 'bg-yellow-400'
-                      : 'bg-red-400'
-                  }`}
+                  className="h-full transition-all bg-[linear-gradient(135deg,#c8873a,#e8b96a)]"
                   style={{ width: `${score}%` }}
                 />
               </div>
@@ -126,9 +119,21 @@ export function OpportunityScorecardView({ scores }: OpportunityScorecardViewPro
 
       {/* Risk Areas */}
       {scores.risky.length > 0 && (
-        <div className="rounded-[12px] border border-red-500/30 bg-red-950/25 p-5">
-          <p className="mb-2 text-xs font-medium text-red-400">Areas to watch</p>
-          <p className="text-sm text-red-200">
+        <div
+          style={{
+            padding: "12px 16px",
+            borderRadius: 10,
+            background: "rgba(200,135,58,0.06)",
+            border: "1px solid rgba(200,135,58,0.25)",
+            cursor: "pointer",
+            transition: "background 0.15s, border-color 0.15s",
+            opacity: 0.65,
+          }}
+        >          <div className="mb-3">
+            <p className={synthesisLabelClass} style={synthesisLabelStyle}>Caution zones</p>
+            <h3 style={{ ...synthesisSectionHeading, fontSize: 15 }}>Areas to Watch</h3>
+          </div>
+          <p className="text-sm" style={{ ...synthesisBodyMuted, color: "rgba(240,220,160,0.65)" }}>
             {scores.risky.map((a) => a.charAt(0).toUpperCase() + a.slice(1)).join(", ")}{" "}
             <span style={synthesisBodyMuted}>are below 40. Proceed with caution or delay action.</span>
           </p>

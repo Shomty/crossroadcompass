@@ -11,10 +11,10 @@ import type { TransitTimeline } from "@/types";
 import {
   synthesisBodyMuted,
   synthesisCream,
-  synthesisInnerPanel,
+  synthesisCardStyle,
+  synthesisNestedCardBaseStyle,
   synthesisLabelClass,
   synthesisLabelStyle,
-  synthesisNestedPanelBase,
 } from "@/components/synthesis/synthesisPanelClasses";
 
 interface WesternTransitViewProps {
@@ -23,26 +23,26 @@ interface WesternTransitViewProps {
 
 function getPlanetColor(planet: string): string {
   const colors: Record<string, string> = {
-    sun: 'text-yellow-400',
-    moon: 'text-slate-300',
-    mercury: 'text-orange-300',
-    venus: 'text-emerald-300',
-    mars: 'text-red-400',
-    jupiter: 'text-amber-400',
-    saturn: 'text-orange-600',
-    uranus: 'text-cyan-400',
-    neptune: 'text-purple-400',
-    pluto: 'text-indigo-400',
+    sun:     'text-[color:var(--gold,#e8b96a)]',
+    moon:    'text-[rgba(240,220,160,0.60)]',
+    mercury: 'text-[color:var(--gold-solar,#D4AF37)]',
+    venus:   'text-[#EDE9FF]',
+    mars:    'text-[color:var(--amber,#c8873a)]',
+    jupiter: 'text-[color:var(--gold-solar,#D4AF37)]',
+    saturn:  'text-[rgba(200,135,58,0.55)]',
+    uranus:  'text-[color:var(--accent-indigo,#818CF8)]',
+    neptune: 'text-[rgba(124,58,237,0.85)]',
+    pluto:   'text-[rgba(124,58,237,0.65)]',
   };
-  return colors[planet.toLowerCase()] || "text-white/55";
+  return colors[planet.toLowerCase()] || "text-[rgba(240,220,160,0.45)]";
 }
 
 function getEventTypeColor(type: string): string {
   const colors: Record<string, string> = {
-    'saturn-return': 'bg-red-500/30 border-red-400/50',
-    'uranus-opposition': 'bg-cyan-500/30 border-cyan-400/50',
-    'jupiter-return': 'bg-amber-500/30 border-amber-400/50',
-    'neptune-transit-begin': 'bg-purple-500/30 border-purple-400/50',
+    'saturn-return':          'bg-[rgba(200,135,58,0.10)] border-[rgba(200,135,58,0.35)]',
+    'uranus-opposition':      'bg-[rgba(129,140,248,0.08)] border-[rgba(129,140,248,0.30)]',
+    'jupiter-return':         'bg-[rgba(200,135,58,0.08)] border-[rgba(200,135,58,0.25)]',
+    'neptune-transit-begin':  'bg-[rgba(124,58,237,0.08)] border-[rgba(124,58,237,0.25)]',
     other: "border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.42)]",
   };
   return colors[type] || "border-[rgba(200,135,58,0.12)] bg-[rgba(13,18,32,0.42)]";
@@ -58,9 +58,9 @@ export function WesternTransitView({
   const { transits, keyEvents } = transitTimeline;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {keyEvents && keyEvents.length > 0 && (
-        <div className={synthesisInnerPanel}>
+        <div style={synthesisCardStyle}>
           <p className={`${synthesisLabelClass} mb-3`} style={synthesisLabelStyle}>
             Key events
           </p>
@@ -107,11 +107,8 @@ export function WesternTransitView({
             return (
               <div
                 key={idx}
-                className={`overflow-hidden border transition-all ${
-                  hasKeyEvent
-                    ? "rounded-[12px] border-[rgba(200,135,58,0.35)] bg-[rgba(200,135,58,0.08)]"
-                    : synthesisNestedPanelBase
-                }`}
+                className={hasKeyEvent ? "overflow-hidden border transition-all rounded-[12px] border-[rgba(200,135,58,0.35)] bg-[rgba(200,135,58,0.08)]" : "overflow-hidden transition-all"}
+                style={hasKeyEvent ? undefined : { ...synthesisNestedCardBaseStyle, overflow: "hidden" }}
               >
                 <div className="border-b border-[rgba(200,135,58,0.1)] px-4 py-3">
                   <p className="text-sm font-medium" style={synthesisCream}>
@@ -136,7 +133,7 @@ export function WesternTransitView({
                               {formatPlanetName(planet.name)}
                             </span>
                             {planet.isRetrograde && (
-                              <span className="text-red-400 font-medium">R</span>
+                              <span className="font-medium text-[rgba(200,135,58,0.65)]">R</span>
                             )}
                           </div>
                           <span className="text-xs" style={synthesisBodyMuted}>
@@ -161,7 +158,7 @@ export function WesternTransitView({
                     </p>
                     <div className="space-y-1">
                       {transit.aspects.slice(0, 3).map((aspect, aidx) => (
-                        <div key={aidx} className="text-xs leading-relaxed" style={synthesisBodyMuted}>
+                        <div key={aidx} className="text-sm leading-relaxed" style={synthesisBodyMuted}>
                           <span className="text-[color:var(--amber,#c8873a)]">→</span>{" "}
                           {formatPlanetName(aspect.planet1)} {aspect.angleName}{" "}
                           {formatPlanetName(aspect.planet2)} (strength: {aspect.strength})

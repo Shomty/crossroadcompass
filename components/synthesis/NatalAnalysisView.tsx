@@ -12,15 +12,16 @@
 
 "use client";
 
+import type React from "react";
 import type { TraitAnalysis, TraitScore, TraitCategory, SynthesisResult, DashaPeriod } from "@/types";
 import {
   synthesisBodyMuted,
   synthesisCream,
-  synthesisInnerPanel,
   synthesisLabelClass,
   synthesisLabelStyle,
-  synthesisNestedPanel,
-  synthesisNestedPanelBase,
+  synthesisNestedCardStyle,
+  synthesisNestedCardBaseStyle,
+  synthesisSectionHeading,
   synthesisTitleCinzel,
 } from "@/components/synthesis/synthesisPanelClasses";
 
@@ -40,14 +41,14 @@ const ALIGNMENT_CONFIG = {
   MEDIUM: {
     label: "MED",
     icon: "◇",
-    color: "text-[color:color-mix(in_srgb,var(--amber,#c8873a)_70%,transparent)]",
-    bar: "bg-[color:color-mix(in_srgb,var(--amber,#c8873a)_50%,transparent)]",
+    color: "text-[rgba(200,135,58,0.80)]",
+    bar: "bg-[rgba(200,135,58,0.50)]",
   },
   LOW: {
     label: "LOW",
     icon: "○",
-    color: "text-white/35",
-    bar: "bg-white/15",
+    color: "text-[rgba(240,220,160,0.35)]",
+    bar: "bg-[rgba(240,220,160,0.15)]",
   },
 } as const;
 
@@ -57,10 +58,10 @@ function AlignmentBadge({ level }: { level: "HIGH" | "MEDIUM" | "LOW" }) {
     <span
       className={`inline-flex items-center gap-0.5 rounded-md border px-2 py-0.5 text-[10px] font-medium tracking-[0.14em] ${
         level === "HIGH"
-          ? "border-[color:color-mix(in_srgb,var(--gold-solar,#D4AF37)_45%,transparent)] bg-[rgba(200,135,58,0.08)]"
+          ? "border-[rgba(212,175,55,0.45)] bg-[rgba(200,135,58,0.08)]"
           : level === "MEDIUM"
             ? "border-[rgba(200,135,58,0.2)] bg-[rgba(200,135,58,0.04)]"
-            : "border-white/10 bg-white/[0.03]"
+            : "border-[rgba(200,135,58,0.06)] bg-[rgba(13,18,32,0.30)]"
       } ${cfg.color}`}
       style={synthesisLabelStyle}
     >
@@ -70,44 +71,17 @@ function AlignmentBadge({ level }: { level: "HIGH" | "MEDIUM" | "LOW" }) {
   );
 }
 
-/** Compact score + bar for alignment table cells */
-function TableScoreCell({ score, vedic }: { score: number; vedic: boolean }) {
-  const pct = Math.round(score * 100);
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <span
-        className="text-sm font-medium tabular-nums leading-none tracking-tight"
-        style={{
-          ...synthesisLabelStyle,
-          color: vedic ? "var(--gold, #e8b96a)" : "rgba(240,220,160,0.62)",
-        }}
-      >
-        {pct}
-      </span>
-      <div
-        className="h-1 w-full max-w-[5.5rem] rounded-full bg-[rgba(13,18,32,0.55)]"
-        role="presentation"
-        aria-hidden
-      >
-        <div
-          className={`h-full rounded-full ${
-            vedic
-              ? "bg-gradient-to-r from-[color:var(--amber,#c8873a)] to-[color:var(--gold,#e8b96a)]"
-              : "bg-white/28"
-          }`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
+// TableScoreCell removed — AlignmentTable now renders dual bars inline.
 
 // ─── Layer 1: Unified Summary ─────────────────────────────────────────────────
 
 function UnifiedSummary({ summary }: { summary: string[] }) {
   return (
-    <div className={synthesisInnerPanel}>
-      <p className={synthesisLabelClass} style={synthesisLabelStyle}>◆ Layer 1 — Unified Summary</p>
+    <div style={synthesisNestedCardStyle}>
+      <div className="mb-4">
+        <p className={synthesisLabelClass} style={synthesisLabelStyle}>Layer 1</p>
+        <h3 style={synthesisSectionHeading}>Unified Summary</h3>
+      </div>
       <ul className="mt-3 space-y-2.5">
         {summary.map((bullet, i) => (
           <li key={i} className="flex gap-2.5">
@@ -123,70 +97,126 @@ function UnifiedSummary({ summary }: { summary: string[] }) {
 // ─── Layer 2: Dual System Breakdown ──────────────────────────────────────────
 
 function SystemCard({
-  title,
+  eyebrow,
+  heading,
   system,
   scores,
   dasha,
 }: {
-  title: string;
+  eyebrow: string;
+  heading: string;
   system: 'vedic' | 'western';
   scores: TraitScore[];
   dasha?: DashaPeriod;
 }) {
+  const isVedic = system === 'vedic';
   const topScores = [...scores]
-    .sort((a, b) =>
-      system === 'vedic'
-        ? b.vedic_score - a.vedic_score
-        : b.western_score - a.western_score
-    )
+    .sort((a, b) => isVedic ? b.vedic_score - a.vedic_score : b.western_score - a.western_score)
     .slice(0, 5);
 
+  const barBg = isVedic
+    ? "linear-gradient(90deg,#c8873a,#e8b96a)"
+    : "rgba(240,220,160,0.28)";
+  const scoreHigh = isVedic ? "var(--gold,#e8b96a)" : "rgba(240,220,160,0.72)";
+  const scoreLow  = isVedic ? "rgba(200,135,58,0.45)" : "rgba(240,220,160,0.28)";
+
   return (
-    <div className={synthesisInnerPanel}>
-      <p className={synthesisLabelClass} style={synthesisLabelStyle}>{title}</p>
-      <div className="mt-3 space-y-3">
-        {topScores.map(s => {
-          const sources = system === 'vedic' ? s.vedic_sources : s.western_sources;
-          const score = system === 'vedic' ? s.vedic_score : s.western_score;
-          const pct = Math.round(score * 100);
+    <div style={synthesisNestedCardStyle}>
+      {/* Header row */}
+      <div className="mb-5 flex items-start justify-between gap-2">
+        <div>
+          <p className={synthesisLabelClass} style={synthesisLabelStyle}>{eyebrow}</p>
+          <h3 style={synthesisSectionHeading}>{heading}</h3>
+        </div>
+        <span
+          style={{
+            ...synthesisLabelStyle,
+            fontSize: 9,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase" as const,
+            color: isVedic ? "rgba(200,135,58,0.55)" : "rgba(240,220,160,0.35)",
+            marginTop: 2,
+          }}
+        >
+          {isVedic ? "Jyotish" : "Tropical"}
+        </span>
+      </div>
+
+      {/* Trait score rows */}
+      <div className="flex flex-col gap-4">
+        {topScores.map((s) => {
+          const score   = isVedic ? s.vedic_score   : s.western_score;
+          const sources = isVedic ? s.vedic_sources : s.western_sources;
+          const pct     = Math.round(score * 100);
           return (
-            <div key={s.trait} className="space-y-1">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-serif text-xs font-medium" style={synthesisTitleCinzel}>
+            <div key={s.trait}>
+              {/* Trait label + score number */}
+              <div className="mb-2 flex items-baseline justify-between gap-2">
+                <span className="font-serif text-sm font-medium leading-snug" style={synthesisTitleCinzel}>
                   {s.label}
                 </span>
                 <span
-                  className="text-[10px] tabular-nums"
                   style={{
-                    ...synthesisLabelStyle,
-                    color: pct >= 70 ? "var(--gold, #e8b96a)" : "rgba(255,255,255,0.4)",
-                  }}
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: 14,
+                    lineHeight: 1,
+                    color: pct >= 70 ? scoreHigh : scoreLow,
+                    tabularNums: true,
+                  } as React.CSSProperties}
                 >
                   {pct}
                 </span>
               </div>
-              {sources.slice(0, 2).map((src, i) => (
-                <p key={i} className="text-xs leading-snug" style={synthesisBodyMuted}>
-                  · {src}
+              {/* Score bar */}
+              <div
+                className="mb-2 h-1.5 w-full overflow-hidden rounded-full"
+                style={{ background: "rgba(13,18,32,0.55)" }}
+                role="meter"
+                aria-valuenow={pct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${s.label} score`}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${pct}%`, background: barBg }}
+                />
+              </div>
+              {/* Source tag */}
+              {sources.length > 0 && (
+                <p
+                  className="mt-1 truncate text-[11px] leading-snug"
+                  style={{ ...synthesisBodyMuted, color: "rgba(255,255,255,0.42)" }}
+                >
+                  {sources[0]}
                 </p>
-              ))}
+              )}
             </div>
           );
         })}
-        {dasha && system === 'vedic' && (
-          <div className="mt-3 border-t border-[rgba(200,135,58,0.12)] pt-3">
-            <p className={synthesisLabelClass} style={synthesisLabelStyle}>Current Dasha Cycle</p>
-            <p className="mt-1 text-xs font-medium" style={synthesisCream}>
-              {dasha.planetName} {dasha.level === 'MAHADASHA' ? 'Mahadasha' : 'Antardasha'}
-            </p>
-            {dasha.remainingDays != null && (
-              <p className="mt-0.5 text-xs" style={synthesisBodyMuted}>
-                {dasha.remainingDays} days remaining
-              </p>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* Dasha block (Vedic only) */}
+      {dasha && isVedic && (
+        <div
+          className="mt-5 rounded-[8px] p-3"
+          style={{
+            background: "rgba(200,135,58,0.05)",
+            border: "1px solid rgba(200,135,58,0.15)",
+          }}
+        >
+          <p className={`${synthesisLabelClass} mb-1`} style={synthesisLabelStyle}>Active Dasha Cycle</p>
+          <p className="text-sm font-medium" style={synthesisCream}>
+            {dasha.planetName}{" "}
+            {dasha.level === "MAHADASHA" ? "Mahadasha" : "Antardasha"}
+          </p>
+          {dasha.remainingDays != null && (
+            <p className="mt-0.5 text-xs" style={synthesisBodyMuted}>
+              {dasha.remainingDays} days remaining
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -195,99 +225,162 @@ function SystemCard({
 
 function AlignmentTable({ scores }: { scores: TraitScore[] }) {
   return (
-    <div className={synthesisInnerPanel}>
-      <p className={synthesisLabelClass} style={synthesisLabelStyle}>
-        ◇ Layer 3 — Trait alignment
-      </p>
-      <p className="mt-1 max-w-2xl text-xs leading-relaxed" style={synthesisBodyMuted}>
-        Scores are 0–100 per system. Match reflects how closely both systems agree on each trait.
+    <div style={synthesisNestedCardStyle}>
+      {/* Header */}
+      <div className="mb-2">
+        <p className={synthesisLabelClass} style={synthesisLabelStyle}>Layer 3</p>
+        <h3 style={synthesisSectionHeading}>Trait Alignment</h3>
+      </div>
+      <p className="mb-5 mt-1 text-sm leading-relaxed" style={synthesisBodyMuted}>
+        Scores 0–100 per system. Match reflects how closely both systems agree.
       </p>
 
-      <div className="mt-4 overflow-x-auto rounded-[8px] ring-1 ring-[rgba(200,135,58,0.1)]">
-        <table className="w-full min-w-[32rem] border-collapse text-left">
-          <thead>
-            <tr className="border-b border-[rgba(200,135,58,0.15)]">
-              <th
-                scope="col"
-                className="px-3 py-3 text-left text-[9px] font-normal uppercase tracking-[0.16em] text-[rgba(200,135,58,0.65)] sm:px-4"
-                style={synthesisLabelStyle}
-              >
-                Trait
-              </th>
-              <th
-                scope="col"
-                className="w-[1%] whitespace-nowrap px-2 py-3 text-right text-[9px] font-normal uppercase tracking-[0.16em] text-[rgba(200,135,58,0.65)] sm:px-3"
-                style={synthesisLabelStyle}
-              >
-                Vedic
-              </th>
-              <th
-                scope="col"
-                className="w-[1%] whitespace-nowrap px-2 py-3 text-right text-[9px] font-normal uppercase tracking-[0.16em] text-[rgba(200,135,58,0.65)] sm:px-3"
-                style={synthesisLabelStyle}
-              >
-                Western
-              </th>
-              <th
-                scope="col"
-                className="w-[1%] whitespace-nowrap px-3 py-3 pl-2 text-right text-[9px] font-normal uppercase tracking-[0.16em] text-[rgba(200,135,58,0.65)] sm:pl-4"
-                style={synthesisLabelStyle}
-              >
-                Match
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {scores.map((s) => (
-              <tr
-                key={s.trait}
-                className="border-b border-[rgba(200,135,58,0.08)] transition-colors even:bg-white/[0.02] hover:bg-[rgba(200,135,58,0.04)]"
-              >
-                <td className="align-middle px-3 py-3 sm:px-4">
-                  <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-                    <span className="font-serif text-sm font-medium leading-snug" style={synthesisTitleCinzel}>
-                      {s.label}
-                    </span>
-                    {s.contradiction ? (
-                      <span
-                        className="w-fit shrink-0 rounded-md border border-red-500/30 bg-red-950/20 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-red-400/95"
-                        style={synthesisLabelStyle}
-                        title="Contradiction — one system > 0.7, other < 0.4"
-                      >
-                        conflict
-                      </span>
-                    ) : null}
-                  </div>
-                </td>
-                <td className="align-middle px-2 py-3 sm:px-3">
-                  <TableScoreCell score={s.vedic_score} vedic />
-                </td>
-                <td className="align-middle px-2 py-3 sm:px-3">
-                  <TableScoreCell score={s.western_score} vedic={false} />
-                </td>
-                <td className="align-middle px-3 py-3 sm:pl-4">
-                  <div className="flex justify-end">
-                    <AlignmentBadge level={s.alignment} />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Column header row */}
+      <div
+        className="mb-1 hidden grid-cols-[1fr_100px_100px_72px] gap-3 px-3 sm:grid"
+        aria-hidden
+      >
+        <p className={synthesisLabelClass} style={synthesisLabelStyle}>Trait</p>
+        <p
+          className={`${synthesisLabelClass} text-right`}
+          style={{ ...synthesisLabelStyle, color: "var(--amber,#c8873a)" }}
+        >
+          Vedic
+        </p>
+        <p
+          className={`${synthesisLabelClass} text-right`}
+          style={{ ...synthesisLabelStyle, color: "rgba(240,220,160,0.40)" }}
+        >
+          Western
+        </p>
+        <p className={`${synthesisLabelClass} text-right`} style={synthesisLabelStyle}>Match</p>
       </div>
 
+      {/* Trait rows */}
+      <div
+        className="overflow-hidden rounded-[10px]"
+        style={{ border: "1px solid rgba(200,135,58,0.10)" }}
+      >
+        {scores.map((s, idx) => {
+          const vPct = Math.round(s.vedic_score * 100);
+          const wPct = Math.round(s.western_score * 100);
+          const isLast = idx === scores.length - 1;
+          return (
+            <div
+              key={s.trait}
+              className="grid grid-cols-1 gap-y-3 px-3 py-3.5 transition-colors hover:bg-[rgba(200,135,58,0.03)] sm:grid-cols-[1fr_100px_100px_72px] sm:items-center sm:gap-x-3 sm:gap-y-0"
+              style={{
+                borderBottom: isLast ? "none" : "1px solid rgba(200,135,58,0.08)",
+                background: idx % 2 === 1 ? "rgba(200,135,58,0.015)" : "transparent",
+              }}
+            >
+              {/* Trait name + conflict badge */}
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span
+                  className="font-serif text-sm font-medium leading-snug"
+                  style={synthesisTitleCinzel}
+                >
+                  {s.label}
+                </span>
+                {s.contradiction && (
+                  <span
+                    className="rounded border px-1.5 py-0.5 text-[9px] uppercase tracking-wide"
+                    style={{
+                      ...synthesisLabelStyle,
+                      color: "rgba(240,220,160,0.55)",
+                      borderColor: "rgba(200,135,58,0.25)",
+                      background: "rgba(200,135,58,0.06)",
+                    }}
+                    title="One system > 0.7, other < 0.4"
+                  >
+                    conflict
+                  </span>
+                )}
+              </div>
+
+              {/* Vedic score + bar */}
+              <div className="flex flex-col items-end gap-1.5">
+                <span
+                  style={{
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: 14,
+                    lineHeight: 1,
+                    color: vPct >= 70 ? "var(--gold,#e8b96a)" : "rgba(200,135,58,0.55)",
+                  }}
+                >
+                  {vPct}
+                </span>
+                <div
+                  className="h-1.5 w-full overflow-hidden rounded-full"
+                  style={{ background: "rgba(13,18,32,0.55)" }}
+                  role="meter"
+                  aria-valuenow={vPct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${s.label} Vedic score`}
+                >
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${vPct}%`,
+                      background: "linear-gradient(90deg,#c8873a,#e8b96a)",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Western score + bar */}
+              <div className="flex flex-col items-end gap-1.5">
+                <span
+                  style={{
+                    fontFamily: "'DM Mono', monospace",
+                    fontSize: 14,
+                    lineHeight: 1,
+                    color: wPct >= 70 ? "rgba(240,220,160,0.72)" : "rgba(240,220,160,0.30)",
+                  }}
+                >
+                  {wPct}
+                </span>
+                <div
+                  className="h-1.5 w-full overflow-hidden rounded-full"
+                  style={{ background: "rgba(13,18,32,0.55)" }}
+                  role="meter"
+                  aria-valuenow={wPct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${s.label} Western score`}
+                >
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${wPct}%`, background: "rgba(240,220,160,0.22)" }}
+                  />
+                </div>
+              </div>
+
+              {/* Match badge */}
+              <div className="flex sm:justify-end">
+                <AlignmentBadge level={s.alignment} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
       <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[rgba(200,135,58,0.12)] pt-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-medium text-[color:var(--amber,#c8873a)]">V</span>
-          <span className="text-[10px]" style={synthesisBodyMuted}>
-            Vedic (Jyotish)
-          </span>
+        <div className="flex items-center gap-2">
+          <div
+            className="h-1.5 w-6 rounded-full"
+            style={{ background: "linear-gradient(90deg,#c8873a,#e8b96a)" }}
+          />
+          <span className="text-xs" style={synthesisBodyMuted}>Vedic (Jyotish)</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-medium text-white/35">W</span>
-          <span className="text-[10px]" style={synthesisBodyMuted}>
-            Western (Tropical)
-          </span>
+        <div className="flex items-center gap-2">
+          <div
+            className="h-1.5 w-6 rounded-full"
+            style={{ background: "rgba(240,220,160,0.22)" }}
+          />
+          <span className="text-xs" style={synthesisBodyMuted}>Western (Tropical)</span>
         </div>
       </div>
     </div>
@@ -301,8 +394,11 @@ function ContradictionResolution({ contradictions, allScores }: { contradictions
 
   if (toShow.length === 0) {
     return (
-      <div className={synthesisInnerPanel}>
-        <p className={synthesisLabelClass} style={synthesisLabelStyle}>⚡ Layer 4 — Contradictions & Resolution</p>
+      <div style={synthesisNestedCardStyle}>
+        <div className="mb-4">
+          <p className={synthesisLabelClass} style={synthesisLabelStyle}>Layer 4</p>
+          <h3 style={synthesisSectionHeading}>Contradictions & Resolution</h3>
+        </div>
         <p className="mt-3 text-sm" style={synthesisBodyMuted}>
           No significant contradictions detected between the two systems. This indicates strong alignment across your chart — both systems tell a consistent story.
         </p>
@@ -311,12 +407,15 @@ function ContradictionResolution({ contradictions, allScores }: { contradictions
   }
 
   return (
-    <div className={synthesisInnerPanel}>
-      <p className={synthesisLabelClass} style={synthesisLabelStyle}>⚡ Layer 4 — Contradictions & Resolution</p>
-      <p className="mb-4 mt-2 text-xs" style={synthesisBodyMuted}>
+    <div style={synthesisNestedCardStyle}>
+      <div className="mb-4">
+        <p className={synthesisLabelClass} style={synthesisLabelStyle}>Layer 4</p>
+        <h3 style={synthesisSectionHeading}>Contradictions & Resolution</h3>
+      </div>
+      <p className="mb-4 mt-2 text-sm" style={synthesisBodyMuted}>
         When two systems diverge, the gap holds the greatest insight.
       </p>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {toShow.map((s) => {
           const vStronger = s.vedic_score > s.western_score;
           const vLabel = vStronger ? "Vedic capacity" : "Vedic pattern";
@@ -324,21 +423,21 @@ function ContradictionResolution({ contradictions, allScores }: { contradictions
           return (
             <div
               key={s.trait}
-              className={`${synthesisNestedPanel} border-l-2 border-l-[rgba(200,135,58,0.35)]`}
+              style={{ ...synthesisNestedCardStyle, borderLeft: "2px solid rgba(200,135,58,0.35)" }}
             >
-              <p className="mb-1.5 font-serif text-xs font-medium" style={synthesisTitleCinzel}>
+              <p className="mb-1.5 font-serif text-sm font-medium" style={synthesisTitleCinzel}>
                 {s.label}
               </p>
               <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums">
                 <span className="text-[color:var(--amber,#c8873a)]">
                   {vLabel}: {Math.round(s.vedic_score * 100)}
                 </span>
-                <span className="text-white/30">vs</span>
+                <span className="text-[rgba(240,220,160,0.30)]">vs</span>
                 <span style={synthesisCream}>
                   {wLabel}: {Math.round(s.western_score * 100)}
                 </span>
               </div>
-              <p className="text-xs leading-relaxed" style={synthesisBodyMuted}>
+              <p className="text-sm leading-relaxed" style={synthesisBodyMuted}>
                 {getResolutionNarrative(s)}
               </p>
             </div>
@@ -403,15 +502,18 @@ function PsychologicalInterpretation({ scores }: { scores: TraitScore[] }) {
   const westernTopSource = (s?: TraitScore) => s?.western_sources?.[0] ?? '';
 
   return (
-    <div className={synthesisInnerPanel}>
-      <p className={synthesisLabelClass} style={synthesisLabelStyle}>◉ Layer 5 — Psychological Interpretation</p>
-      <p className="font-oracle mb-4 mt-1 text-xs italic leading-relaxed" style={synthesisBodyMuted}>
+    <div style={synthesisNestedCardStyle}>
+      <div className="mb-4">
+        <p className={synthesisLabelClass} style={synthesisLabelStyle}>Layer 5</p>
+        <h3 style={synthesisSectionHeading}>Psychological Interpretation</h3>
+      </div>
+      <p className="font-oracle mb-4 mt-1 text-sm italic leading-relaxed" style={synthesisBodyMuted}>
         Western-led reading of conscious experience and behavioural patterns.
       </p>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {identity && (
           <div className="border-t border-[rgba(200,135,58,0.12)] pt-4 first:border-t-0 first:pt-0">
-            <p className="mb-1 font-serif text-xs font-medium" style={synthesisTitleCinzel}>
+            <p className="mb-1 font-serif text-sm font-medium" style={synthesisTitleCinzel}>
               Identity
             </p>
             <p className="text-sm leading-relaxed" style={synthesisBodyMuted}>
@@ -425,7 +527,7 @@ function PsychologicalInterpretation({ scores }: { scores: TraitScore[] }) {
         )}
         {emotional && (
           <div className="border-t border-[rgba(200,135,58,0.12)] pt-4 first:border-t-0 first:pt-0">
-            <p className="mb-1 font-serif text-xs font-medium" style={synthesisTitleCinzel}>
+            <p className="mb-1 font-serif text-sm font-medium" style={synthesisTitleCinzel}>
               Emotional processing
             </p>
             <p className="text-sm leading-relaxed" style={synthesisBodyMuted}>
@@ -438,7 +540,7 @@ function PsychologicalInterpretation({ scores }: { scores: TraitScore[] }) {
         )}
         {social && (
           <div className="border-t border-[rgba(200,135,58,0.12)] pt-4 first:border-t-0 first:pt-0">
-            <p className="mb-1 font-serif text-xs font-medium" style={synthesisTitleCinzel}>
+            <p className="mb-1 font-serif text-sm font-medium" style={synthesisTitleCinzel}>
               Social behaviour
             </p>
             <p className="text-sm leading-relaxed" style={synthesisBodyMuted}>
@@ -452,7 +554,7 @@ function PsychologicalInterpretation({ scores }: { scores: TraitScore[] }) {
         )}
         {relation && (
           <div className="border-t border-[rgba(200,135,58,0.12)] pt-4 first:border-t-0 first:pt-0">
-            <p className="mb-1 font-serif text-xs font-medium" style={synthesisTitleCinzel}>
+            <p className="mb-1 font-serif text-sm font-medium" style={synthesisTitleCinzel}>
               Relationship style
             </p>
             <p className="text-sm leading-relaxed" style={synthesisBodyMuted}>
@@ -464,7 +566,7 @@ function PsychologicalInterpretation({ scores }: { scores: TraitScore[] }) {
         )}
         {energy && (
           <div className="border-t border-[rgba(200,135,58,0.12)] pt-4 first:border-t-0 first:pt-0">
-            <p className="mb-1 font-serif text-xs font-medium" style={synthesisTitleCinzel}>
+            <p className="mb-1 font-serif text-sm font-medium" style={synthesisTitleCinzel}>
               Energy & recovery
             </p>
             <p className="text-sm leading-relaxed" style={synthesisBodyMuted}>
@@ -485,18 +587,22 @@ function PsychologicalInterpretation({ scores }: { scores: TraitScore[] }) {
 
 function ConfidenceIndex({ scores }: { scores: TraitScore[] }) {
   return (
-    <div className={synthesisInnerPanel}>
-      <p className={synthesisLabelClass} style={synthesisLabelStyle}>◈ Layer 6 — Confidence Index</p>
-      <p className="mb-4 mt-1 text-[10px] leading-relaxed" style={synthesisBodyMuted}>
+    <div style={synthesisNestedCardStyle}>
+      <div className="mb-4">
+        <p className={synthesisLabelClass} style={synthesisLabelStyle}>Layer 6</p>
+        <h3 style={synthesisSectionHeading}>Confidence Index</h3>
+      </div>
+      <p className="mb-4 mt-1 text-xs leading-relaxed" style={synthesisBodyMuted}>
         How consistently both systems agree on each trait.
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {scores.map((s) => (
           <div
             key={s.trait}
-            className={`flex items-center justify-between gap-3 ${synthesisNestedPanelBase} px-3 py-2`}
+            className="flex items-center justify-between gap-3"
+            style={{ ...synthesisNestedCardBaseStyle, padding: "8px 12px" }}
           >
-            <span className="text-xs font-medium font-serif" style={synthesisTitleCinzel}>
+            <span className="text-sm font-medium font-serif" style={synthesisTitleCinzel}>
               {s.label}
             </span>
             <AlignmentBadge level={s.alignment} />
@@ -511,11 +617,11 @@ function ConfidenceIndex({ scores }: { scores: TraitScore[] }) {
           <span className="text-[color:var(--gold,#e8b96a)]">◆ HIGH</span> — Both systems strongly agree
         </span>
         <span>
-          <span className="text-[color:color-mix(in_srgb,var(--amber,#c8873a)_70%,transparent)]">◇ MED</span> — Moderate
+          <span className="text-[rgba(200,135,58,0.80)]">◇ MED</span> — Moderate
           alignment
         </span>
         <span>
-          <span className="text-white/30">○ LOW</span> — Systems diverge
+          <span className="text-[rgba(240,220,160,0.35)]">○ LOW</span> — Systems diverge
         </span>
       </div>
     </div>
@@ -538,7 +644,7 @@ export function NatalAnalysisView({ synthesis }: NatalAnalysisViewProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-7">
       {/* Layer 1 — Unified Summary */}
       {ta.unifiedSummary.length > 0 && (
         <UnifiedSummary summary={ta.unifiedSummary} />
@@ -547,13 +653,15 @@ export function NatalAnalysisView({ synthesis }: NatalAnalysisViewProps) {
       {/* Layer 2 — Dual System Breakdown */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <SystemCard
-          title="◆ Jyotish Layer — Karmic Patterns"
+          eyebrow="Jyotish Layer"
+          heading="Karmic Patterns"
           system="vedic"
           scores={ta.scores}
           dasha={synthesis.currentAntarDasha}
         />
         <SystemCard
-          title="◇ Western Layer — Conscious Expression"
+          eyebrow="Western Layer"
+          heading="Conscious Expression"
           system="western"
           scores={ta.scores}
         />

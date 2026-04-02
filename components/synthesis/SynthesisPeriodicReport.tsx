@@ -11,7 +11,7 @@ import ReactMarkdown from "react-markdown";
 import {
   synthesisBodyMuted,
   synthesisCream,
-  synthesisInnerPanel,
+  synthesisCardStyle,
   synthesisPrimaryCta,
   synthesisTitleCinzel,
 } from "@/components/synthesis/synthesisPanelClasses";
@@ -170,7 +170,7 @@ export function SynthesisPeriodicReport() {
   const isLoading = loading === activePeriod;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <div className="flex min-w-0 max-w-full flex-wrap gap-2">
         {(Object.entries(PERIOD_CONFIG) as [Period, typeof PERIOD_CONFIG.daily][]).map(([period, config]) => (
           <button
@@ -249,7 +249,7 @@ export function SynthesisPeriodicReport() {
         )}
       </div>
 
-      <div className={`${synthesisInnerPanel} min-h-64`}>
+      <div style={{ ...synthesisCardStyle, minHeight: "16rem" }}>
         {isLoading && <ReportSkeleton />}
 
         {!isLoading && error && (

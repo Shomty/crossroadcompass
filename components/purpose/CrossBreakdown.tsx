@@ -20,33 +20,34 @@ export function CrossBreakdown({ crossType, crossName, gates }: CrossBreakdownPr
         background: "rgba(13,18,32,0.5)",
         border: "1px solid rgba(200,135,58,0.12)",
         borderRadius: 12,
-        padding: "1.25rem",
+        padding: "1.5rem",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-        <span style={{ fontSize: 18, color: "#e8b96a" }}>✦</span>
-        <div>
-          <h4
-            style={{
-              fontFamily: "Cinzel, serif",
-              fontSize: 15,
-              fontWeight: 500,
-              color: "rgba(255,255,255,0.9)",
-              margin: 0,
-            }}
-          >
-            {crossName}
-          </h4>
-          <span
-            style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 11,
-              color: "rgba(200,135,58,0.7)",
-            }}
-          >
-            {crossType}
-          </span>
-        </div>
+      <div style={{ marginBottom: 20 }}>
+        <span style={{ fontSize: 18, color: "#e8b96a", display: "block", marginBottom: 6 }}>✦</span>
+        <h4
+          style={{
+            fontFamily: "Cinzel, serif",
+            fontSize: 20,
+            fontWeight: 400,
+            color: "rgba(255,255,255,0.92)",
+            margin: "0 0 6px",
+            lineHeight: 1.25,
+          }}
+        >
+          {crossName}
+        </h4>
+        <span
+          style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 11,
+            color: "#c8873a",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+          }}
+        >
+          {crossType}
+        </span>
       </div>
 
       <div
@@ -60,9 +61,10 @@ export function CrossBreakdown({ crossType, crossName, gates }: CrossBreakdownPr
           <div
             key={i}
             style={{
-              background: "rgba(200,135,58,0.08)",
+              background: "rgba(13,18,32,0.6)",
+              border: "1px solid rgba(200,135,58,0.12)",
               borderRadius: 8,
-              padding: "8px 12px",
+              padding: "10px 14px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -71,8 +73,8 @@ export function CrossBreakdown({ crossType, crossName, gates }: CrossBreakdownPr
             <span
               style={{
                 fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-                fontSize: 11,
-                color: "rgba(255,255,255,0.5)",
+                fontSize: 12,
+                color: "rgba(255,255,255,0.55)",
               }}
             >
               {gateLabels[i]}
@@ -80,7 +82,7 @@ export function CrossBreakdown({ crossType, crossName, gates }: CrossBreakdownPr
             <span
               style={{
                 fontFamily: "'DM Mono', monospace",
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: 500,
                 color: "#e8b96a",
               }}

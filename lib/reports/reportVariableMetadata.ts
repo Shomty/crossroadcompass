@@ -4,6 +4,7 @@ import { REPORT_TEMPLATE_VARIABLE_KEYS } from "./reportTemplateVariableKeys";
 export const VARIABLE_PALETTE_GROUP_ORDER = [
   "Profile & birth",
   "Human Design",
+  "Western chart",
   "Vedic chart",
   "Dashas & transits",
   "Special lagnas (AL, GL, BL, HL)",
@@ -18,6 +19,23 @@ export const VARIABLE_PALETTE_GROUP_ORDER = [
 export type VariablePaletteGroup = (typeof VARIABLE_PALETTE_GROUP_ORDER)[number];
 
 const LABEL_OVERRIDES: Partial<Record<ReportTemplateVariableKey, string>> = {
+  // Western chart
+  western_asc_sign:          "Ascendant — sign",
+  western_asc_degree:        "Ascendant — degree",
+  western_asc_dms:           "Ascendant — degree DMS",
+  western_true_node_sign:    "True Node (North Node) — sign",
+  western_true_node_degree:  "True Node (North Node) — degree",
+  western_true_node_house:   "True Node (North Node) — house",
+  western_true_node_retro:   "True Node (North Node) — retrograde",
+  western_true_node_dignity: "True Node (North Node) — dignity",
+  western_true_node_dms:     "True Node (North Node) — degree DMS",
+  western_aspects_json:      "Western aspects (JSON)",
+  western_aspects_summary:   "Western aspects — major aspects summary",
+  western_patterns_json:     "Western chart patterns (JSON)",
+  western_chart_patterns:    "Chart patterns — summary",
+  western_planets_json:      "Western planets (JSON)",
+  western_houses_json:       "Western houses (JSON)",
+  // Vedic special points
   sp_AL_sign: "Arudha Lagna (AL) — sign",
   sp_GL_sign: "Ghati Lagna (GL) — sign",
   sp_BL_sign: "Bhava Lagna (BL) — sign",
@@ -39,6 +57,7 @@ function humanizeKey(key: string): string {
   return key
     .replace(/^sp_/, "sp: ")
     .replace(/^vedic_/, "vedic: ")
+    .replace(/^western_/, "western: ")
     .replace(/^hd_/, "HD: ")
     .replace(/^dasha_/, "dasha: ")
     .replace(/_/g, " ");
@@ -56,6 +75,7 @@ function inferGroup(key: ReportTemplateVariableKey): VariablePaletteGroup {
     return "Profile & birth";
   }
   if (key.startsWith("hd_")) return "Human Design";
+  if (key.startsWith("western_")) return "Western chart";
   if (
     key.startsWith("vedic_") ||
     key === "lagna" ||

@@ -92,16 +92,16 @@ export function PurposeDecoder({ insight, crossData }: PurposeDecoderProps) {
             background: "rgba(13,18,32,0.5)",
             border: "1px solid rgba(200,135,58,0.12)",
             borderRadius: 12,
-            padding: "1.25rem",
+            padding: "1.5rem",
           }}
         >
           <h4
             style={{
               fontFamily: "Cinzel, serif",
-              fontSize: 14,
-              fontWeight: 500,
+              fontSize: 16,
+              fontWeight: 400,
               color: "#c8873a",
-              margin: "0 0 12px",
+              margin: "0 0 14px",
             }}
           >
             HD Purpose Expression
@@ -109,9 +109,9 @@ export function PurposeDecoder({ insight, crossData }: PurposeDecoderProps) {
           <p
             style={{
               fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-              fontSize: 13,
-              color: "rgba(255,255,255,0.7)",
-              lineHeight: 1.65,
+              fontSize: 14,
+              color: "rgba(255,255,255,0.85)",
+              lineHeight: 1.75,
               margin: 0,
             }}
           >

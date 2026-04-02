@@ -284,6 +284,34 @@ a { color: inherit; text-decoration: none; }
 }
 .btn-ghost:hover { color: var(--cream); }
 
+.btn-read-report {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--cosmos);
+  background: linear-gradient(135deg, #d4af5f 0%, #c8873a 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.18s;
+  text-decoration: none;
+  box-shadow: 0 2px 12px rgba(200,135,58,0.28);
+}
+.btn-read-report:hover {
+  opacity: 0.88;
+}
+.btn-read-report:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(212,175,95,0.45), 0 0 0 4px rgba(13,18,37,0.72);
+}
+
 /* ─── Cards ────────────────────────────────────────────────────────────── */
 .card {
   border: 1px solid rgba(200, 135, 58, 0.12);
@@ -1079,6 +1107,68 @@ label {
   box-shadow: 0 0 0 1px rgba(200, 135, 58, 0.08);
 }
 
+/* ── Synthesis page tab rail ──────────────────────────────────────────────────
+   Horizontally scrollable, no-wrap, single-row tab bar for 7+ tabs.
+   Use instead of .chart-variant-toggle when tabs must stay on one line.       */
+.synthesis-tab-rail {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(200, 135, 58, 0.18);
+  background: rgba(13, 18, 32, 0.55);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.synthesis-tab-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.synthesis-tab-rail button,
+.synthesis-tab-rail a {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-family: 'DM Mono', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.48);
+  background: transparent;
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+
+.synthesis-tab-rail button:hover,
+.synthesis-tab-rail a:hover {
+  color: rgba(240, 220, 160, 0.85);
+  background: rgba(200, 135, 58, 0.08);
+}
+
+.synthesis-tab-rail button[data-active='true'],
+.synthesis-tab-rail a[data-active='true'] {
+  background: linear-gradient(135deg, rgba(200,135,58,0.22), rgba(232,185,106,0.16));
+  border: 1px solid rgba(200, 135, 58, 0.35);
+  color: rgba(240, 220, 160, 0.95);
+  font-weight: 600;
+}
+
+/* Reports page card hover */
+.report-card {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.report-card:hover {
+  border-color: rgba(200, 135, 58, 0.42) !important;
+  box-shadow: 0 4px 32px rgba(200, 135, 58, 0.08);
+}
+
 /* North / South grid switch — sits inside chart panel */
 .chart-variant-toggle {
   display: inline-flex;
@@ -1609,6 +1699,7 @@ label {
   .btn-ghost,
   .btn-toggle,
   .chart-variant-toggle,
+  .synthesis-tab-rail,
   .card-grain {
     display: none !important;
   }

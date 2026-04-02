@@ -1,7 +1,8 @@
 "use client";
 
 /**
- * Matches ChapterCard header row: 40px glyph, DM Mono eyebrow, Cinzel title.
+ * Centered card-style header — matches Shadow Work Portal header aesthetic.
+ * Gradient background, centered amber eyebrow label, large Cinzel title.
  */
 
 interface SynthesisTabHeaderProps {
@@ -11,56 +12,53 @@ interface SynthesisTabHeaderProps {
   subtitle?: string;
 }
 
-export function SynthesisTabHeader({ glyph, eyebrow, title, subtitle }: SynthesisTabHeaderProps) {
+export function SynthesisTabHeader({ eyebrow, title, subtitle }: SynthesisTabHeaderProps) {
   return (
-    <div className="mb-5">
-      <div className="flex items-center gap-3.5" style={{ marginBottom: subtitle ? 12 : 0 }}>
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border font-serif text-lg text-[#c8873a]"
-          style={{
-            background: "rgba(200,135,58,0.08)",
-            borderColor: "rgba(200,135,58,0.25)",
-          }}
-        >
-          {glyph}
-        </div>
-        <div>
-          <div
-            style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 9,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "rgba(200,135,58,0.6)",
-              marginBottom: 3,
-            }}
-          >
-            {eyebrow}
-          </div>
-          <h2
-            className="font-normal"
-            style={{
-              fontFamily: "Cinzel, serif",
-              fontSize: 18,
-              fontWeight: 400,
-              color: "rgba(240,220,160,0.95)",
-              lineHeight: 1.25,
-              margin: 0,
-            }}
-          >
-            {title}
-          </h2>
-        </div>
-      </div>
+    <div
+      className="animate-enter"
+      style={{
+        textAlign: "center",
+        padding: "2rem 1.5rem",
+        background: "linear-gradient(180deg, rgba(46,31,15,0.3) 0%, rgba(13,18,32,0.4) 100%)",
+        borderRadius: 16,
+        border: "1px solid rgba(200,135,58,0.15)",
+        marginBottom: 24,
+      }}
+    >
+      <span
+        style={{
+          display: "block",
+          fontFamily: "'DM Mono', monospace",
+          fontSize: 11,
+          color: "rgba(200,135,58,0.8)",
+          textTransform: "uppercase",
+          letterSpacing: "0.16em",
+          marginBottom: 12,
+        }}
+      >
+        {eyebrow}
+      </span>
+      <h2
+        style={{
+          fontFamily: "Cinzel, serif",
+          fontSize: 26,
+          fontWeight: 400,
+          color: "#f0dca0",
+          margin: "0 0 0",
+          lineHeight: 1.25,
+        }}
+      >
+        {title}
+      </h2>
       {subtitle ? (
         <p
-          className="mt-3 text-sm"
           style={{
             fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
-            lineHeight: 1.8,
+            fontSize: 14,
+            lineHeight: 1.75,
             color: "rgba(240,220,160,0.72)",
-            margin: 0,
-            maxWidth: 640,
+            margin: "12px auto 0",
+            maxWidth: 560,
           }}
         >
           {subtitle}
