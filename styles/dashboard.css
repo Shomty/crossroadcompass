@@ -534,25 +534,14 @@ body[data-sidebar="compact"] .app-main-content {
   padding: 2px 0 18px;
 }
 
-/* Glyph ring — the gold-haloed compass circle */
-.logo-glyph-ring {
-  position: relative;
-  width: 36px;
-  height: 36px;
+/* Inline SVG orbital compass glyph */
+.logo-compass-glyph {
   flex-shrink: 0;
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 1px rgba(212,175,55,0.30),
-    0 0 10px rgba(212,175,55,0.12);
-  transition: box-shadow 0.3s ease;
-  display: block;
+  transition: filter 0.3s ease;
 }
 
-.app-sidebar-logo:hover .logo-glyph-ring {
-  box-shadow:
-    0 0 0 1.5px rgba(212,175,55,0.60),
-    0 0 20px rgba(212,175,55,0.25),
-    0 0 40px rgba(212,175,55,0.08);
+.app-sidebar-logo:hover .logo-compass-glyph {
+  filter: drop-shadow(0 0 6px rgba(212,175,55,0.45));
 }
 
 /* Wordmark block — two-line typeset mark */
@@ -664,12 +653,108 @@ body[data-sidebar="compact"] .app-main-content {
   border-left-color: var(--accent-gold-cool, #D4AF37);
 }
 
+.sidebar-group:first-of-type {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(212,175,55,0.10);
+}
+
+.sidebar-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: none;
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cc-text-tertiary, rgba(255,255,255,0.35));
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  margin-top: 2px;
+}
+
+.sidebar-group-header:hover {
+  color: var(--cc-text-secondary, #8a8678);
+  background: rgba(255,255,255,0.04);
+}
+
+.sidebar-group-header.active {
+  color: var(--cc-amber-light, #e8b86d);
+}
+
+.sidebar-group-header.compact {
+  justify-content: center;
+  padding: 11px 0;
+  gap: 0;
+}
+
+.sidebar-group-label {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.sidebar-group-chevron {
+  flex-shrink: 0;
+  color: inherit;
+  transition: transform 0.22s ease, opacity 0.2s;
+  opacity: 0.5;
+}
+
+.sidebar-group-chevron.open {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* Collapsible container */
+.sidebar-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.22s ease, opacity 0.18s ease;
+  padding-left: 8px;
+}
+
+.sidebar-group-items.open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* Child items — slightly indented, smaller font */
+.sidebar-item-child {
+  padding-left: 16px !important;
+  font-size: 12.5px !important;
+}
+
+.sidebar-item-child .app-sidebar-item-icon {
+  opacity: 0.75;
+}
+
+.sidebar-item-child.active .app-sidebar-item-icon {
+  opacity: 1;
+}
+
 .app-sidebar-footer {
   margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 
 .app-sidebar-collapse-btn {
   display: flex;

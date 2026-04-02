@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
-import clsx from "clsx";
 import { AnimatedNorthIndianChart, SouthIndianChart } from "@node-jhora/ui-react";
 import { DIVISIONAL_LABELS } from "@/lib/astro/divisionalLabels";
 import { mapVedicChartToJhoraUi } from "@/lib/chart/vedicChartToJhoraUi";
@@ -120,12 +119,7 @@ export function DivisionalChartsPanel({ birthTimeKnown }: Props) {
       {!chart ? (
         <p className="text-muted-chart text-sm">Could not read this divisional chart from the server.</p>
       ) : jhora ? (
-        <div
-          className={clsx(
-            "north-indian-chart-wrap w-full max-w-[min(100%,520px)] [&_svg]:h-auto [&_svg]:w-full",
-            "text-[var(--cream)]",
-          )}
-        >
+        <div className="text-[var(--cream)]">
           {jhoraStyle === "north" ? (
             <AnimatedNorthIndianChart
               planets={jhora.planets}

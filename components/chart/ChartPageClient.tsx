@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import clsx from "clsx";
 import type { Planet, VedicChartCalculations } from "openastrology-library";
 import { AnimatedNorthIndianChart, SouthIndianChart } from "@node-jhora/ui-react";
 import { getVimshottariPeriods, parseSerializedVedicChart } from "@/lib/astro/serializeVedicChart";
@@ -89,7 +88,7 @@ export function ChartPageClient({ initialChart, birthTimeKnown, jhoraChart }: Pr
 
   return (
     <section className="chart-page animate-enter animate-enter-2">
-      <nav className="chart-page-tabs" aria-label="Chart sections" role="tablist">
+      <nav className="synthesis-tab-rail" aria-label="Chart sections" role="tablist">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -97,7 +96,6 @@ export function ChartPageClient({ initialChart, birthTimeKnown, jhoraChart }: Pr
             role="tab"
             aria-selected={tab === t.id}
             data-active={tab === t.id ? "true" : "false"}
-            className="chart-tab-btn"
             onClick={() => setTab(t.id)}
           >
             {t.label}
@@ -105,10 +103,10 @@ export function ChartPageClient({ initialChart, birthTimeKnown, jhoraChart }: Pr
         ))}
       </nav>
 
-      <V4GlassCard>
+      <V4GlassCard style={{ padding: "22px 24px" }}>
         <div className="chart-page-panel flex flex-col gap-6">
           {tab === "chart" && (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-8">
               {transit?.planets != null && (
                 <div className="flex justify-end">
                   <button
@@ -121,17 +119,15 @@ export function ChartPageClient({ initialChart, birthTimeKnown, jhoraChart }: Pr
                   </button>
                 </div>
               )}
+
+              {/* ── Charts row ── */}
               <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+                {/* Jhora rāśi */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--mist)]">
-                        Jhora · rāśi
-                      </p>
-                      <p className="text-xs text-[var(--mist)] opacity-80">
-                        Same sidereal longitudes as your natal table; @node-jhora SVG (whole sign). Same
-                        canvas size as the chart below. Toggle style.
-                      </p>
+                      <p className="chart-panel-eyebrow">Jhora · rāśi</p>
+
                     </div>
                     <div
                       className="chart-variant-toggle shrink-0"
@@ -155,12 +151,7 @@ export function ChartPageClient({ initialChart, birthTimeKnown, jhoraChart }: Pr
                     </div>
                   </div>
                   {jhoraChart ? (
-                    <div
-                      className={clsx(
-                        "north-indian-chart-wrap w-full max-w-[min(100%,520px)] [&_svg]:h-auto [&_svg]:w-full",
-                        "text-[var(--cream)]",
-                      )}
-                    >
+                    <>
                       {jhoraStyle === "north" ? (
                         <AnimatedNorthIndianChart
                           planets={jhoraChart.planets}
@@ -176,60 +167,75 @@ export function ChartPageClient({ initialChart, birthTimeKnown, jhoraChart }: Pr
                           height={NORTH_INDIAN_CHART_SIZE_PX}
                         />
                       )}
-                    </div>
+                    </>
                   ) : (
                     <p className="text-muted-chart text-sm">
                       Jhora chart could not be loaded for your profile.
                     </p>
                   )}
-                  <div className="mt-10 border-t border-[rgba(200,135,58,0.22)] pt-8">
-                    <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--mist)]">
-                      North Indian · classic
-                    </p>
-                    <NatalChartGrid
-                      chart={chart}
-                      birthTimeKnown={birthTimeKnown}
-                      transitChart={showChartTransits ? transit : null}
-                      centered={false}
-                    />
-                  </div>
                 </div>
-                {chart.planets != null ? (
-                  <aside className="flex w-full min-w-0 flex-col gap-4 lg:w-[min(100%,400px)] lg:shrink-0">
-                    <div>
-                      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--mist)]">
-                        Planet details
-                      </p>
-                      <p className="text-xs text-[var(--mist)] opacity-80">
-                        Natal table; optional transit rows when transits are on.
-                      </p>
-                    </div>
-                    <PlanetSummaryCard planets={chart.planets} />
-                    <PlanetTable
-                      variant="panel"
-                      planets={chart.planets}
-                      onPlanetSelect={setSelectedPlanet}
-                      transitPlanets={showChartTransits ? (transit?.planets ?? null) : null}
-                    />
-                  </aside>
-                ) : null}
+
+                {/* North Indian classic */}
+                <div className="min-w-0 flex-1">
+                  <p className="chart-panel-eyebrow mb-4">North Indian · classic</p>
+                  <NatalChartGrid
+                    chart={chart}
+                    birthTimeKnown={birthTimeKnown}
+                    transitChart={showChartTransits ? transit : null}
+                    centered={false}
+                  />
+                </div>
               </div>
+
+              {/* ── Planet table below both charts ── */}
+              {chart.planets != null && (
+                <div className="flex flex-col gap-4 border-t border-[rgba(200,135,58,0.18)] pt-6">
+                  <div>
+                    <h2 className="chart-panel-section-title">Planetary Positions</h2>
+                  </div>
+                  <PlanetSummaryCard planets={chart.planets} />
+                  <PlanetTable
+                    variant="default"
+                    planets={chart.planets}
+                    onPlanetSelect={setSelectedPlanet}
+                    transitPlanets={showChartTransits ? (transit?.planets ?? null) : null}
+                  />
+                </div>
+              )}
             </div>
           )}
 
           {tab === "planets" &&
             (chart.planets != null ? (
               <div className="flex flex-col gap-6">
-                <p className="text-sm leading-relaxed text-[var(--mist)]">
-                  Positions, dignity summary, and the full planet table live on the{" "}
-                  <strong className="text-[var(--cream)]">Chart</strong> tab beside the charts.
-                </p>
-                <PlanetExportButton planets={chart.planets} />
-                <DrushtiVisualizer
+                <div>
+                  <h2 className="chart-panel-section-title">Planetary Positions</h2>
+                </div>
+                <PlanetSummaryCard planets={chart.planets} />
+                <PlanetTable
+                  variant="default"
                   planets={chart.planets}
-                  selected={selectedPlanet}
-                  onClear={() => setSelectedPlanet(null)}
+                  onPlanetSelect={setSelectedPlanet}
+                  transitPlanets={showChartTransits ? (transit?.planets ?? null) : null}
                 />
+                <PlanetExportButton planets={chart.planets} />
+                {Object.values(chart.planets).some((p) => p.aspects.length > 0) && (
+                  <div
+                    style={{
+                      borderRadius: 12,
+                      border: "1px solid rgba(212,175,95,0.14)",
+                      background: "rgba(13,18,32,0.6)",
+                      padding: "18px 20px",
+                    }}
+                  >
+                    <h2 className="chart-panel-section-title" style={{ marginBottom: 4 }}>Drishti (Vedic Aspects)</h2>
+                    <DrushtiVisualizer
+                      planets={chart.planets}
+                      selected={selectedPlanet}
+                      onClear={() => setSelectedPlanet(null)}
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-muted-chart">Planet positions are not available for this chart.</p>

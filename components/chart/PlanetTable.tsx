@@ -4,14 +4,68 @@ import { Fragment, useMemo, useState } from "react";
 import type { Planet, PlanetaryPositions } from "openastrology-library";
 import clsx from "clsx";
 
-const dignityColor: Record<string, string> = {
-  Exalted: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
-  Own: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-  Moolatrikona: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-  Friendly: "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-200",
-  Neutral: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300",
-  Inimical: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-200",
-  Debilitated: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-200",
+// ── Glyph tables ──────────────────────────────────────────────────────────────
+
+const PLANET_GLYPH: Record<string, string> = {
+  sun:       "☉",
+  moon:      "☽",
+  mercury:   "☿",
+  venus:     "♀",
+  mars:      "♂",
+  jupiter:   "♃",
+  saturn:    "♄",
+  rahu:      "☊",
+  ketu:      "☋",
+};
+
+const SIGN_GLYPH: Record<string, string> = {
+  aries:       "♈",
+  taurus:      "♉",
+  gemini:      "♊",
+  cancer:      "♋",
+  leo:         "♌",
+  virgo:       "♍",
+  libra:       "♎",
+  scorpio:     "♏",
+  sagittarius: "♐",
+  capricorn:   "♑",
+  aquarius:    "♒",
+  pisces:      "♓",
+};
+
+/** Planet-specific accent colors — matches SudarshanChakraPageClient palette */
+const PLANET_BG: Record<string, string> = {
+  Sun:     "rgba(232,148,90,0.15)",
+  Moon:    "rgba(180,185,230,0.15)",
+  Mars:    "rgba(220,80,80,0.15)",
+  Mercury: "rgba(100,200,130,0.15)",
+  Jupiter: "rgba(240,200,90,0.15)",
+  Venus:   "rgba(230,150,200,0.15)",
+  Saturn:  "rgba(130,130,170,0.15)",
+  Rahu:    "rgba(140,100,230,0.15)",
+  Ketu:    "rgba(80,190,180,0.15)",
+};
+const PLANET_TEXT: Record<string, string> = {
+  Sun:     "#e8945a",
+  Moon:    "#b4b9e6",
+  Mars:    "#e05555",
+  Mercury: "#64c882",
+  Jupiter: "#f0c85a",
+  Venus:   "#e696c8",
+  Saturn:  "#9090b0",
+  Rahu:    "#9b6be6",
+  Ketu:    "#50bebf",
+};
+
+/** Dignity badge styles — all dark-themed, no Tailwind dark: prefix needed */
+const DIGNITY_STYLE: Record<string, { bg: string; text: string; border: string }> = {
+  Exalted:      { bg: "rgba(52,211,153,0.12)",  text: "#6ee7b7", border: "rgba(52,211,153,0.28)" },
+  Own:          { bg: "rgba(96,165,250,0.12)",   text: "#93c5fd", border: "rgba(96,165,250,0.28)" },
+  Moolatrikona: { bg: "rgba(96,165,250,0.12)",   text: "#93c5fd", border: "rgba(96,165,250,0.28)" },
+  Friendly:     { bg: "rgba(45,212,191,0.10)",   text: "#5eead4", border: "rgba(45,212,191,0.25)" },
+  Neutral:      { bg: "rgba(148,163,184,0.08)",  text: "rgba(232,224,208,0.55)", border: "rgba(148,163,184,0.2)" },
+  Inimical:     { bg: "rgba(251,146,60,0.10)",   text: "#fbbf24", border: "rgba(251,146,60,0.25)" },
+  Debilitated:  { bg: "rgba(248,113,113,0.12)",  text: "#fca5a5", border: "rgba(248,113,113,0.28)" },
 };
 
 const PLANETS: Planet[] = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn", "rahu", "ketu"];
@@ -30,6 +84,18 @@ function cap(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function DignityBadge({ dignity }: { dignity: string }) {
+  const style = DIGNITY_STYLE[dignity] ?? DIGNITY_STYLE.Neutral;
+  return (
+    <span
+      className="pt-dignity"
+      style={{ background: style.bg, color: style.text, borderColor: style.border }}
+    >
+      {dignity}
+    </span>
+  );
+}
+
 export function PlanetTable({ planets, onPlanetSelect, transitPlanets, variant = "default" }: Props) {
   const panel = variant === "panel";
   const [sortKey, setSortKey] = useState<SortKey>("house");
@@ -40,11 +106,11 @@ export function PlanetTable({ planets, onPlanetSelect, transitPlanets, variant =
     const list = PLANETS.map((k) => ({ key: k, p: planets[k] }));
     list.sort((a, b) => {
       let cmp = 0;
-      if (sortKey === "house") cmp = a.p.house - b.p.house;
-      else if (sortKey === "name") cmp = a.key.localeCompare(b.key);
-      else if (sortKey === "sign") cmp = a.p.sign.localeCompare(b.p.sign);
+      if (sortKey === "house")      cmp = a.p.house - b.p.house;
+      else if (sortKey === "name")  cmp = a.key.localeCompare(b.key);
+      else if (sortKey === "sign")  cmp = a.p.sign.localeCompare(b.p.sign);
       else if (sortKey === "nakshatra") cmp = a.p.nakshatra.localeCompare(b.p.nakshatra);
-      else if (sortKey === "dignity") cmp = a.p.dignity.localeCompare(b.p.dignity);
+      else if (sortKey === "dignity")   cmp = a.p.dignity.localeCompare(b.p.dignity);
       return sortDir === "asc" ? cmp : -cmp;
     });
     return list;
@@ -52,25 +118,13 @@ export function PlanetTable({ planets, onPlanetSelect, transitPlanets, variant =
 
   function toggleSort(k: SortKey) {
     if (sortKey === k) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortKey(k);
-      setSortDir("asc");
-    }
+    else { setSortKey(k); setSortDir("asc"); }
   }
 
-  const thPad = panel ? "px-2 py-1.5" : "px-3 py-2.5";
-  const tdPad = panel ? "px-2 py-1.5" : "px-3 py-2.5";
-
-  function header(k: SortKey, label: string) {
+  function SortTh({ k, label, className }: { k: SortKey; label: string; className?: string }) {
     return (
-      <th
-        className={clsx(
-          "cursor-pointer select-none text-left uppercase tracking-wider text-[var(--mist)]",
-          thPad,
-          panel ? "text-[10px]" : "text-xs",
-        )}
-      >
-        <button type="button" className="hover:text-[rgba(232,185,106,0.95)]" onClick={() => toggleSort(k)}>
+      <th className={clsx("pt-th", panel && "pt-th--panel", className)}>
+        <button type="button" className="pt-th-btn" onClick={() => toggleSort(k)}>
           {label}
           {sortKey === k ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
         </button>
@@ -79,58 +133,37 @@ export function PlanetTable({ planets, onPlanetSelect, transitPlanets, variant =
   }
 
   return (
-    <div className={clsx("overflow-x-auto", panel && "min-w-0")}>
-      <table
-        className={clsx(
-          "chart-data-table w-full border-collapse",
-          panel ? "min-w-0 text-xs" : "min-w-[640px] text-sm",
-        )}
-      >
+    <div className={clsx("pt-scroll", panel && "min-w-0")}>
+      <table className={clsx("pt-table", panel ? "min-w-0" : "min-w-[640px]")}>
         <thead>
-          <tr className="border-b border-[rgba(200,135,58,0.22)]">
-            {header("name", "Planet")}
-            {header("sign", "Sign")}
-            {header("house", "House")}
-            {header("nakshatra", "Nakshatra")}
-            <th
-              className={clsx(
-                "text-left uppercase tracking-wider text-[var(--mist)]",
-                thPad,
-                panel ? "text-[10px]" : "text-xs",
-              )}
-            >
-              Pada
-            </th>
-            {header("dignity", "Dignity")}
-            <th
-              className={clsx(
-                "text-left uppercase tracking-wider text-[var(--mist)]",
-                thPad,
-                panel ? "text-[10px]" : "text-xs",
-              )}
-            >
-              R
-            </th>
-            <th
-              className={clsx(
-                "text-left uppercase tracking-wider text-[var(--mist)]",
-                thPad,
-                panel ? "text-[10px]" : "text-xs",
-              )}
-            >
-              Combust
-            </th>
+          <tr>
+            <SortTh k="name"      label="Planet" />
+            <SortTh k="sign"      label="Sign" />
+            <SortTh k="house"     label="House" className="pt-th--center" />
+            <SortTh k="nakshatra" label="Nakshatra" />
+            <th className={clsx("pt-th", panel && "pt-th--panel")}>Pada</th>
+            <SortTh k="dignity" label="Dignity" />
+            <th className={clsx("pt-th", panel && "pt-th--panel")} title="Retrograde">R</th>
+            <th className={clsx("pt-th", panel && "pt-th--panel")}>Combust</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ key, p }) => {
+          {rows.map(({ key, p }, i) => {
             const tp = transitPlanets?.[key] ?? null;
+            const pName = cap(key);
+            const pBg   = PLANET_BG[pName]   ?? "rgba(200,168,76,0.1)";
+            const pText = PLANET_TEXT[pName]  ?? "var(--gold, #e8b96a)";
+            const pGlyph = PLANET_GLYPH[key] ?? "";
+            const sGlyph = SIGN_GLYPH[p.sign.toLowerCase()] ?? "";
+
             return (
               <Fragment key={key}>
+                {/* ── natal row ── */}
                 <tr
                   className={clsx(
-                    "cursor-pointer border-b border-[rgba(200,135,58,0.12)] hover:bg-[rgba(200,135,58,0.06)]",
-                    expanded === key && "bg-[rgba(200,135,58,0.1)]"
+                    "pt-tr",
+                    i % 2 === 0 ? "pt-tr--even" : "pt-tr--odd",
+                    expanded === key && "pt-tr--expanded",
                   )}
                   onClick={() => {
                     const next = expanded === key ? null : key;
@@ -138,95 +171,77 @@ export function PlanetTable({ planets, onPlanetSelect, transitPlanets, variant =
                     onPlanetSelect?.(next);
                   }}
                 >
-                  <td className={clsx(tdPad, "font-medium text-[var(--cream)]")}>{cap(key)}</td>
-                  <td className={tdPad}>{cap(p.sign)}</td>
-                  <td className={tdPad}>{p.house}</td>
-                  <td className={tdPad}>{cap(p.nakshatra)}</td>
-                  <td className={tdPad}>{p.nakshatraPada}</td>
-                  <td className={tdPad}>
-                    <span
-                      className={clsx(
-                        "rounded px-1.5 py-0.5 text-xs",
-                        dignityColor[p.dignity] ?? "bg-gray-100 text-gray-600"
-                      )}
-                    >
-                      {p.dignity}
-                    </span>
+                  {/* Planet */}
+                  <td className="pt-td pt-td--planet">
+                    <span className="pt-planet-glyph" style={{ color: pText }}>{pGlyph}</span>
+                    <span className="pt-planet-badge" style={{ background: pBg, color: pText }}>{pName}</span>
                   </td>
-                  <td className={clsx(tdPad, "font-medium text-amber-600")}>{p.isRetrograde ? "(R)" : ""}</td>
-                  <td className={clsx(tdPad, "text-red-500")}>{p.isCombust ? "●" : ""}</td>
+                  {/* Sign */}
+                  <td className="pt-td">
+                    <span className="pt-sign-glyph">{sGlyph}</span>
+                    <span className="pt-sign-name">{cap(p.sign)}</span>
+                  </td>
+                  {/* House */}
+                  <td className="pt-td pt-td--center pt-td--mono">{p.house}</td>
+                  {/* Nakshatra */}
+                  <td className="pt-td pt-td--nakshatra">{cap(p.nakshatra)}</td>
+                  {/* Pada */}
+                  <td className="pt-td pt-td--mono pt-td--muted">{p.nakshatraPada}</td>
+                  {/* Dignity */}
+                  <td className="pt-td"><DignityBadge dignity={p.dignity} /></td>
+                  {/* Retrograde */}
+                  <td className="pt-td pt-td--center">
+                    {p.isRetrograde && <span className="pt-retro">℞</span>}
+                  </td>
+                  {/* Combust */}
+                  <td className="pt-td pt-td--center">
+                    {p.isCombust && <span className="pt-combust" title="Combust">●</span>}
+                  </td>
                 </tr>
+
+                {/* ── expanded detail row ── */}
                 {expanded === key && (
-                  <tr className="border-b border-[rgba(200,135,58,0.12)] bg-[rgba(200,135,58,0.06)]">
-                    <td colSpan={8} className={clsx(panel ? "px-3 py-2 text-xs" : "px-4 py-3 text-sm", "text-[var(--mist)]")}>
-                      <div className="mb-1">Speed: {p.speed.toFixed(4)}°/day</div>
-                      <div>
-                        Aspects:{" "}
+                  <tr className="pt-tr pt-tr--detail">
+                    <td colSpan={8} className="pt-td pt-td--detail">
+                      <span className="pt-detail-item">Speed: {p.speed.toFixed(4)}°/day</span>
+                      <span className="pt-detail-sep">·</span>
+                      <span className="pt-detail-item">
+                        Drishti:{" "}
                         {p.aspects.length === 0
                           ? "—"
-                          : p.aspects.map((a, i) => (
-                              <span key={i}>
-                                {i > 0 ? " · " : ""}
-                                houses {a.house} ({a.aspect}°)
+                          : p.aspects.map((a, j) => (
+                              <span key={j}>
+                                {j > 0 ? " · " : ""}
+                                house {a.house} ({a.aspect}°)
                               </span>
                             ))}
-                      </div>
+                      </span>
                     </td>
                   </tr>
                 )}
+
+                {/* ── transit row ── */}
                 {tp != null && (
-                  <tr
-                    className={clsx(
-                      "border-b border-[rgba(200,135,58,0.12)]",
-                      panel ? "bg-[rgba(200,135,58,0.04)]" : "bg-[rgba(60,120,220,0.06)]",
-                    )}
-                  >
-                    <td className={clsx(tdPad, "pl-5 text-[var(--mist)]", !panel && "text-[rgba(130,180,255,0.75)]")}>
-                      <span
-                        className={clsx(
-                          "mr-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium",
-                          panel
-                            ? "border border-[rgba(200,135,58,0.35)] text-[var(--cream)]"
-                            : "bg-[rgba(60,120,220,0.25)] text-[rgba(130,180,255,0.9)]",
-                        )}
-                      >
-                        transit
-                      </span>
-                      {cap(key)}
+                  <tr className="pt-tr pt-tr--transit">
+                    <td className="pt-td pt-td--planet">
+                      <span className="pt-transit-badge">transit</span>
+                      <span className="pt-planet-glyph" style={{ color: pText, opacity: 0.6 }}>{pGlyph}</span>
+                      <span className="pt-td--muted">{pName}</span>
                     </td>
-                    <td className={clsx(tdPad, panel ? "text-[var(--mist)]" : "text-[rgba(130,180,255,0.75)]")}>
+                    <td className="pt-td pt-td--muted">
+                      <span className="pt-sign-glyph" style={{ opacity: 0.55 }}>{SIGN_GLYPH[tp.sign.toLowerCase()] ?? ""}</span>
                       {cap(tp.sign)}
                     </td>
-                    <td className={clsx(tdPad, panel ? "text-[var(--mist)]" : "text-[rgba(130,180,255,0.75)]")}>
-                      {tp.house}
+                    <td className="pt-td pt-td--center pt-td--mono pt-td--muted">{tp.house}</td>
+                    <td className="pt-td pt-td--muted">{cap(tp.nakshatra)}</td>
+                    <td className="pt-td pt-td--mono pt-td--muted">{tp.nakshatraPada}</td>
+                    <td className="pt-td"><DignityBadge dignity={tp.dignity} /></td>
+                    <td className="pt-td pt-td--center">
+                      {tp.isRetrograde && <span className="pt-retro" style={{ opacity: 0.7 }}>℞</span>}
                     </td>
-                    <td className={clsx(tdPad, panel ? "text-[var(--mist)]" : "text-[rgba(130,180,255,0.75)]")}>
-                      {cap(tp.nakshatra)}
+                    <td className="pt-td pt-td--center">
+                      {tp.isCombust && <span className="pt-combust" style={{ opacity: 0.7 }}>●</span>}
                     </td>
-                    <td className={clsx(tdPad, panel ? "text-[var(--mist)]" : "text-[rgba(130,180,255,0.75)]")}>
-                      {tp.nakshatraPada}
-                    </td>
-                    <td className={tdPad}>
-                      <span
-                        className={clsx(
-                          "rounded px-1.5 py-0.5 text-xs",
-                          panel ? "" : "opacity-75",
-                          dignityColor[tp.dignity] ?? "bg-gray-100 text-gray-600"
-                        )}
-                      >
-                        {tp.dignity}
-                      </span>
-                    </td>
-                    <td
-                      className={clsx(
-                        tdPad,
-                        "font-medium text-amber-600",
-                        !panel && "opacity-75",
-                      )}
-                    >
-                      {tp.isRetrograde ? "(R)" : ""}
-                    </td>
-                    <td className={clsx(tdPad, "text-red-500", !panel && "opacity-75")}>{tp.isCombust ? "●" : ""}</td>
                   </tr>
                 )}
               </Fragment>

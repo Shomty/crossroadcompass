@@ -92,7 +92,11 @@ const DEG = Math.PI / 180;
 
 function polarToXY(cx: number, cy: number, r: number, angleDeg: number) {
   const a = (angleDeg - 90) * DEG; // 0° at top, clockwise
-  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  // Round to 6dp so SSR and client produce identical attribute strings
+  return {
+    x: Math.round((cx + r * Math.cos(a)) * 1e6) / 1e6,
+    y: Math.round((cy + r * Math.sin(a)) * 1e6) / 1e6,
+  };
 }
 
 function wedgePath(

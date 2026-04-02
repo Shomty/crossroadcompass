@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "postinstall": "prisma generate && patch-package",
+    "predev": "node scripts/heal-manifests.js",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

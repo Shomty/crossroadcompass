@@ -8,7 +8,11 @@ import { redirect } from "next/navigation";
 import { getAppUserContext } from "@/lib/auth/appContext";
 import { db } from "@/lib/db";
 import { getOrCreateVedicChart } from "@/lib/astro/chartService";
-import { computeSudarshanChakra } from "@/lib/astro/sudarshanaChakraService";
+import {
+  computeSudarshanChakra,
+  extractPlanetPositions,
+  extractHousePositions,
+} from "@/lib/astro/sudarshanaChakraService";
 import { SudarshanChakraPageClient } from "@/components/chart/SudarshanChakraPageClient";
 import { PageLayout } from "@/components/layout/PageLayout";
 
@@ -29,6 +33,8 @@ export default async function SudarshanChakraPage() {
 
   const chart = await getOrCreateVedicChart(ctx.userId, profile);
   const result = computeSudarshanChakra(chart);
+  const planetPositions = extractPlanetPositions(chart);
+  const housePositions = extractHousePositions(result);
 
   const lagnaSign = result.meta.lagnaSign;
   const lagnaLabel = lagnaSign
@@ -45,7 +51,11 @@ export default async function SudarshanChakraPage() {
       title="Sudarshana Chakra"
       subtitle={subtitle}
     >
-      <SudarshanChakraPageClient result={result} />
+      <SudarshanChakraPageClient
+        result={result}
+        planetPositions={planetPositions}
+        housePositions={housePositions}
+      />
     </PageLayout>
   );
 }

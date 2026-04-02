@@ -8,29 +8,76 @@
  */
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, X, Compass, LayoutGrid, Moon, Globe, SlidersHorizontal, ChevronLeft, ChevronRight, Clock, BookOpen, Zap, Target, Sparkles, Timer, Heart, Telescope, CalendarClock, Sunrise, MessageSquare, Layers } from "lucide-react";
-import { useState, useEffect } from "react";
+import {
+  LogOut, Menu, X, Compass, LayoutGrid, Moon, Globe, SlidersHorizontal,
+  ChevronLeft, ChevronRight, ChevronDown, Clock, BookOpen, Zap, Target,
+  Sparkles, Timer, Heart, Telescope, CalendarClock, Sunrise, MessageSquare, Layers,
+} from "lucide-react";
+import { useState, useEffect, type ComponentType } from "react";
 
-const NAV_ITEMS = [
-  { href: "/dashboard",         label: "Dashboard",       Icon: Compass },
-  { href: "/chat",              label: "Chat",            Icon: MessageSquare },
-  { href: "/chart",                  label: "Jyotish Chart",      Icon: LayoutGrid },
-  { href: "/chart/sudarshana-chakra", label: "Sudarshana Chakra", Icon: Layers },
-  { href: "/reports",           label: "My Reports",      Icon: Moon },
-  { href: "/transit",           label: "Transits",        Icon: Globe },
-  { href: "/karma-timeline",    label: "Karma Timeline",  Icon: Clock },
-  { href: "/life-blueprint",    label: "Life Blueprint",  Icon: BookOpen },
-  { href: "/energy-blueprint",  label: "Energy Blueprint",Icon: Zap },
-  { href: "/purpose",           label: "Purpose Decoder", Icon: Target },
-  { href: "/shadow",            label: "Shadow Work",     Icon: Sparkles },
-  { href: "/muhurta",           label: "Muhurta Finder",  Icon: Timer },
-  { href: "/new-muhurta",      label: "Muhurta (new)",   Icon: CalendarClock },
-  { href: "/purushartha-muhurta", label: "Puruṣārtha Muhūrta", Icon: Sunrise },
-  { href: "/chemistry",         label: "Cosmic Chemistry",Icon: Heart },
-  { href: "/sky-observer",      label: "Sky Observer",    Icon: Telescope },
-  { href: "/settings/profile",  label: "Settings",        Icon: SlidersHorizontal },
+interface NavItem {
+  href: string;
+  label: string;
+  Icon: ComponentType<{ size?: number; strokeWidth?: number }>;
+}
+
+interface NavGroup {
+  id: string;
+  label: string;
+  Icon: ComponentType<{ size?: number; strokeWidth?: number }>;
+  items: NavItem[];
+}
+
+const ROOT_ITEMS: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", Icon: Compass },
+  { href: "/chat",      label: "Chat",      Icon: MessageSquare },
+];
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    id: "charts",
+    label: "Charts",
+    Icon: LayoutGrid,
+    items: [
+      { href: "/chart",                   label: "Jyotish Chart",      Icon: LayoutGrid },
+      { href: "/chart/sudarshana-chakra", label: "Sudarshana Chakra",  Icon: Layers },
+      { href: "/chemistry",               label: "Cosmic Chemistry",    Icon: Heart },
+    ],
+  },
+  {
+    id: "sky",
+    label: "Sky",
+    Icon: Telescope,
+    items: [
+      { href: "/sky-observer",          label: "Sky Observer",       Icon: Telescope },
+      { href: "/transit",               label: "Transits",           Icon: Globe },
+      { href: "/muhurta",               label: "Muhurta Finder",     Icon: Timer },
+      { href: "/new-muhurta",           label: "Muhurta (new)",      Icon: CalendarClock },
+      { href: "/purushartha-muhurta",   label: "Puruṣārtha Muhūrta", Icon: Sunrise },
+    ],
+  },
+  {
+    id: "reports",
+    label: "Reports",
+    Icon: Moon,
+    items: [
+      { href: "/reports",          label: "My Reports",       Icon: Moon },
+      { href: "/karma-timeline",   label: "Karma Timeline",   Icon: Clock },
+      { href: "/life-blueprint",   label: "Life Blueprint",   Icon: BookOpen },
+      { href: "/energy-blueprint", label: "Energy Blueprint", Icon: Zap },
+      { href: "/purpose",          label: "Purpose Decoder",  Icon: Target },
+      { href: "/shadow",           label: "Shadow Work",      Icon: Sparkles },
+    ],
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    Icon: SlidersHorizontal,
+    items: [
+      { href: "/settings/profile", label: "Settings", Icon: SlidersHorizontal },
+    ],
+  },
 ];
 
 interface Props {
@@ -38,11 +85,53 @@ interface Props {
   tier: string;
 }
 
+/** Inline SVG orbital compass — replaces the logo image file. */
+function CompassGlyph() {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="logo-compass-glyph"
+      aria-hidden="true"
+    >
+      <circle cx="16" cy="16" r="14.25" stroke="rgba(212,175,55,0.55)" strokeWidth="1.5" />
+      <circle cx="16" cy="16" r="9" stroke="rgba(212,175,55,0.20)" strokeWidth="0.75" />
+      <line x1="16" y1="3" x2="16" y2="29" stroke="rgba(212,175,55,0.45)" strokeWidth="1" />
+      <line x1="3" y1="16" x2="29" y2="16" stroke="rgba(212,175,55,0.30)" strokeWidth="1" />
+      <circle cx="16" cy="16" r="2" fill="rgba(212,175,55,0.70)" />
+      {/* North pointer */}
+      <polygon points="16,5 14.5,13 16,11 17.5,13" fill="rgba(212,175,55,0.75)" />
+    </svg>
+  );
+}
+
+/** Detect which group ID contains the currently active route. */
+function getActiveGroupId(pathname: string): string | null {
+  for (const group of NAV_GROUPS) {
+    if (group.items.some((item) =>
+      item.href === pathname || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+    )) {
+      return group.id;
+    }
+  }
+  return null;
+}
+
+const DEFAULT_GROUPS: Record<string, boolean> = {
+  charts: false,
+  sky: false,
+  reports: false,
+  settings: false,
+};
 
 export function SidebarNav({ userName, tier }: Props) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(DEFAULT_GROUPS);
 
   const initials = userName
     .split(" ")
@@ -51,12 +140,35 @@ export function SidebarNav({ userName, tier }: Props) {
     .toUpperCase()
     .slice(0, 2) || "U";
 
-  // Restore compact state from localStorage after hydration
+  // Restore compact + group state; auto-expand active group
   useEffect(() => {
-    const stored = localStorage.getItem("sidebar_compact") === "true";
-    setIsCompact(stored);
-    document.body.setAttribute("data-sidebar", stored ? "compact" : "expanded");
+    const compact = localStorage.getItem("sidebar_compact") === "true";
+    setIsCompact(compact);
+    document.body.setAttribute("data-sidebar", compact ? "compact" : "expanded");
+
+    let stored: Record<string, boolean> = { ...DEFAULT_GROUPS };
+    try {
+      const raw = localStorage.getItem("sidebar_groups");
+      if (raw) stored = { ...DEFAULT_GROUPS, ...JSON.parse(raw) };
+    } catch { /* ignore */ }
+
+    const activeId = getActiveGroupId(pathname);
+    if (activeId) stored[activeId] = true;
+    setOpenGroups(stored);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-expand the active group whenever route changes
+  useEffect(() => {
+    const activeId = getActiveGroupId(pathname);
+    if (!activeId) return;
+    setOpenGroups((prev) => {
+      if (prev[activeId]) return prev;
+      const next = { ...prev, [activeId]: true };
+      localStorage.setItem("sidebar_groups", JSON.stringify(next));
+      return next;
+    });
+  }, [pathname]);
 
   function toggleCompact() {
     const next = !isCompact;
@@ -65,21 +177,17 @@ export function SidebarNav({ userName, tier }: Props) {
     document.body.setAttribute("data-sidebar", next ? "compact" : "expanded");
   }
 
+  function toggleGroup(id: string) {
+    setOpenGroups((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      localStorage.setItem("sidebar_groups", JSON.stringify(next));
+      return next;
+    });
+  }
+
   const Logo = ({ onClick, compact }: { onClick?: () => void; compact?: boolean }) => (
     <Link href="/dashboard" className={`app-sidebar-logo${compact ? " compact" : ""}`} onClick={onClick}>
-      {/* Glyph — always visible */}
-      <span className="logo-glyph-ring">
-        <Image
-          src="/logo-icon.png"
-          alt="Crossroads Compass"
-          width={36}
-          height={36}
-          priority
-          style={{ display: "block", width: 36, height: 36, objectFit: "contain" }}
-        />
-      </span>
-
-      {/* Wordmark — fades out when compact */}
+      <CompassGlyph />
       {!compact && (
         <span className="logo-wordmark" aria-label="Crossroads Compass">
           <span className="logo-wordmark-primary">
@@ -92,12 +200,11 @@ export function SidebarNav({ userName, tier }: Props) {
     </Link>
   );
 
-  const NavLinks = ({ onItemClick, compact }: { onItemClick?: () => void; compact?: boolean }) => (
+  const NavGroups = ({ onItemClick, compact }: { onItemClick?: () => void; compact?: boolean }) => (
     <nav className="app-sidebar-nav">
-      {NAV_ITEMS.map(({ href, label, Icon }) => {
-        const active =
-          pathname === href ||
-          (href !== "/dashboard" && pathname.startsWith(href));
+      {/* Root standalone items */}
+      {ROOT_ITEMS.map(({ href, label, Icon }) => {
+        const active = pathname === href;
         return (
           <Link
             key={href}
@@ -106,13 +213,61 @@ export function SidebarNav({ userName, tier }: Props) {
             onClick={onItemClick}
             title={compact ? label : undefined}
           >
-            <span className="app-sidebar-item-icon">
-              <Icon size={18} strokeWidth={1.5} />
-            </span>
-            {!compact && (
-              <span className="app-sidebar-item-label">{label}</span>
-            )}
+            <span className="app-sidebar-item-icon"><Icon size={18} strokeWidth={1.5} /></span>
+            {!compact && <span className="app-sidebar-item-label">{label}</span>}
           </Link>
+        );
+      })}
+
+      {/* Grouped sections */}
+      {NAV_GROUPS.map(({ id, label, Icon, items }) => {
+        const isOpen = openGroups[id] ?? false;
+        const hasActive = items.some((item) =>
+          item.href === pathname || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+        );
+        return (
+          <div key={id} className="sidebar-group">
+            <button
+              type="button"
+              className={`sidebar-group-header${hasActive ? " active" : ""}${compact ? " compact" : ""}`}
+              onClick={() => !compact && toggleGroup(id)}
+              aria-expanded={isOpen}
+              title={compact ? label : undefined}
+            >
+              <span className="app-sidebar-item-icon"><Icon size={18} strokeWidth={1.5} /></span>
+              {!compact && (
+                <>
+                  <span className="sidebar-group-label">{label}</span>
+                  <ChevronDown
+                    size={14}
+                    strokeWidth={2}
+                    className={`sidebar-group-chevron${isOpen ? " open" : ""}`}
+                  />
+                </>
+              )}
+            </button>
+
+            {!compact && (
+              <div className={`sidebar-group-items${isOpen ? " open" : ""}`}>
+                {items.map(({ href, label: itemLabel, Icon: ItemIcon }) => {
+                  const active =
+                    href === pathname ||
+                    (href !== "/dashboard" && pathname.startsWith(href));
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`app-sidebar-item sidebar-item-child${active ? " active" : ""}`}
+                      onClick={onItemClick}
+                    >
+                      <span className="app-sidebar-item-icon"><ItemIcon size={16} strokeWidth={1.5} /></span>
+                      <span className="app-sidebar-item-label">{itemLabel}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         );
       })}
     </nav>
@@ -144,7 +299,7 @@ export function SidebarNav({ userName, tier }: Props) {
       {/* Desktop sidebar */}
       <aside className={`app-sidebar${isCompact ? " compact" : ""}`}>
         <Logo compact={isCompact} />
-        <NavLinks compact={isCompact} />
+        <NavGroups compact={isCompact} />
         <div className="app-sidebar-footer">
           <UserBadge compact={isCompact} />
           <button
@@ -176,7 +331,7 @@ export function SidebarNav({ userName, tier }: Props) {
         aria-hidden="true"
       />
 
-      {/* Mobile slide-in drawer — always full width, no compact */}
+      {/* Mobile slide-in drawer */}
       <div className={`app-sidebar-drawer${drawerOpen ? " open" : ""}`}>
         <div className="app-sidebar-drawer-top">
           <Logo onClick={() => setDrawerOpen(false)} />
@@ -188,7 +343,7 @@ export function SidebarNav({ userName, tier }: Props) {
             <X size={20} />
           </button>
         </div>
-        <NavLinks onItemClick={() => setDrawerOpen(false)} />
+        <NavGroups onItemClick={() => setDrawerOpen(false)} />
         <UserBadge />
       </div>
     </>

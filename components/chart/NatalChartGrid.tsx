@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import clsx from "clsx";
 import type { VedicChartCalculations } from "openastrology-library";
 import {
   generateNorthIndianChartSVG,
@@ -55,10 +54,7 @@ export function NatalChartGrid({ chart, birthTimeKnown, transitChart, centered =
     <div className={centered ? "" : "min-w-0"}>
       <BirthTimeBanner birthTimeKnown={birthTimeKnown} />
       <div
-        className={clsx(
-          "north-indian-chart-wrap w-full max-w-[min(100%,520px)] [&_svg]:h-auto [&_svg]:w-full",
-          centered && "mx-auto",
-        )}
+        className={centered ? "mx-auto" : undefined}
         // SVG is generated only from server chart + transit data (no raw user HTML).
         dangerouslySetInnerHTML={{ __html: svgMarkup }}
       />
