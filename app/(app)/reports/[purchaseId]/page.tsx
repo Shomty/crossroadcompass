@@ -21,12 +21,16 @@ export default async function ReportReaderPage({
   params: Promise<{ purchaseId: string }>;
 }) {
   const ctx = await getAppUserContext();
-  if (!ctx) redirect("/login");
+  if (!ctx) {
+    console.error("[report-reader] no user context → redirect /login");
+    redirect("/login");
+  }
 
   const userId = ctx.userId;
   const { purchaseId } = await params;
 
   if (typeof purchaseId !== "string" || purchaseId.length === 0) {
+    console.error("[report-reader] invalid purchaseId=%s → redirect /reports", JSON.stringify(purchaseId));
     redirect("/reports");
   }
 
@@ -39,7 +43,10 @@ export default async function ReportReaderPage({
     },
   });
 
-  if (!purchase) redirect("/reports");
+  if (!purchase) {
+    console.error("[report-reader] purchase not found: purchaseId=%s userId=%s → redirect /reports", purchaseId, userId);
+    redirect("/reports");
+  }
 
   const isOwner = purchase.user.id === userId;
   const rawSession = await auth();
@@ -48,6 +55,10 @@ export default async function ReportReaderPage({
     rawSession?.user?.isAdmin === true;
 
   if (!isOwner && !isRealAdmin) {
+    console.error(
+      "[report-reader] access denied: purchaseId=%s requestUserId=%s ownerUserId=%s isRealAdmin=%s → redirect /reports",
+      purchaseId, userId, purchase.user.id, isRealAdmin
+    );
     redirect("/reports");
   }
 

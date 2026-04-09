@@ -25,6 +25,9 @@ export interface ChatInitialState {
   /** Chat threads persist in SQLite (always true when DB is configured). */
   persistenceEnabled: boolean;
   starterPrompts: ChatStarterItem[];
+  /** User's saved AI model preference for CosmicChat (e.g. "gemini-flash", "claude-sonnet").
+   * NOTE: This preference applies ONLY to CosmicChat. Report generation always uses Gemini. */
+  preferredAiModel: string;
 }
 
 function resolveIntroMessage(raw: string | undefined): string {
@@ -34,7 +37,7 @@ function resolveIntroMessage(raw: string | undefined): string {
 }
 
 export async function getChatInitialState(userId: string): Promise<ChatInitialState> {
-  const [subscription, introRow, starterPrompts] = await Promise.all([
+  const [subscription, introRow, starterPrompts, chatState] = await Promise.all([
     db.subscription.findUnique({
       where: { userId },
       select: { tier: true },
@@ -44,10 +47,15 @@ export async function getChatInitialState(userId: string): Promise<ChatInitialSt
       select: { value: true },
     }),
     getEffectiveChatStarters(),
+    db.userChatState.findUnique({
+      where: { userId },
+      select: { preferredAiModel: true },
+    }),
   ]);
 
   const tier = (subscription?.tier ?? "FREE") as import("@/types").SubscriptionTier;
   const introMessage = resolveIntroMessage(introRow?.value);
+  const preferredAiModel = chatState?.preferredAiModel ?? (tier === "FREE" ? "gemini-flash" : "gemini-pro");
 
   const activeSessionId = await ensureActiveSession(userId);
   const history = await loadThread(userId, activeSessionId);
@@ -63,6 +71,7 @@ export async function getChatInitialState(userId: string): Promise<ChatInitialSt
       activeSessionId,
       persistenceEnabled,
       starterPrompts,
+      preferredAiModel,
     };
   }
 
@@ -77,5 +86,6 @@ export async function getChatInitialState(userId: string): Promise<ChatInitialSt
     activeSessionId,
     persistenceEnabled,
     starterPrompts,
+    preferredAiModel,
   };
 }

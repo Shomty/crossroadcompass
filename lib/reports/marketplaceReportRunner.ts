@@ -1,3 +1,10 @@
+/**
+ * lib/reports/marketplaceReportRunner.ts
+ * Runs marketplace report generation using Gemini.
+ *
+ * AI provider: Gemini (always). The user's CosmicChat model preference does NOT
+ * affect report generation — reports always use the configured Gemini model.
+ */
 import type { BirthProfile } from "@prisma/client";
 import { loadReportTemplateSources } from "@/lib/admin/loadReportTemplateSources";
 import {
