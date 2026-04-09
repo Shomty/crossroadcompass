@@ -17,7 +17,10 @@ export async function generateReportForPurchase(
     return { success: false, error: "Purchase not found" };
   }
 
-  if (!["PAID", "COMPLETE", "FAILED"].includes(purchase.status)) {
+  // PENDING is treated the same as PAID — it means payment was initiated but
+  // the Stripe webhook hasn't arrived yet (or it's a free/admin purchase).
+  // Allowing generation here unblocks purchases that get stuck in PENDING.
+  if (!["PENDING", "PAID", "COMPLETE", "FAILED"].includes(purchase.status)) {
     return {
       success: false,
       error: `Purchase is in status ${purchase.status}, cannot generate`,
