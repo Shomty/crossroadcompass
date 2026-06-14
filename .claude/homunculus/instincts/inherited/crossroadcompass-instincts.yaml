@@ -1,0 +1,814 @@
+# Instincts generated from https://github.com/Shomty/crossroadcompass
+# Generated: 2026-04-02T09:02:23.308Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: crossroadcompass-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, fix, chore
+
+## Evidence
+
+- 69 commits analyzed
+- Detected conventional commit pattern
+- Examples: fix(reports): use raw SQL for periodic_reports — Prisma client missing model, feat(synthesis): pass trait analysis scores to Gemini prompt (engine3 Phase 3)
+
+---
+id: crossroadcompass-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Commit Length
+
+## Action
+
+Write moderate-length commit messages (~67 characters)
+
+## Evidence
+
+- Average commit message length: 67 chars
+- Based on 69 commits
+
+---
+id: crossroadcompass-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: crossroadcompass-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: crossroadcompass-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Export Style
+
+## Action
+
+Prefer default exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: default
+
+---
+id: crossroadcompass-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: crossroadcompass-test-framework
+trigger: "when writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Test Framework
+
+## Action
+
+Use vitest as the test framework
+
+## Evidence
+
+- Test framework detected: vitest
+- File pattern: *.test.ts
+
+---
+id: crossroadcompass-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: crossroadcompass-test-mocking
+trigger: "when mocking dependencies in tests"
+confidence: 0.75
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Test Mocking
+
+## Action
+
+Use vi.mock for mocking
+
+## Evidence
+
+- Mocking pattern detected: vi.mock
+- Consistent across test files
+
+---
+id: crossroadcompass-test-types
+trigger: "when planning tests for a feature"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Test Types
+
+## Action
+
+Write unit, integration, e2e tests to match project standards
+
+## Evidence
+
+- Test types detected: unit, integration, e2e
+- Coverage config: no
+
+---
+id: crossroadcompass-workflow-database-migration
+trigger: "when modifying the database schema or adding tables"
+confidence: 0.8
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Database Migration
+
+## Action
+
+Follow the database-migration workflow:
+1. Create migration file
+2. Update schema definitions
+3. Generate/update types
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~6x per month
+- Files: **/schema.*, migrations/*, **/types.ts
+
+---
+id: crossroadcompass-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~19x per month
+- Files: app/api/transit/reading/*, components/dashboard/*, lib/ai/*
+
+---
+id: crossroadcompass-workflow-add-or-evolve-database-table-or-model
+trigger: "when doing add or evolve database table or model"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Add Or Evolve Database Table Or Model
+
+## Action
+
+Follow the add-or-evolve-database-table-or-model workflow:
+1. Edit prisma/schema.prisma to add or change a model/table.
+2. Generate or write a new migration SQL file under prisma/migrations/...
+3. Update backend API route(s) or service logic to use the new/changed model.
+4. Update types/index.ts or related type files if needed.
+5. Sometimes update lib/kv/keys.ts or caching logic.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: prisma/schema.prisma, prisma/migrations/*/migration.sql, app/api/**/*.ts
+
+---
+id: crossroadcompass-workflow-add-or-evolve-api-endpoint
+trigger: "when doing add or evolve api endpoint"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Add Or Evolve Api Endpoint
+
+## Action
+
+Follow the add-or-evolve-api-endpoint workflow:
+1. Create or update app/api/[feature]/[endpoint]/route.ts.
+2. Implement or update related service logic in lib/...
+3. Update or add tests in tests/api/... or lib/...test.ts.
+4. Update types/index.ts if new types are introduced.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: app/api/**/*.ts, lib/**/*.ts, tests/api/**/*.test.ts
+
+---
+id: crossroadcompass-workflow-feature-development-frontend-backend-integration
+trigger: "when doing feature development frontend backend integration"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Feature Development Frontend Backend Integration
+
+## Action
+
+Follow the feature-development-frontend-backend-integration workflow:
+1. Create or update app/(app)/[feature]/page.tsx.
+2. Create or update components/[feature]/*.tsx.
+3. Create or update app/api/[feature]/*/route.ts.
+4. Implement or update lib/[feature]/*.ts service logic.
+5. Update types/index.ts as needed.
+6. Update app/globals.css or styles/*.css for new UI elements.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: app/(app)/**/*.tsx, components/**/*.tsx, app/api/**/*.ts
+
+---
+id: crossroadcompass-workflow-design-system-or-style-guide-update
+trigger: "when doing design system or style guide update"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Design System Or Style Guide Update
+
+## Action
+
+Follow the design-system-or-style-guide-update workflow:
+1. Edit app/globals.css and/or styles/*.css to add or update tokens, utilities, or palettes.
+2. Update components to use new or changed classes.
+3. Update or create STYLE_GUIDE.md or related docs.
+4. Sometimes update layout or shared UI primitives.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: app/globals.css, styles/*.css, components/**/*.tsx
+
+---
+id: crossroadcompass-workflow-ai-service-or-prompt-engine-evolution
+trigger: "when doing ai service or prompt engine evolution"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Ai Service Or Prompt Engine Evolution
+
+## Action
+
+Follow the ai-service-or-prompt-engine-evolution workflow:
+1. Edit or add lib/ai/[service]Service.ts and/or lib/ai/prompts/*.ts.
+2. Update or create app/api/[feature]/*/route.ts to use new AI logic.
+3. Update types/index.ts if new types are needed.
+4. Sometimes update caching (lib/kv/keys.ts) or add tests.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: lib/ai/**/*.ts, lib/ai/prompts/*.ts, app/api/**/*.ts
+
+---
+id: crossroadcompass-workflow-report-template-variable-or-engine-update
+trigger: "when doing report template variable or engine update"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Report Template Variable Or Engine Update
+
+## Action
+
+Follow the report-template-variable-or-engine-update workflow:
+1. Edit lib/reports/reportTemplateVariableKeys.ts and/or reportTemplateVars.ts.
+2. Update lib/reports/contextBuilder.ts or reportGenerationService.ts.
+3. Update types/index.ts for new variable types.
+4. Sometimes update related API endpoints or tests.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: lib/reports/reportTemplateVariableKeys.ts, lib/reports/reportTemplateVars.ts, lib/reports/contextBuilder.ts
+
+---
+id: crossroadcompass-workflow-print-or-pdf-styling-and-print-button-integration
+trigger: "when doing print or pdf styling and print button integration"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Shomty/crossroadcompass
+---
+
+# Crossroadcompass Workflow Print Or Pdf Styling And Print Button Integration
+
+## Action
+
+Follow the print-or-pdf-styling-and-print-button-integration workflow:
+1. Edit app/globals.css to add or update @media print rules and print-specific classes.
+2. Add or update components/ui/PrintButton.tsx.
+3. Integrate PrintButton into content/report components.
+4. Update app/(app)/reports/[purchaseId]/page.tsx or similar pages to use print features.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: app/globals.css, components/ui/PrintButton.tsx, components/report/**/*.tsx
+
+---
+id: crossroadcompass-instinct-file-naming
+trigger: "When creating a new file"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct File Naming
+
+## Action
+
+Name the file using camelCase
+
+## Evidence
+
+- Naming conventions: files = camelCase
+- Pattern in components/dashboard/TransitCard.tsx
+
+---
+id: crossroadcompass-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Function Naming
+
+## Action
+
+Name the function using camelCase
+
+## Evidence
+
+- Naming conventions: functions = camelCase
+- Pattern in lib/ai/transitReadingService.ts
+
+---
+id: crossroadcompass-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase
+
+## Evidence
+
+- Naming conventions: classes = PascalCase
+- Pattern in components/ui/PrintButton.tsx
+
+---
+id: crossroadcompass-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE
+
+## Evidence
+
+- Naming conventions: constants = SCREAMING_SNAKE_CASE
+- Pattern in lib/ai/prompts/*.ts
+
+---
+id: crossroadcompass-instinct-import-alias
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Import Alias
+
+## Action
+
+Use alias import style
+
+## Evidence
+
+- importStyle: alias
+- Pattern in app/(app)/dashboard/page.tsx
+
+---
+id: crossroadcompass-instinct-default-export
+trigger: "When exporting a module"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Default Export
+
+## Action
+
+Use default export style
+
+## Evidence
+
+- exportStyle: default
+- Pattern in components/ui/PrintButton.tsx
+
+---
+id: crossroadcompass-instinct-test-file-pattern
+trigger: "When creating a test file"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Test File Pattern
+
+## Action
+
+Name the file with the pattern *.test.ts
+
+## Evidence
+
+- testing.filePattern: *.test.ts
+- Pattern in tests/api/**/*.test.ts
+
+---
+id: crossroadcompass-instinct-test-framework-vitest
+trigger: "When writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Test Framework Vitest
+
+## Action
+
+Use the vitest framework
+
+## Evidence
+
+- testing.framework: vitest
+- Pattern in vitest.config.ts
+
+---
+id: crossroadcompass-instinct-test-types
+trigger: "When planning tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Test Types
+
+## Action
+
+Write unit, integration, and e2e tests as appropriate
+
+## Evidence
+
+- testing.testTypes: unit, integration, e2e
+- Pattern in tests/api/**/*.test.ts
+
+---
+id: crossroadcompass-instinct-vi-mock
+trigger: "When mocking in tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Vi Mock
+
+## Action
+
+Use vi.mock for mocking dependencies
+
+## Evidence
+
+- testing.mockingStyle: vi.mock
+- Pattern in tests/api/**/*.test.ts
+
+---
+id: crossroadcompass-instinct-conventional-commits
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Conventional Commits
+
+## Action
+
+Use conventional commit prefixes: feat, fix, chore, style, security
+
+## Evidence
+
+- commits.type: conventional
+- Examples: fix(reports): use raw SQL...
+- feat(synthesis): pass trait analysis...
+
+---
+id: crossroadcompass-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Commit Length
+
+## Action
+
+Keep commit messages concise, around 67 characters on average
+
+## Evidence
+
+- commits.averageLength: 67
+- Examples: feat: subtle Liquid Ether animated background on all pages
+
+---
+id: crossroadcompass-instinct-add-or-evolve-database-table-or-model
+trigger: "When someone wants to persist new data or change DB structure"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Add Or Evolve Database Table Or Model
+
+## Action
+
+Edit prisma/schema.prisma, create migration, update backend API/service logic, update types, and sometimes update caching logic
+
+## Evidence
+
+- Workflow: add-or-evolve-database-table-or-model
+- Pattern in prisma/schema.prisma, prisma/migrations/*/migration.sql, app/api/**/*.ts
+
+---
+id: crossroadcompass-instinct-add-or-evolve-api-endpoint
+trigger: "When someone wants to expose new backend functionality"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Add Or Evolve Api Endpoint
+
+## Action
+
+Create or update app/api/[feature]/[endpoint]/route.ts, update service logic, add or update tests, update types if needed
+
+## Evidence
+
+- Workflow: add-or-evolve-api-endpoint
+- Pattern in app/api/**/*.ts, lib/**/*.ts, tests/api/**/*.test.ts
+
+---
+id: crossroadcompass-instinct-feature-development-frontend-backend-integration
+trigger: "When someone wants to build a new user-facing feature that requires backend logic"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Feature Development Frontend Backend Integration
+
+## Action
+
+Create/update frontend page/component, backend API/service, types, and styles as needed
+
+## Evidence
+
+- Workflow: feature-development-frontend-backend-integration
+- Pattern in app/(app)/**/*.tsx, components/**/*.tsx, app/api/**/*.ts
+
+---
+id: crossroadcompass-instinct-design-system-or-style-guide-update
+trigger: "When someone wants to standardize or update the app's visual language"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Design System Or Style Guide Update
+
+## Action
+
+Edit global CSS/styles, update components to use new classes, update/create STYLE_GUIDE.md
+
+## Evidence
+
+- Workflow: design-system-or-style-guide-update
+- Pattern in app/globals.css, styles/*.css, components/**/*.tsx
+
+---
+id: crossroadcompass-instinct-ai-service-or-prompt-engine-evolution
+trigger: "When someone wants to add new AI features or improve prompt logic"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Ai Service Or Prompt Engine Evolution
+
+## Action
+
+Edit/add lib/ai service or prompt files, update API route, update types, sometimes update caching or add tests
+
+## Evidence
+
+- Workflow: ai-service-or-prompt-engine-evolution
+- Pattern in lib/ai/**/*.ts, lib/ai/prompts/*.ts, app/api/**/*.ts
+
+---
+id: crossroadcompass-instinct-report-template-variable-or-engine-update
+trigger: "When someone wants to add new computed fields or logic to reports"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Report Template Variable Or Engine Update
+
+## Action
+
+Edit report template variable files, update context builder or generation service, update types, sometimes update API/tests
+
+## Evidence
+
+- Workflow: report-template-variable-or-engine-update
+- Pattern in lib/reports/reportTemplateVariableKeys.ts, lib/reports/contextBuilder.ts
+
+---
+id: crossroadcompass-instinct-print-or-pdf-styling-and-print-button-integration
+trigger: "When someone wants to improve print/PDF output or add print actions to UI"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: Shomty/crossroadcompass
+---
+
+# Crossroadcompass Instinct Print Or Pdf Styling And Print Button Integration
+
+## Action
+
+Edit app/globals.css for print rules, add/update PrintButton, integrate into report/content components, update report pages
+
+## Evidence
+
+- Workflow: print-or-pdf-styling-and-print-button-integration
+- Pattern in app/globals.css, components/ui/PrintButton.tsx, app/(app)/reports/[purchaseId]/page.tsx
+
